@@ -8,6 +8,8 @@ main=Tester.dba
 include1=TopGui.dba
 include2=TopGui_Button.dba
 include3=TopGui_Window.dba
+include4=TopGui_Checkbox.dba
+include5=TopGui_Radiobutton.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***

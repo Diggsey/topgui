@@ -13,6 +13,9 @@ global windowY2 = 300
 global windowW2 = 500
 global windowH2 = 500
 
+global windowChecked1 = 0
+global windowChecked2 as guiId
+
 dim windowFuncPtrs(1) as integer
 windowFuncPtrs(0) = get ptr to function("window1")
 windowFuncPtrs(1) = get ptr to function("window2")
@@ -43,8 +46,9 @@ function window1(focused)
     activated = guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!", focused)
         
         if guiButton(GEN_ID, windowW-300, windowH-300, 200, 50, "Click me!")
-            `msgbox "Hello!", 0, 0
         endif
+        
+        windowChecked1 = guiCheckbox(GEN_ID, 100, 100, 120, 30, "Check me", windowChecked1)
         
         windowX = guiMoveX(windowX)
         windowY = guiMoveY(windowY)
@@ -62,6 +66,11 @@ function window2(focused)
         if guiButton(GEN_ID, windowW2-300, windowH2-300, 200, 50, "Click me!")
             `msgbox "Hello!", 0, 0
         endif
+        
+        windowChecked2 = guiRadioButton(GEN_ID, 100, 40, 120, 30, "Check me", windowChecked2)
+        windowChecked2 = guiRadioButton(GEN_ID, 100, 80, 120, 30, "Check me", windowChecked2)
+        windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", windowChecked2)
+        windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", windowChecked2)
         
         windowX2 = guiMoveX(windowX2)
         windowY2 = guiMoveY(windowY2)

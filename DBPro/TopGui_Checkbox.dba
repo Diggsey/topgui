@@ -1,0 +1,60 @@
+
+function guiCheckbox(id as guiId, x, y, w, h, caption$, checked)
+    guiBeginControl(x, y, w, h, 1)
+    
+    checked = guiCheckboxLogic(id, w, h, checked)
+    guiCheckboxDraw(id, w, h, caption$, checked)
+    
+    guiEndControl()
+endfunction checked
+
+function guiCheckboxLogic(id as guiId, w, h, checked)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    boxx = x
+    boxy = y+h/2-10
+    
+    ` If mouse over, try becoming hot
+    if guiInClip(gui.msx, gui.msy)
+        if guiInRect(gui.msx, gui.msy, boxx, boxy, boxx+20, boxy+20)
+            guiSetHot(id)
+        else
+            if guiInRect(gui.msx, gui.msy, x+20, y, x+w, y+h)
+                guiSetHot(id)
+            endif
+        endif
+    endif
+    
+    if gui.msd = 1
+        if guiGetHot() = id
+            checked = 1-checked
+        endif
+    endif
+    
+endfunction checked
+
+function guiCheckboxDraw(id as guiId, w, h, caption$, checked)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    boxx = x
+    boxy = y+h/2-10
+    
+    if guiGetHot() = id
+        a2FillBox boxx, boxy, boxx+20, boxy+20, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80, 0xFFFFFF80
+    else
+        a2FillBox boxx, boxy, boxx+20, boxy+20, 0xFF808080, 0xFF808080, 0xFFC0C0C0, 0xFFC0C0C0
+    endif
+    
+    if checked
+        a2FillTriangle boxx+2, boxy+10, boxx+8, boxy+13, boxx+8, boxy+17, 0xFF000000
+        a2FillTriangle boxx+8, boxy+17, boxx+8, boxy+13, boxx+16, boxy+3, 0xFF000000
+        a2Triangle boxx+2, boxy+10, boxx+8, boxy+13, boxx+8, boxy+17, 0xFF000000
+        a2Triangle boxx+8, boxy+17, boxx+8, boxy+13, boxx+16, boxy+3, 0xFF000000
+    endif
+    
+    a2Box boxx, boxy, boxx+19, boxy+19, 0xFF000000
+    
+    a2BoxText gui.fontId, x+25, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
+endfunction
