@@ -3,15 +3,44 @@ set display mode desktop width(), desktop height(), 32, 1
 
 guiInit()
 
-windowX = 100
-windowY = 100
-windowW = 500
-windowH = 500
+global windowX = 100
+global windowY = 100
+global windowW = 500
+global windowH = 500
+
+global windowX2 = 300
+global windowY2 = 300
+global windowW2 = 500
+global windowH2 = 500
+
+dim windowFuncPtrs(1) as integer
+windowFuncPtrs(0) = get ptr to function("window1")
+windowFuncPtrs(1) = get ptr to function("window2")
 
 do
     guiUpdate()
     
-    guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!")
+    activateIndex = -1
+    for i = 0 to 1
+        if call function ptr(windowFuncPtrs(i), i = 1)
+            activateIndex = i
+        endif
+    next i
+    
+    if activateIndex <> -1
+        ptr = windowFuncPtrs(activateIndex)
+        array delete element windowFuncPtrs(), activateIndex
+        array insert at bottom windowFuncPtrs()
+        windowFuncPtrs(1) = ptr
+    endif
+    
+    sync
+    cls 0xFFC0D0FF
+loop
+
+function window1(focused)
+
+    activated = guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!", focused)
         
         if guiButton(GEN_ID, windowW-300, windowH-300, 200, 50, "Click me!")
             `msgbox "Hello!", 0, 0
@@ -24,8 +53,23 @@ do
         
     guiWindowEnd()
     
-    sync
-    cls 0xFFC0D0FF
-loop
+endfunction activated
+
+function window2(focused)
+
+    activated = guiWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", focused)
+        
+        if guiButton(GEN_ID, windowW2-300, windowH2-300, 200, 50, "Click me!")
+            `msgbox "Hello!", 0, 0
+        endif
+        
+        windowX2 = guiMoveX(windowX2)
+        windowY2 = guiMoveY(windowY2)
+        windowW2 = guiResizeW(windowW2)
+        windowH2 = guiResizeH(windowH2)
+        
+    guiWindowEnd()
+    
+endfunction activated
 
 end

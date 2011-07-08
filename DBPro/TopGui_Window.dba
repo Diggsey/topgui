@@ -1,9 +1,9 @@
 
-function guiWindowBegin(id as guiId, x, y, w, h, caption$)
+function guiWindowBegin(id as guiId, x, y, w, h, caption$, focused)
     guiBeginControl(x, y, w, h, 1)
     
     activated = guiWindowLogic(id, w, h)
-    guiWindowDraw(id, w, h, caption$)
+    guiWindowDraw(id, w, h, caption$, focused)
     
     guiBeginContainer(id, 4, 26, w-8, h-29)
 endfunction activated
@@ -112,16 +112,23 @@ function guiWindowLogic(id as guiId, w, h)
     endif
 endfunction activated
 
-function guiWindowDraw(id as guiId, w, h, caption$)
+function guiWindowDraw(id as guiId, w, h, caption$, focused)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
     a2FillBox x, y, x+w, y+h, 0x80000000
-    a2FillBox x, y, x+w, y+25, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+    
+    if focused
+        a2FillBox x, y, x+w, y+25, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        a2Box x+1, y+25, x+w-2, y+h-2, 0xFFFFC040
+        a2Box x+2, y+25, x+w-3, y+h-3, 0xFFFFC040
+    else
+        a2FillBox x, y, x+w, y+25, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+        a2Box x+1, y+25, x+w-2, y+h-2, 0xFF808080
+        a2Box x+2, y+25, x+w-3, y+h-3, 0xFF808080
+    endif
     
     a2Box x, y, x+w-1, y+h-1, 0xFF000000
-    a2Box x+1, y+25, x+w-2, y+h-2, 0xFF808080
-    a2Box x+2, y+25, x+w-3, y+h-3, 0xFF808080
     a2Box x+3, y+25, x+w-4, y+h-4, 0xFF000000
     a2Text gui.fontId, x+6, y+4, caption$, 0xFF000000
     
