@@ -1,0 +1,56 @@
+#constant GEN_ID INDEX_ID(0)
+#constant guiId integer
+
+type guiContextType
+    hotId as guiId
+    activeId as guiId
+    nextHotId as guiId
+    msc as integer  ` Mouse click
+    msx as integer  ` Mouse X
+    msy as integer  ` Mouse Y
+    omc as integer  ` Old mouse click
+    omx as integer  ` Old mouse X
+    omy as integer  ` Old mouse Y
+    msd as integer  ` Mouse down
+    msu as integer  ` Mouse up
+endtype
+
+global gui as guiContextType
+
+function guiInit()
+    ` Insert ASM code into getReturnAddress:
+    `   0x8B 0x45 0x04      mov eax, [ebp+4]
+    `   0xC3                ret
+    poke dword get ptr to function("getReturnAddress"), 0xC304458B
+
+endfunction
+
+function INDEX_ID(index)
+    result = -(getReturnAddress() << 12) + index
+endfunction result
+
+function getReturnAddress()
+endfunction result
+
+function guiUpdate()
+    gui.hotId = gui.nextHotId
+    gui.nextHotId = 0
+    
+    gui.msc = mouseclick()
+    gui.msx = mousex()
+    gui.msy = mousey()
+endfunction
+
+function guiSetHot(id as guiId)
+    gui.nextHotId = id
+endfunction
+
+function guiGetHot()
+endfunction gui.hotId
+
+function guiSetActive(id as guiId)
+    gui.activeId = id
+endfunction
+
+function guiGetActive()
+endfunction gui.activeId

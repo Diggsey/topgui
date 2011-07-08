@@ -1,0 +1,9 @@
+sync on
+set display mode desktop width(), desktop height(), 32
+
+gui.activeId = 23
+
+print guiGetActive()
+sync : sync
+wait key
+end
