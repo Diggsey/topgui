@@ -1,17 +1,26 @@
-sync on : sync rate 60
-set display mode desktop width(), desktop height(), 32
+sync on
+set display mode desktop width(), desktop height(), 32, 1
 
 guiInit()
 
+windowX = 100
+windowY = 100
+
 do
     guiUpdate()
-
-    if guiButton(GEN_ID, 100, 100, 200, 50, "Click me!")
-        `msgbox "Hello!", 0, 0
-    endif
+    
+    guiWindowBegin(GEN_ID, windowX, windowY, 500, 500, "Hello world!")
+        windowX = guiMoveX(windowX)
+        windowY = guiMoveY(windowY)
+    
+        if guiButton(GEN_ID, 100, 100, 200, 50, "Click me!")
+            `msgbox "Hello!", 0, 0
+        endif
+        
+    guiWindowEnd()
     
     sync
-    cls 0
+    cls 0xFFC0D0FF
 loop
 
 end

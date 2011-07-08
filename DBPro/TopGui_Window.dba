@@ -1,0 +1,71 @@
+
+function guiWindowBegin(id as guiId, x, y, w, h, caption$)
+    guiBeginControl(x, y, w, h, 1)
+    
+    activated = guiWindowLogic(id, w, h)
+    guiWindowDraw(id, w, h, caption$)
+    
+    guiBeginContainer(id, 3, 20, w-6, h-23)
+endfunction activated
+
+function guiWindowEnd()
+    guiEndContainer()
+    
+    guiEndControl()
+endfunction
+
+function guiWindowLogic(id as guiId, w, h)
+    activated = 0
+
+    ` Convert 0, 0 to screen coordinates
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    ` If mouse over, try becoming hot
+    if guiInRect(gui.msx, gui.msy, x, y, x+w, y+h)
+        guiSetHot(id)
+    endif
+    
+    if gui.msd
+        if guiGetHot() = id or guiIsChildHot(id)
+            activated = 1
+        endif
+    endif
+    
+    if guiGetHot() = id
+        if gui.msd = 1
+            ` If in titlebar
+            if guiInRect(gui.msx, gui.msy, x+3, y+3, x+w-3, y+20)
+                if guiSetActive(id)
+                    gui.dragMode = 1
+                    gui.dragX = x - gui.msx
+                    gui.dragY = y - gui.msy
+                endif
+            endif
+        endif
+    endif
+    
+    if guiGetActive() = id
+        if gui.msc = 1
+            guiStayActive()
+            select gui.dragMode
+                case 1
+                    newx = gui.dragX + gui.msx
+                    newy = gui.dragY + gui.msy
+                    
+                    gui.deltaX = newx-x
+                    gui.deltaY = newy-y
+                    gui.deltaW = 0
+                    gui.deltaH = 0
+                endcase
+            endselect
+        endif
+    endif
+endfunction activated
+
+function guiWindowDraw(id as guiId, w, h, caption$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    a2FillBox x, y, x+w, y+h, 0x80000000
+endfunction

@@ -7,6 +7,7 @@ project name=TopGui
 main=Tester.dba
 include1=TopGui.dba
 include2=TopGui_Button.dba
+include3=TopGui_Window.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***

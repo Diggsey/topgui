@@ -1,11 +1,18 @@
 
 function guiButton(id as guiId, x, y, w, h, caption$)
-    clicked = guiButtonLogic(id, x, y, w, h)
-    guiButtonDraw(id, x, y, w, h, caption$)
+    guiBeginControl(x, y, w, h, 1)
+    
+    clicked = guiButtonLogic(id, w, h)
+    guiButtonDraw(id, w, h, caption$)
+    
+    guiEndControl()
 endfunction clicked
 
-function guiButtonLogic(id as guiId, x, y, w, h)
+function guiButtonLogic(id as guiId, w, h)
     clicked = 0
+    ` Convert 0, 0 to screen coordinates
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
 
     ` If mouse over, try becoming hot
     if guiInRect(gui.msx, gui.msy, x, y, x+w, y+h)
@@ -42,7 +49,10 @@ function guiButtonLogic(id as guiId, x, y, w, h)
     endif
 endfunction clicked
 
-function guiButtonDraw(id as guiId, x, y, w, h, caption$)
+function guiButtonDraw(id as guiId, w, h, caption$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
     if guiGetHot() = id
         if guiGetActive() = id
             ` Active (pressed)
@@ -55,6 +65,7 @@ function guiButtonDraw(id as guiId, x, y, w, h, caption$)
         ` Normal
         a2FillBox x, y, x+w, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
     endif
-    a2Box x, y, x+w, y+h, 0xFF000000
+    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, 0x80FFFFFF
     a2BoxText gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000
 endfunction
