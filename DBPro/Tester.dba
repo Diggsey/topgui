@@ -1,9 +1,17 @@
-sync on
+sync on : sync rate 60
 set display mode desktop width(), desktop height(), 32
 
-gui.activeId = 23
+guiInit()
 
-print guiGetActive()
-sync : sync
-wait key
+do
+    guiUpdate()
+
+    if guiButton(GEN_ID, 100, 100, 200, 50, "Click me!")
+        `msgbox "Hello!", 0, 0
+    endif
+    
+    sync
+    cls 0
+loop
+
 end

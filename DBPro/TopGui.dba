@@ -1,10 +1,11 @@
-#constant GEN_ID INDEX_ID(0)
 #constant guiId integer
 
+` All global non-array data related to the gui should be stored in here:
 type guiContextType
     hotId as guiId
     activeId as guiId
     nextHotId as guiId
+    stayActive as boolean
     msc as integer  ` Mouse click
     msx as integer  ` Mouse X
     msy as integer  ` Mouse Y
@@ -13,32 +14,66 @@ type guiContextType
     omy as integer  ` Old mouse Y
     msd as integer  ` Mouse down
     msu as integer  ` Mouse up
+    fontId as integer
+    defaultFontId as integer
 endtype
 
 global gui as guiContextType
 
+` Initialize gui
 function guiInit()
     ` Insert ASM code into getReturnAddress:
     `   0x8B 0x45 0x04      mov eax, [ebp+4]
     `   0xC3                ret
+    ` (Bytes reversed to get correct endian-ness:)
     poke dword get ptr to function("getReturnAddress"), 0xC304458B
 
+    gui.defaultFontId = a2CreateFont("Segoe UI", 12, a2Size_Point(), a2Style_Normal())
+    gui.fontId = gui.defaultFontId
 endfunction
 
+` Will be replaced by ASM code at init time
+function getReturnAddress()
+endfunction result
+
+` GEN_ID - Generate a unique but consistent control ID
+` INDEX_ID(x) - Generate a control ID based on an index
+#constant GEN_ID INDEX_ID(0)
 function INDEX_ID(index)
     result = -(getReturnAddress() << 12) + index
 endfunction result
 
-function getReturnAddress()
-endfunction result
-
 function guiUpdate()
-    gui.hotId = gui.nextHotId
+    ` A control must keep itself active to stay active
+    if gui.stayActive = 0
+        gui.activeId = 0
+    else
+        gui.stayActive = 0
+    endif
+    
+    if gui.activeId
+        ` Only active control can become hot
+        if gui.activeId = gui.nextHotId
+            gui.hotId = gui.nextHotId
+        else
+            gui.hotId = 0
+        endif
+    else
+        gui.hotId = gui.nextHotId
+    endif
     gui.nextHotId = 0
     
+    ` Get mouse input
+    gui.omc = gui.msc
+    gui.omx = gui.msx
+    gui.omy = gui.msy
     gui.msc = mouseclick()
     gui.msx = mousex()
     gui.msy = mousey()
+    ` Mouse down = clicked now and not clicked before
+    gui.msd = gui.msc and (not gui.omc)
+    ` Mouse up = clicked before and not clicked now
+    gui.msu = gui.omc and (not gui.msc)
 endfunction
 
 function guiSetHot(id as guiId)
@@ -49,8 +84,49 @@ function guiGetHot()
 endfunction gui.hotId
 
 function guiSetActive(id as guiId)
-    gui.activeId = id
+    if id
+        if gui.activeId = 0
+            gui.activeId = id
+            gui.stayActive = 1
+        endif
+    else
+        gui.activeId = 0
+        gui.stayActive = 0
+    endif
+endfunction
+
+function guiStayActive()
+    gui.stayActive = 1
 endfunction
 
 function guiGetActive()
 endfunction gui.activeId
+
+function guiInRect(x, y, x1, y1, x2, y2)
+    if x >= x1 and x < x2
+        if y >= y1 and y < y2
+            exitfunction 1
+        endif
+    endif
+endfunction 0
+
+function guiInEllipse(x, y, x1, y1, x2, y2)
+    rx = (x2-x1)/2
+    ry = (y2-y1)/2
+    rx2 = rx*rx
+    ry2 = ry*ry
+    
+    dx = x-(x1+x2)/2
+    dy = y-(y1+y2)/2
+    
+    result = (dx*dx)*ry2 + (dy*dy)*rx2 <= rx2*ry2
+endfunction result
+
+function guiSetFont(fontId)
+    if fontId
+        gui.fontId = fontId
+    else
+        gui.fontId = gui.defaultFontId
+    endif
+endfunction
+

@@ -1,0 +1,60 @@
+
+function guiButton(id as guiId, x, y, w, h, caption$)
+    clicked = guiButtonLogic(id, x, y, w, h)
+    guiButtonDraw(id, x, y, w, h, caption$)
+endfunction clicked
+
+function guiButtonLogic(id as guiId, x, y, w, h)
+    clicked = 0
+
+    ` If mouse over, try becoming hot
+    if guiInRect(gui.msx, gui.msy, x, y, x+w, y+h)
+        guiSetHot(id)
+    endif
+    
+    ` If we're the active control
+    if guiGetActive() = id
+        guiStayActive()
+        
+        ` If left button was released
+        if gui.msu = 1
+            ` If we're hot we were clicked
+            if guiGetHot() = id then clicked = 1
+
+            ` No longer active
+            guiSetActive(0)
+        endif
+        
+        ` If other button was pressed
+        if gui.msd
+            ` No longer active
+            guiSetActive(0)
+        endif
+    else
+        ` If we're the hot control
+        if guiGetHot() = id
+            ` If left button was pressed
+            if gui.msd = 1
+                ` Make us active
+                guiSetActive(id)
+            endif
+        endif
+    endif
+endfunction clicked
+
+function guiButtonDraw(id as guiId, x, y, w, h, caption$)
+    if guiGetHot() = id
+        if guiGetActive() = id
+            ` Active (pressed)
+            a2FillBox x, y, x+w, y+h, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80, 0xFFFFFF80
+        else
+            ` Hot
+            a2FillBox x, y, x+w, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        endif
+    else
+        ` Normal
+        a2FillBox x, y, x+w, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+    endif
+    a2Box x, y, x+w, y+h, 0xFF000000
+    a2BoxText gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000
+endfunction
