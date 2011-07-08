@@ -5,7 +5,7 @@ function guiWindowBegin(id as guiId, x, y, w, h, caption$)
     activated = guiWindowLogic(id, w, h)
     guiWindowDraw(id, w, h, caption$)
     
-    guiBeginContainer(id, 3, 20, w-6, h-23)
+    guiBeginContainer(id, 4, 26, w-8, h-29)
 endfunction activated
 
 function guiWindowEnd()
@@ -22,7 +22,7 @@ function guiWindowLogic(id as guiId, w, h)
     y = guiAdjustY(0)
 
     ` If mouse over, try becoming hot
-    if guiInRect(gui.msx, gui.msy, x, y, x+w, y+h)
+    if guiInClip(gui.msx, gui.msy)
         guiSetHot(id)
     endif
     
@@ -35,30 +35,79 @@ function guiWindowLogic(id as guiId, w, h)
     if guiGetHot() = id
         if gui.msd = 1
             ` If in titlebar
-            if guiInRect(gui.msx, gui.msy, x+3, y+3, x+w-3, y+20)
+            if guiInRect(gui.msx, gui.msy, x+4, y+4, x+w-4, y+25)
                 if guiSetActive(id)
                     gui.dragMode = 1
                     gui.dragX = x - gui.msx
                     gui.dragY = y - gui.msy
                 endif
+            else
+                ` Left border
+                lb = guiInRect(gui.msx, gui.msy, x, y, x+4, y+h)
+                ` Top border
+                tb = guiInRect(gui.msx, gui.msy, x, y, x+w, y+4)
+                ` Right border
+                rb = guiInRect(gui.msx, gui.msy, x+w-4, y, x+w, y+h)
+                ` Bottom border
+                bb = guiInRect(gui.msx, gui.msy, x, y+h-4, x+w, y+h)
+                
+                if lb or tb or rb or bb
+                    gui.dragMode = (lb << 1) or (tb << 2) or (rb << 3) or (bb << 4)
+                    if guiSetActive(id)
+                        if lb
+                            gui.dragX = x - gui.msx
+                        else
+                            if rb
+                                gui.dragX = w - gui.msx
+                            endif
+                        endif
+                        
+                        if tb
+                            gui.dragY = y - gui.msy
+                        else
+                            if bb
+                                gui.dragY = h - gui.msy
+                            endif
+                        endif
+                    endif
+                endif
             endif
+            
         endif
     endif
     
     if guiGetActive() = id
         if gui.msc = 1
             guiStayActive()
-            select gui.dragMode
-                case 1
-                    newx = gui.dragX + gui.msx
-                    newy = gui.dragY + gui.msy
-                    
-                    gui.deltaX = newx-x
-                    gui.deltaY = newy-y
-                    gui.deltaW = 0
-                    gui.deltaH = 0
-                endcase
-            endselect
+            if gui.dragMode = 1
+                newx = gui.dragX + gui.msx
+                newy = gui.dragY + gui.msy
+                
+                gui.deltaX = newx-x
+                gui.deltaY = newy-y
+            endif
+            if (gui.dragMode and 2)
+                newx = gui.dragX + gui.msx
+                
+                gui.deltaX = newx-x
+                gui.deltaW = -gui.deltaX
+            endif
+            if (gui.dragMode and 4)
+                newy = gui.dragY + gui.msy
+                
+                gui.deltaY = newy-y
+                gui.deltaH = -gui.deltaY
+            endif
+            if (gui.dragMode and 8)
+                neww = gui.dragX + gui.msx
+                
+                gui.deltaW = neww-w
+            endif
+            if (gui.dragMode and 16)
+                newh = gui.dragY + gui.msy
+                
+                gui.deltaH = newh-h
+            endif
         endif
     endif
 endfunction activated
@@ -68,4 +117,12 @@ function guiWindowDraw(id as guiId, w, h, caption$)
     y = guiAdjustY(0)
     
     a2FillBox x, y, x+w, y+h, 0x80000000
+    a2FillBox x, y, x+w, y+25, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+    
+    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2Box x+1, y+25, x+w-2, y+h-2, 0xFF808080
+    a2Box x+2, y+25, x+w-3, y+h-3, 0xFF808080
+    a2Box x+3, y+25, x+w-4, y+h-4, 0xFF000000
+    a2Text gui.fontId, x+6, y+4, caption$, 0xFF000000
+    
 endfunction

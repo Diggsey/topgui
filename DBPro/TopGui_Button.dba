@@ -15,7 +15,7 @@ function guiButtonLogic(id as guiId, w, h)
     y = guiAdjustY(0)
 
     ` If mouse over, try becoming hot
-    if guiInRect(gui.msx, gui.msy, x, y, x+w, y+h)
+    if guiInClip(gui.msx, gui.msy)
         guiSetHot(id)
     endif
     

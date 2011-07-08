@@ -5,17 +5,22 @@ guiInit()
 
 windowX = 100
 windowY = 100
+windowW = 500
+windowH = 500
 
 do
     guiUpdate()
     
-    guiWindowBegin(GEN_ID, windowX, windowY, 500, 500, "Hello world!")
-        windowX = guiMoveX(windowX)
-        windowY = guiMoveY(windowY)
-    
-        if guiButton(GEN_ID, 100, 100, 200, 50, "Click me!")
+    guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!")
+        
+        if guiButton(GEN_ID, windowW-300, windowH-300, 200, 50, "Click me!")
             `msgbox "Hello!", 0, 0
         endif
+        
+        windowX = guiMoveX(windowX)
+        windowY = guiMoveY(windowY)
+        windowW = guiResizeW(windowW)
+        windowH = guiResizeH(windowH)
         
     guiWindowEnd()
     

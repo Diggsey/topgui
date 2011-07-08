@@ -32,6 +32,8 @@ type guiRectType
     y1 as integer
     x2 as integer
     y2 as integer
+    offsetx as integer
+    offsety as integer
 endtype
 
 global gui as guiContextType
@@ -117,12 +119,19 @@ function guiResizeH(h)
 endfunction h
 
 function guiPushClip(x1, y1, x2, y2, child)
+
     if child and array count(guiClip()) >= 0
+        offsetx = x1 + guiClip().offsetx
+        offsety = y1 + guiClip().offsety
+        
         ` Intersect clip regions
         x1 = max(x1, 0) + guiClip().x1
         y1 = max(y1, 0) + guiClip().y1
         x2 = min(x2, guiClip().x2-guiClip().x1) + guiClip().x1
         y2 = min(y2, guiClip().y2-guiClip().y1) + guiClip().y1
+    else
+        offsetx = x1
+        offsety = y1
     endif
 
     add to stack guiClip()
@@ -130,11 +139,21 @@ function guiPushClip(x1, y1, x2, y2, child)
     guiClip().y1 = y1
     guiClip().x2 = x2
     guiClip().y2 = y2
+    guiClip().offsetx = offsetx
+    guiClip().offsety = offsety
     
-    x1 = max(x1, 0)
-    y1 = max(y1, 0)
-    x2 = min(x2, draw target width())
-    y2 = min(y2, draw target height())
+    x1 = clamp(x1, 0, draw target width())
+    y1 = clamp(y1, 0, draw target height())
+    x2 = clamp(x2, x1, draw target width())
+    y2 = clamp(y2, y1, draw target height())
+    
+    if x1 = x2 or y1 = y2
+        x1 = -1
+        y1 = -1
+        x2 = -1
+        y2 = -1
+    endif
+        
     a2SetClip x1, y1, x2, y2
 endfunction
 
@@ -146,11 +165,18 @@ function guiPopClip()
         y1 = guiClip().y1
         x2 = guiClip().x2
         y2 = guiClip().y2
-    
-        x1 = max(x1, 0)
-        y1 = max(y1, 0)
-        x2 = min(x2, draw target width())
-        y2 = min(y2, draw target height())
+        
+        x1 = clamp(x1, 0, draw target width())
+        y1 = clamp(y1, 0, draw target height())
+        x2 = clamp(x2, x1, draw target width())
+        y2 = clamp(y2, y1, draw target height())
+        
+        if x1 = x2 or y1 = y2
+            x1 = -1
+            y1 = -1
+            x2 = -1
+            y2 = -1
+        endif
         
         a2SetClip x1, y1, x2, y2
     else
@@ -160,13 +186,13 @@ endfunction
 
 function guiAdjustX(x)
     if array count(guiClip()) >= 0
-        inc x, guiClip().x1
+        inc x, guiClip().offsetx
     endif
 endfunction x
 
 function guiAdjustY(y)
     if array count(guiClip()) >= 0
-        inc y, guiClip().y1
+        inc y, guiClip().offsety
     endif
 endfunction y
 
