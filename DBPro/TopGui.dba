@@ -98,13 +98,39 @@ function guiUpdate()
     gui.msu = gui.omc and (not gui.msc)
 endfunction
 
-function guiMoveX(x)
-    inc x, gui.deltaX
+function guiMoveX(x, minX, maxX, w, minW, maxW)
+    oldx = x
+    oldw = w
+    x = clamp(x + gui.deltaX, minX, maxX)
+    w = clamp(w + gui.deltaW, minW, maxW)
+    
+    if gui.deltaW <> 0 and gui.deltaX <> 0
+        x = oldx+oldw-w
+        if x < minX
+            x = minX
+            w = oldx+oldw-x
+        endif
+    endif
+    
+    gui.deltaW = w-oldw
     gui.deltaX = 0
 endfunction x
 
-function guiMoveY(y)
-    inc y, gui.deltaY
+function guiMoveY(y, minY, maxY, h, minH, maxH)
+    oldy = y
+    oldh = h
+    y = clamp(y + gui.deltaY, minY, maxY)
+    h = clamp(h + gui.deltaH, minH, maxH)
+    
+    if gui.deltaH <> 0 and gui.deltaY <> 0
+        y = oldy+oldh-h
+        if y < minY
+            y = minY
+            h = oldy+oldh-y
+        endif
+    endif
+    
+    gui.deltaH = h-oldh
     gui.deltaY = 0
 endfunction y
 
@@ -118,20 +144,22 @@ function guiResizeH(h)
     gui.deltaH = 0
 endfunction h
 
-function guiPushClip(x1, y1, x2, y2, child)
+function guiPushClip(x1, y1, x2, y2, scrollx, scrolly, child)
 
     if child and array count(guiClip()) >= 0
-        offsetx = x1 + guiClip().offsetx
-        offsety = y1 + guiClip().offsety
+        ox = guiClip().offsetx
+        oy = guiClip().offsety
+        offsetx = x1 + ox - scrollx
+        offsety = y1 + oy - scrolly
         
         ` Intersect clip regions
-        x1 = max(x1, 0) + guiClip().x1
-        y1 = max(y1, 0) + guiClip().y1
+        x1 = max(x1 + ox, guiClip().x1)
+        y1 = max(y1 + oy, guiClip().y1)
         x2 = min(x2, guiClip().x2-guiClip().x1) + guiClip().x1
         y2 = min(y2, guiClip().y2-guiClip().y1) + guiClip().y1
     else
-        offsetx = x1
-        offsety = y1
+        offsetx = x1 - scrollx
+        offsety = y1 - scrolly
     endif
 
     add to stack guiClip()
@@ -197,7 +225,7 @@ function guiAdjustY(y)
 endfunction y
 
 function guiBeginControl(x, y, w, h, child)
-    guiPushClip(x, y, x+w, y+h, child)
+    guiPushClip(x, y, x+w, y+h, 0, 0, child)
 endfunction
 
 function guiEndControl()
@@ -286,8 +314,8 @@ function guiSetFont(fontId)
     endif
 endfunction
 
-function guiBeginContainer(id as guiId, x, y, w, h)
-    guiPushClip(x, y, x+w, y+h, 1)
+function guiBeginContainer(id as guiId, x, y, w, h, scrollx, scrolly)
+    guiPushClip(x, y, x+w, y+h, scrollx, scrolly, 1)
     
     add to stack guiIdStack()
     guiIdStack() = id

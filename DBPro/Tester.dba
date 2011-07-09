@@ -13,6 +13,11 @@ global windowY2 = 300
 global windowW2 = 500
 global windowH2 = 500
 
+global windowX3 = 200
+global windowY3 = 200
+global windowW3 = 200
+global windowH3 = 200
+
 global windowChecked1 = 0
 global windowChecked2 as guiId
 
@@ -23,19 +28,7 @@ windowFuncPtrs(1) = get ptr to function("window2")
 do
     guiUpdate()
     
-    activateIndex = -1
-    for i = 0 to 1
-        if call function ptr(windowFuncPtrs(i), i = 1)
-            activateIndex = i
-        endif
-    next i
-    
-    if activateIndex <> -1
-        ptr = windowFuncPtrs(activateIndex)
-        array delete element windowFuncPtrs(), activateIndex
-        array insert at bottom windowFuncPtrs()
-        windowFuncPtrs(1) = ptr
-    endif
+    guiWindowListPtrs(get arrayptr(windowFuncPtrs()), 1)
     
     sync
     cls 0xFFC0D0FF
@@ -43,25 +36,25 @@ loop
 
 function window1(focused)
 
-    activated = guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!", focused)
+    clicked = guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!", 0, focused)
         
         if guiButton(GEN_ID, windowW-300, windowH-300, 200, 50, "Click me!")
         endif
         
         windowChecked1 = guiCheckbox(GEN_ID, 100, 100, 120, 30, "Check me", windowChecked1)
         
-        windowX = guiMoveX(windowX)
-        windowY = guiMoveY(windowY)
+        windowX = guiMoveX(windowX, 0, 1000000, windowW, 50, 1000000)
+        windowY = guiMoveY(windowY, 0, 1000000, windowH, 50, 1000000)
         windowW = guiResizeW(windowW)
         windowH = guiResizeH(windowH)
         
     guiWindowEnd()
     
-endfunction activated
+endfunction clicked
 
 function window2(focused)
 
-    activated = guiWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", focused)
+    clicked = guiWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", 0, focused)
         
         if guiButton(GEN_ID, windowW2-300, windowH2-300, 200, 50, "Click me!")
             `msgbox "Hello!", 0, 0
@@ -72,13 +65,28 @@ function window2(focused)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", windowChecked2)
         
-        windowX2 = guiMoveX(windowX2)
-        windowY2 = guiMoveY(windowY2)
+        windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)
+        windowY2 = guiMoveY(windowY2, 0, 1000000, windowH2, 50, 1000000)
         windowW2 = guiResizeW(windowW2)
         windowH2 = guiResizeH(windowH2)
         
+        window3(focused)
+        
     guiWindowEnd()
     
-endfunction activated
+endfunction clicked
+
+function window3(focused)
+
+    clicked = guiWindowBegin(GEN_ID, windowX3, windowY3, windowW3, windowH3, "Hello world!", 0, focused)
+        
+        windowX3 = guiMoveX(windowX3, 0, 1000000, windowW3, 50, 1000000)
+        windowY3 = guiMoveY(windowY3, 0, 1000000, windowH3, 50, 1000000)
+        windowW3 = guiResizeW(windowW3)
+        windowH3 = guiResizeH(windowH3)
+        
+    guiWindowEnd()
+    
+endfunction clicked
 
 end

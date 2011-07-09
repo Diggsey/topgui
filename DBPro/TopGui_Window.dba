@@ -1,11 +1,11 @@
 
-function guiWindowBegin(id as guiId, x, y, w, h, caption$, focused)
-    guiBeginControl(x, y, w, h, 1)
+function guiWindowBegin(id as guiId, x, y, w, h, caption$, child, focused)
+    guiBeginControl(x, y, w, h, child)
     
     activated = guiWindowLogic(id, w, h)
     guiWindowDraw(id, w, h, caption$, focused)
     
-    guiBeginContainer(id, 4, 26, w-8, h-29)
+    guiBeginContainer(id, 4, 26, w-8, h-30, 0, 0)
 endfunction activated
 
 function guiWindowEnd()
@@ -111,6 +111,38 @@ function guiWindowLogic(id as guiId, w, h)
         endif
     endif
 endfunction activated
+
+function guiWindowListPtrs(arrayptr as integer, focused)
+    windowCount = get arrayptr count(arrayptr)
+    windowFocus = -1
+    
+    for i = 0 to windowCount
+        ptr = peek integer(get arrayptr item ptr(arrayptr, i))
+        if call function ptr(ptr, (i = windowCount) and focused)
+            windowFocus = i
+        endif
+    next i
+
+    if windowFocus <> -1
+        rotate arrayptr arrayptr, windowFocus, windowCount
+    endif
+endfunction
+
+function guiWindowListNames(arrayptr as integer, focused)
+    windowCount = get arrayptr count(arrayptr)
+    windowFocus = -1
+    
+    for i = 0 to windowCount
+        name$ = peek string(get arrayptr item ptr(arrayptr, i))
+        if call function name(name$, (i = windowCount) and focused)
+            windowFocus = i
+        endif
+    next i
+
+    if windowFocus <> -1
+        rotate arrayptr arrayptr, windowFocus, windowCount
+    endif
+endfunction
 
 function guiWindowDraw(id as guiId, w, h, caption$, focused)
     x = guiAdjustX(0)
