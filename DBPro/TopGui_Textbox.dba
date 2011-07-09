@@ -1,0 +1,33 @@
+
+function guiTextbox(id as guiId, x, y, w, h, text$)
+    guiBeginControl(x, y, w, h, 1)
+    
+    text$ = guiTextboxLogic(id, w, h, text$)
+    guiTextboxDraw(id, w, h, text$)
+    
+    guiEndControl()
+endfunction clicked
+
+function guiTextboxLogic(id as guiId, w, h, text$)
+
+    focused = guiFocus(id, 1)
+    
+    ` Convert 0, 0 to screen coordinates
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    ` If mouse over, try becoming hot
+    if guiInClip(gui.msx, gui.msy)
+        guiSetHot(id)
+    endif
+    
+endfunction text$
+
+function guiTextboxDraw(id as guiId, w, h, text$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    a2FillBox x, y, x+w-1, y+h-1, 0xC0FFFFFF
+    a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, text$, 0, 1, 0, 0xFF000000
+    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+endfunction

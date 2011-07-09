@@ -16,7 +16,7 @@ global windowH2 = 500
 global windowX3 = 200
 global windowY3 = 200
 global windowW3 = 350
-global windowH3 = 200
+global windowH3 = 400
 
 global windowChecked1 = 0
 global windowChecked2 as guiId
@@ -27,10 +27,10 @@ windowFuncPtrs(0) = get ptr to function("window1")
 windowFuncPtrs(1) = get ptr to function("window2")
 
 do
-    guiUpdate()
     
     guiWindowListPtrs(get arrayptr(windowFuncPtrs()), 1)
     
+    guiUpdate()
     sync
     cls 0xFFC0D0FF
 loop
@@ -83,6 +83,7 @@ function window3(focused)
         
         windowValue3 = guiHScrollbar(GEN_ID, 30, 30, 250, 21, windowValue3, 100, 20)
         windowValue3 = guiVScrollbar(GEN_ID, 30, 60, 21, 250, windowValue3, 100, 20)
+        guiTextbox(GEN_ID, 60, 60, 150, 25, "Edit me!")
         
         windowX3 = guiMoveX(windowX3, 0, 1000000, windowW3, 50, 1000000)
         windowY3 = guiMoveY(windowY3, 0, 1000000, windowH3, 50, 1000000)

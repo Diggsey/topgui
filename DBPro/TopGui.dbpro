@@ -11,6 +11,8 @@ include3=TopGui_Window.dba
 include4=TopGui_Checkbox.dba
 include5=TopGui_Radiobutton.dba
 include6=TopGui_Scrollbar.dba
+include7=TopGui_Textbox.dba
+include8=TopGui_Keys.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***

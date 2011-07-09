@@ -9,6 +9,8 @@ function guiButton(id as guiId, x, y, w, h, caption$)
 endfunction clicked
 
 function guiButtonLogic(id as guiId, w, h)
+    focused = guiFocus(id, 1)
+    
     clicked = 0
     ` Convert 0, 0 to screen coordinates
     x = guiAdjustX(0)
@@ -47,14 +49,21 @@ function guiButtonLogic(id as guiId, w, h)
             endif
         endif
     endif
+    
+    if focused
+        if guiProcessKeyUp(id, VK_SPACE) then clicked = 1
+    endif
 endfunction clicked
 
 function guiButtonDraw(id as guiId, w, h, caption$)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    if guiGetHot() = id
-        if guiGetActive() = id
+    focused = guiGetFocus() = id
+    pressed = focused and spacekey()
+    
+    if guiGetHot() = id or pressed
+        if guiGetActive() = id or pressed
             ` Active (pressed)
             a2FillBox x, y, x+w, y+h, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80, 0xFFFFFF80
         else
@@ -68,4 +77,9 @@ function guiButtonDraw(id as guiId, w, h, caption$)
     a2Box x, y, x+w-1, y+h-1, 0xFF000000
     a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, 0x80FFFFFF
     a2BoxText gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000
+    
+    if focused
+        guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, 0xFF000000)
+    endif
+    
 endfunction
