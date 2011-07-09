@@ -19,6 +19,7 @@ type guiContextType
     dragMode as integer
     dragX as integer
     dragY as integer
+    delayTime as integer
     
     ` Moving/resizing
     deltaX as integer
@@ -69,6 +70,7 @@ function guiUpdate()
     ` A control must keep itself active to stay active
     if gui.stayActive = 0
         gui.activeId = 0
+        gui.delayTime = 0
     else
         gui.stayActive = 0
     endif
@@ -326,4 +328,22 @@ function guiEndContainer()
 
     guiPopClip()
 endfunction
+
+function guiSetDelay(id as guiId, delay as integer)
+    if gui.activeId = id
+        gui.delayTime = timer() + delay
+    endif
+endfunction
+
+function guiClearDelay(id as guiId)
+    if gui.activeId = id
+        gui.delayTime = 0
+    endif
+endfunction
+
+function guiHasDelayed()
+    if gui.delayTime <> 0 and timer() >= gui.delayTime
+        exitfunction 1
+    endif
+endfunction 0
 

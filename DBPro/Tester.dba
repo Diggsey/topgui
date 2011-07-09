@@ -15,11 +15,12 @@ global windowH2 = 500
 
 global windowX3 = 200
 global windowY3 = 200
-global windowW3 = 200
+global windowW3 = 350
 global windowH3 = 200
 
 global windowChecked1 = 0
 global windowChecked2 as guiId
+global windowValue3 = 0
 
 dim windowFuncPtrs(1) as integer
 windowFuncPtrs(0) = get ptr to function("window1")
@@ -79,6 +80,9 @@ endfunction clicked
 function window3(focused)
 
     clicked = guiWindowBegin(GEN_ID, windowX3, windowY3, windowW3, windowH3, "Hello world!", 0, focused)
+        
+        windowValue3 = guiHScrollbar(GEN_ID, 30, 30, 250, 21, windowValue3, 100, 20)
+        windowValue3 = guiVScrollbar(GEN_ID, 30, 60, 21, 250, windowValue3, 100, 20)
         
         windowX3 = guiMoveX(windowX3, 0, 1000000, windowW3, 50, 1000000)
         windowY3 = guiMoveY(windowY3, 0, 1000000, windowH3, 50, 1000000)
