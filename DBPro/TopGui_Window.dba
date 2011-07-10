@@ -1,6 +1,7 @@
 
 function guiWindowBegin(id as guiId, x, y, w, h, caption$, child, focused)
     guiBeginControl(x, y, w, h, child)
+    guiGetScroll(id, id)
     
     activated = guiWindowLogic(id, w, h)
     guiWindowDrawBackground(id, w, h)
@@ -58,8 +59,13 @@ function guiScrollWindowDraw(id, w, h, caption$, scrollx, scrolly, scrollw, scro
     
     pageSizeH = w-29
     pageSizeV = h-51
-    gui.interaction.scrollX = guiHScrollbar(CHILD_ID(id), 3, h-24, w-26, 21, scrollx, scrollw-pageSizeH, pageSizeH)
-    gui.interaction.scrollY = guiVScrollbar(CHILD_ID(id), w-24, 25, 21, h-48, scrolly, scrollh-pageSizeV, pageSizeV)
+    
+    horzId = CHILD_ID(id)
+    vertId = CHILD_ID(id)
+    
+    guiGetScroll(id, vertId)
+    gui.interaction.scrollX = guiHScrollbar(horzId, 3, h-24, w-26, 21, scrollx, scrollw-pageSizeH, pageSizeH, 25)
+    gui.interaction.scrollY = guiVScrollbar(vertId, w-24, 25, 21, h-48, scrolly, scrollh-pageSizeV, pageSizeV, 25)
     
     guiWindowDraw(id, w, h, caption$, focused)
     

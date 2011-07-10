@@ -14,6 +14,7 @@ type guiContextType
     hotId as guiId
     activeId as guiId
     nextHotId as guiId
+    scrollId as guiId
     stayActive as boolean
     msc as integer  ` Mouse click
     msx as integer  ` Mouse X
@@ -21,6 +22,7 @@ type guiContextType
     omc as integer  ` Old mouse click
     omx as integer  ` Old mouse X
     omy as integer  ` Old mouse Y
+    mmz as integer  ` Mouse wheel
     msd as integer  ` Mouse down
     msu as integer  ` Mouse up
     fontId as integer
@@ -213,6 +215,7 @@ function guiUpdate()
     gui.msc = mouseclick()
     gui.msx = mousex()
     gui.msy = mousey()
+    gui.mmz = mousemovez()/-120
     ` Mouse down = clicked now and not clicked before
     gui.msd = gui.msc and (not gui.omc)
     ` Mouse up = clicked before and not clicked now
@@ -285,8 +288,8 @@ function guiPushClip(x1, y1, x2, y2, scrollx, scrolly, child)
         ` Intersect clip regions
         x1 = max(x1 + ox, guiClip().x1)
         y1 = max(y1 + oy, guiClip().y1)
-        x2 = min(x2, guiClip().x2-guiClip().x1) + guiClip().x1
-        y2 = min(y2, guiClip().y2-guiClip().y1) + guiClip().y1
+        x2 = min(x2 + ox, guiClip().x2)
+        y2 = min(y2 + oy, guiClip().y2)
     else
         offsetx = x1 - scrollx
         offsety = y1 - scrolly
@@ -594,4 +597,17 @@ endfunction
 function guiFocusChanged()
     result = gui.veryOldFocusId <> gui.oldFocusId
 endfunction result
+
+function guiGetScroll(id as guiId, redirectId as guiId)
+    if gui.msd = 1
+        if guiGetHot() = id or guiIsChildHot(id)
+            gui.scrollId = redirectId
+        endif
+    endif
+    if gui.scrollId = id
+        scroll = gui.mmz
+    else
+        scroll = 0
+    endif
+endfunction scroll
 

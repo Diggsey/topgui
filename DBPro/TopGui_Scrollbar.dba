@@ -1,23 +1,23 @@
 
-function guiHScrollbar(id as guiId, x, y, w, h, value, maxValue, pageSize)
+function guiHScrollbar(id as guiId, x, y, w, h, value, maxValue, pageSize, smallStep)
     guiBeginControl(x, y, w, h, 1)
     
-    value = guiHScrollbarLogic(id, w, h, value, maxValue, pageSize)
+    value = guiHScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
     guiHScrollbarDraw(id, w, h, value, maxValue, pageSize)
     
     guiEndControl()
 endfunction value
 
-function guiVScrollbar(id as guiId, x, y, w, h, value, maxValue, pageSize)
+function guiVScrollbar(id as guiId, x, y, w, h, value, maxValue, pageSize, smallStep)
     guiBeginControl(x, y, w, h, 1)
     
-    value = guiVScrollbarLogic(id, w, h, value, maxValue, pageSize)
+    value = guiVScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
     guiVScrollbarDraw(id, w, h, value, maxValue, pageSize)
     
     guiEndControl()
 endfunction value
 
-function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize)
+function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
@@ -30,7 +30,9 @@ function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize)
     if maxValue <= 0
         exitfunction 0
     endif
-
+    
+    inc value, guiGetScroll(id, id)*smallStep
+    
     slideSize = (w-h*2)
     barSize = (pageSize*slideSize)/(maxValue+pageSize)
     barPos = ((slideSize-barSize)*value)/maxValue
@@ -53,8 +55,8 @@ function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize)
                     guiSetDelay(id, 500)
                     
                     gui.dragMode = 0
-                    if inButton1 then gui.dragMode = 2 : dec value
-                    if inButton2 then gui.dragMode = 3 : inc value
+                    if inButton1 then gui.dragMode = 2 : dec value, smallStep
+                    if inButton2 then gui.dragMode = 3 : inc value, smallStep
                     if inSlider1 then gui.dragMode = 4 : dec value, pageSize
                     if inSlider2 then gui.dragMode = 5 : inc value, pageSize
                 endif
@@ -73,12 +75,12 @@ function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize)
                 endcase
                 case 2
                     if inButton1
-                        if guiHasDelayed() then guiSetDelay(id, 50) : dec value
+                        if guiHasDelayed() then guiSetDelay(id, 50) : dec value, smallStep
                     endif
                 endcase
                 case 3
                     if inButton2
-                        if guiHasDelayed() then guiSetDelay(id, 50) : inc value
+                        if guiHasDelayed() then guiSetDelay(id, 50) : inc value, smallStep
                     endif
                 endcase
                 case 4
@@ -99,7 +101,7 @@ function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize)
     
 endfunction value
 
-function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize)
+function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
 
@@ -113,6 +115,8 @@ function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize)
         exitfunction 0
     endif
 
+    inc value, guiGetScroll(id, id)*smallStep
+    
     slideSize = (h-w*2)
     barSize = (pageSize*slideSize)/(maxValue+pageSize)
     barPos = ((slideSize-barSize)*value)/maxValue
@@ -135,8 +139,8 @@ function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize)
                     guiSetDelay(id, 500)
                     
                     gui.dragMode = 0
-                    if inButton1 then gui.dragMode = 2 : dec value
-                    if inButton2 then gui.dragMode = 3 : inc value
+                    if inButton1 then gui.dragMode = 2 : dec value, smallStep
+                    if inButton2 then gui.dragMode = 3 : inc value, smallStep
                     if inSlider1 then gui.dragMode = 4 : dec value, pageSize
                     if inSlider2 then gui.dragMode = 5 : inc value, pageSize
                 endif
@@ -155,12 +159,12 @@ function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize)
                 endcase
                 case 2
                     if inButton1
-                        if guiHasDelayed() then guiSetDelay(id, 50) : dec value
+                        if guiHasDelayed() then guiSetDelay(id, 50) : dec value, smallStep
                     endif
                 endcase
                 case 3
                     if inButton2
-                        if guiHasDelayed() then guiSetDelay(id, 50) : inc value
+                        if guiHasDelayed() then guiSetDelay(id, 50) : inc value, smallStep
                     endif
                 endcase
                 case 4

@@ -25,9 +25,10 @@ global windowText$ = "Edit me!"
 global windowScrollX2
 global windowScrollY2
 
-dim windowFuncPtrs(1) as integer
+dim windowFuncPtrs(2) as integer
 windowFuncPtrs(0) = get ptr to function("window1")
 windowFuncPtrs(1) = get ptr to function("window2")
+windowFuncPtrs(2) = get ptr to function("window3")
 
 do
     
@@ -69,8 +70,6 @@ function window2(focused)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", windowChecked2)
         
-        window3(focused)
-        
     guiScrollWindowEnd()
     windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)
     windowY2 = guiMoveY(windowY2, 0, 1000000, windowH2, 50, 1000000)
@@ -85,8 +84,8 @@ function window3(focused)
 
     clicked = guiWindowBegin(GEN_ID, windowX3, windowY3, windowW3, windowH3, "Hello world!", 0, focused)
         
-        windowValue3 = guiHScrollbar(GEN_ID, 30, 30, 250, 21, windowValue3, 100, 20)
-        windowValue3 = guiVScrollbar(GEN_ID, 30, 60, 21, 250, windowValue3, 100, 20)
+        windowValue3 = guiHScrollbar(GEN_ID, 30, 30, 250, 21, windowValue3, 100, 20, 5)
+        windowValue3 = guiVScrollbar(GEN_ID, 30, 60, 21, 250, windowValue3, 100, 20, 5)
         windowText$ = guiTextbox(GEN_ID, 60, 60, 150, 25, windowText$, 0)
         
     guiWindowEnd()
