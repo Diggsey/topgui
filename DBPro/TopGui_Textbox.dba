@@ -1,14 +1,28 @@
 
-function guiTextbox(id as guiId, x, y, w, h, text$)
+function guiTextbox(id as guiId, x, y, w, h, text$, callbackPtr)
     guiBeginControl(x, y, w, h, 1)
     
-    text$ = guiTextboxLogic(id, w, h, text$)
+    text$ = guiTextboxLogic(id, w, h, text$, callbackPtr)
     guiTextboxDraw(id, w, h, text$)
     
     guiEndControl()
-endfunction clicked
+endfunction text$
 
-function guiTextboxLogic(id as guiId, w, h, text$)
+function guiTextboxValidate(text$, newtext$, newSelStart, newSelEnd, callbackPtr)
+    if callbackPtr
+        valid = call function ptr(callbackPtr, newtext$)
+    else
+        valid = 1
+    endif
+    
+    if valid
+        gui.selStart = newSelStart
+        gui.selEnd = newSelEnd
+        text$ = newtext$
+    endif
+endfunction text$
+
+function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
 
     focused = guiFocus(id, 1)
     
@@ -21,13 +35,108 @@ function guiTextboxLogic(id as guiId, w, h, text$)
         guiSetHot(id)
     endif
     
+    if guiGetHot() = id
+        if gui.msd = 1
+            if guiSetActive(id)
+                guiSetFocus(id)
+                
+                gui.selStart = guiGetCursorPos(text$, gui.msx-x-4)
+                gui.selEnd = gui.selStart
+            endif
+        endif
+    endif
+    
+    if guiGetActive() = id
+        if gui.msc = 1
+            guiStayActive()
+            
+            gui.selEnd = guiGetCursorPos(text$, gui.msx-x-4)
+            guiSetCursorVisible(1)
+        endif
+    endif
+    
+    if focused
+        l = fast len(gui.entryBuffer)
+        while l
+            mode = mid ascii(gui.entryBuffer, 1)
+            keyCode = mid ascii(gui.entryBuffer, 2)
+            char$ = chr$(keyCode)
+            minSel = min(gui.selStart, gui.selEnd)
+            maxSel = max(gui.selStart, gui.selEnd)
+            
+            select mode
+                case 1
+                    if keyCode = 8
+                        if minSel <> maxSel
+                            newtext$ = replace$(text$, minSel+1, maxSel-minSel, "")
+                            text$ = guiTextboxValidate(text$, newtext$, minSel, minSel, callbackPtr)
+                        else
+                            if minSel > 0
+                                newtext$ = replace$(text$, minSel, 1, "")
+                                text$ = guiTextboxValidate(text$, newtext$, minSel-1, minSel-1, callbackPtr)
+                            endif
+                        endif
+                    else
+                        if keyCode <> 9
+                            newtext$ = replace$(text$, minSel+1, maxSel-minSel, char$)
+                            text$ = guiTextboxValidate(text$, newtext$, minSel+1, minSel+1, callbackPtr)
+                        endif
+                    endif
+                endcase
+            endselect
+            
+            gui.entryBuffer = remove$(gui.entryBuffer, 1, 2)
+            dec l, 2
+        endwhile
+        
+        gui.selStart = clamp(gui.selStart, 0, fast len(text$))
+        gui.selEnd = clamp(gui.selEnd, 0, fast len(text$))
+    endif
+    
 endfunction text$
+
+function guiGetTextWidth(text$)
+    if text$ = ""
+        result = 0
+    else
+        result = a2GetTextWidth(gui.fontId, text$)
+    endif
+endfunction result
 
 function guiTextboxDraw(id as guiId, w, h, text$)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
+    focused = guiGetFocus() = id
+    
     a2FillBox x, y, x+w-1, y+h-1, 0xC0FFFFFF
+    
+    if focused
+        selStartX = guiGetTextWidth(fast left$(text$, gui.selStart))+x+4
+        selEndX = guiGetTextWidth(fast left$(text$, gui.selEnd))+x+4
+        a2FillBox min(selStartX, selEndX), y+2, max(selStartX, selEndX), y+h-2, 0xFFFFC040
+        if guiGetCursorVisible() then a2Line selEndX, y+2, selEndX, y+h-3, 0xFF000000
+    endif
+    
     a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, text$, 0, 1, 0, 0xFF000000
     a2Box x, y, x+w-1, y+h-1, 0xFF000000
 endfunction
+
+function guiGetCursorPos(text$, pos)
+    minChar = 1
+    maxChar = fast len(text$)
+    
+    while maxChar > minChar
+        midChar = (minChar+maxChar)/2
+        width = guiGetTextWidth(fast left$(text$, midChar))
+        if width <= pos
+            minChar = midChar+1
+        else
+            maxChar = midChar
+        endif
+    endwhile
+    width = guiGetTextWidth(fast left$(text$, minChar-1)) + guiGetTextWidth(mid$(text$, minChar))/2
+    if width > pos
+        dec minChar
+    endif
+endfunction minChar
