@@ -40,7 +40,7 @@ function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
             if guiSetActive(id)
                 guiSetFocus(id)
                 
-                gui.selStart = guiGetCursorPos(text$, gui.msx-x-4)
+                gui.selStart = guiGetCursorPos(text$, gui.msx+gui.tempScroll-x-4)
                 gui.selEnd = gui.selStart
             endif
         endif
@@ -50,7 +50,7 @@ function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
         if gui.msc = 1
             guiStayActive()
             
-            gui.selEnd = guiGetCursorPos(text$, gui.msx-x-4)
+            gui.selEnd = guiGetCursorPos(text$, gui.msx+gui.tempScroll-x-4)
             guiSetCursorVisible(1)
         endif
     endif
@@ -64,33 +64,65 @@ function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
             minSel = min(gui.selStart, gui.selEnd)
             maxSel = max(gui.selStart, gui.selEnd)
             
-            select mode
-                case 1
-                    if keyCode = 8
+            if mode = 1
+                if keyCode = 8
+                    if minSel <> maxSel
+                        newtext$ = replace$(text$, minSel+1, maxSel-minSel, "")
+                        text$ = guiTextboxValidate(text$, newtext$, minSel, minSel, callbackPtr)
+                    else
+                        if minSel > 0
+                            newtext$ = replace$(text$, minSel, 1, "")
+                            text$ = guiTextboxValidate(text$, newtext$, minSel-1, minSel-1, callbackPtr)
+                        endif
+                    endif
+                else
+                    if keyCode <> 9 and keyCode <> 10 and keyCode <> 13
+                        newtext$ = replace$(text$, minSel+1, maxSel-minSel, char$)
+                        text$ = guiTextboxValidate(text$, newtext$, minSel+1, minSel+1, callbackPtr)
+                    endif
+                endif
+            else
+                if mode = 2 or mode = 3
+                    if keyCode = VK_LEFT
+                        dec gui.selEnd
+                        if shiftkey() = 0 then gui.selStart = gui.selEnd
+                    endif
+                    if keyCode = VK_RIGHT
+                        inc gui.selEnd
+                        if shiftkey() = 0 then gui.selStart = gui.selEnd
+                    endif
+                    if keyCode = VK_DELETE
                         if minSel <> maxSel
                             newtext$ = replace$(text$, minSel+1, maxSel-minSel, "")
                             text$ = guiTextboxValidate(text$, newtext$, minSel, minSel, callbackPtr)
                         else
-                            if minSel > 0
-                                newtext$ = replace$(text$, minSel, 1, "")
-                                text$ = guiTextboxValidate(text$, newtext$, minSel-1, minSel-1, callbackPtr)
-                            endif
-                        endif
-                    else
-                        if keyCode <> 9
-                            newtext$ = replace$(text$, minSel+1, maxSel-minSel, char$)
-                            text$ = guiTextboxValidate(text$, newtext$, minSel+1, minSel+1, callbackPtr)
+                            newtext$ = replace$(text$, minSel+1, 1, "")
+                            text$ = guiTextboxValidate(text$, newtext$, minSel, minSel, callbackPtr)
                         endif
                     endif
-                endcase
-            endselect
+                endif
+            endif
+            
+            gui.selStart = clamp(gui.selStart, 0, fast len(text$))
+            gui.selEnd = clamp(gui.selEnd, 0, fast len(text$))
             
             gui.entryBuffer = remove$(gui.entryBuffer, 1, 2)
             dec l, 2
+            
+            guiSetCursorVisible(1)
         endwhile
         
         gui.selStart = clamp(gui.selStart, 0, fast len(text$))
         gui.selEnd = clamp(gui.selEnd, 0, fast len(text$))
+        
+        selEndX = guiGetTextWidth(fast left$(text$, gui.selEnd))+4-gui.tempScroll
+        if selEndX < 4
+            dec gui.tempScroll, 10
+        endif
+        if selEndX > w-4
+            inc gui.tempScroll, 10
+        endif
+        if gui.tempScroll < 0 then gui.tempScroll = 0
     endif
     
 endfunction text$
@@ -108,17 +140,22 @@ function guiTextboxDraw(id as guiId, w, h, text$)
     y = guiAdjustY(0)
     
     focused = guiGetFocus() = id
+    if focused
+        scroll = gui.tempScroll
+    else
+        scroll = 0
+    endif
     
     a2FillBox x, y, x+w-1, y+h-1, 0xC0FFFFFF
     
     if focused
-        selStartX = guiGetTextWidth(fast left$(text$, gui.selStart))+x+4
-        selEndX = guiGetTextWidth(fast left$(text$, gui.selEnd))+x+4
+        selStartX = guiGetTextWidth(fast left$(text$, gui.selStart))+x+4-scroll
+        selEndX = guiGetTextWidth(fast left$(text$, gui.selEnd))+x+4-scroll
         a2FillBox min(selStartX, selEndX), y+2, max(selStartX, selEndX), y+h-2, 0xFFFFC040
         if guiGetCursorVisible() then a2Line selEndX, y+2, selEndX, y+h-3, 0xFF000000
     endif
     
-    a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, text$, 0, 1, 0, 0xFF000000
+    a2BoxText gui.fontId, x+4-scroll, y+4, x+w-2, y+h-2, text$, 0, 1, 0, 0xFF000000
     a2Box x, y, x+w-1, y+h-1, 0xFF000000
 endfunction
 

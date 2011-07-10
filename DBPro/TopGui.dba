@@ -35,6 +35,7 @@ type guiContextType
     selEnd as integer
     entryBuffer as string
     cursorTimer as integer
+    tempScroll as integer
 endtype
 
 type guiRectType
@@ -452,6 +453,9 @@ function guiFocus(id as guiId, tabFocus)
                 gui.tempFocusId = 0
             else
                 if guiProcessKeyDown(id, VK_TAB, 0) and tabFocus
+                    gui.tempScroll = 0
+                    gui.selStart = 0
+                    gui.selEnd = 2147483647
                     if shiftkey()
                         gui.tempFocusId = id
                     else

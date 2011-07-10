@@ -12,7 +12,9 @@ function guiCheckboxLogic(id as guiId, w, h, checked)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    boxx = x
+    focused = guiFocus(id, 1)
+    
+    boxx = x+5
     boxy = y+h/2-10
     
     ` If mouse over, try becoming hot
@@ -20,7 +22,7 @@ function guiCheckboxLogic(id as guiId, w, h, checked)
         if guiInRect(gui.msx, gui.msy, boxx, boxy, boxx+20, boxy+20)
             guiSetHot(id)
         else
-            if guiInRect(gui.msx, gui.msy, x+20, y, x+w, y+h)
+            if guiInRect(gui.msx, gui.msy, x+25, y, x+w, y+h)
                 guiSetHot(id)
             endif
         endif
@@ -29,7 +31,12 @@ function guiCheckboxLogic(id as guiId, w, h, checked)
     if gui.msd = 1
         if guiGetHot() = id
             checked = 1-checked
+            guiSetFocus(id)
         endif
+    endif
+    
+    if focused
+        if guiProcessKeyUp(id, VK_SPACE) then checked = 1-checked
     endif
     
 endfunction checked
@@ -38,10 +45,12 @@ function guiCheckboxDraw(id as guiId, w, h, caption$, checked)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    boxx = x
+    focused = guiGetFocus() = id
+    
+    boxx = x+5
     boxy = y+h/2-10
     
-    if guiGetHot() = id
+    if (guiGetHot() = id) or (focused and spacekey())
         a2FillBox boxx, boxy, boxx+20, boxy+20, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80, 0xFFFFFF80
     else
         a2FillBox boxx, boxy, boxx+20, boxy+20, 0xFF808080, 0xFF808080, 0xFFC0C0C0, 0xFFC0C0C0
@@ -56,5 +65,9 @@ function guiCheckboxDraw(id as guiId, w, h, caption$, checked)
     
     a2Box boxx, boxy, boxx+19, boxy+19, 0xFF000000
     
-    a2BoxText gui.fontId, x+25, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
+    a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
+    
+    if focused
+        guiDrawFocusRect(x, y, x+w-1, y+h-1, 0x80FFFFFF)
+    endif
 endfunction
