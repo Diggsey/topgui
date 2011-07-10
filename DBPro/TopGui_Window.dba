@@ -3,6 +3,7 @@ function guiWindowBegin(id as guiId, x, y, w, h, caption$, child, focused)
     guiBeginControl(x, y, w, h, child)
     
     activated = guiWindowLogic(id, w, h)
+    guiWindowDrawBackground(id, w, h)
     guiWindowDraw(id, w, h, caption$, focused)
     
     guiBeginContainer(id, 4, 26, w-8, h-30, 0, 0)
@@ -12,6 +13,73 @@ function guiWindowEnd()
     guiEndContainer()
     
     guiEndControl()
+endfunction
+
+function guiScrollWindowBegin(id as guiId, x, y, w, h, caption$, scrollx, scrolly, scrollw, scrollh, child, focused)
+    guiBeginControl(x, y, w, h, child)
+    
+    activated = guiScrollWindowLogic(id, w, h)
+    guiScrollWindowDraw(id, w, h, caption$, scrollx, scrolly, scrollw, scrollh, focused)
+    
+    guiBeginContainer(id, 4, 26, w-29, h-51, scrollx, scrolly)
+endfunction activated
+
+function guiScrollWindowEnd()
+    guiEndContainer()
+    
+    guiEndControl()
+endfunction
+
+function guiScrollWindowLogic(id, w, h)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    if guiGetHot() = id
+        if gui.msd = 1
+            if guiInRect(gui.msx, gui.msy, x+w-24, y+h-24, x+w-4, y+h-4)
+                if guiSetActive(id)
+                    gui.dragMode = (1 << 3) or (1 << 4)
+                    gui.dragX = w - gui.msx
+                    gui.dragY = h - gui.msy
+                endif
+            endif
+        endif
+    endif
+    
+    activated = guiWindowLogic(id, w, h)
+    
+endfunction activated
+
+function guiScrollWindowDraw(id, w, h, caption$, scrollx, scrolly, scrollw, scrollh, focused)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    guiWindowDrawBackground(id, w, h)
+    
+    pageSizeH = w-29
+    pageSizeV = h-51
+    gui.interaction.scrollX = guiHScrollbar(CHILD_ID(id), 3, h-24, w-26, 21, scrollx, scrollw-pageSizeH, pageSizeH)
+    gui.interaction.scrollY = guiVScrollbar(CHILD_ID(id), w-24, 25, 21, h-48, scrolly, scrollh-pageSizeV, pageSizeV)
+    
+    guiWindowDraw(id, w, h, caption$, focused)
+    
+    if focused
+        a2FillBox x+w-24, y+h-24, x+w-1, y+h-1, 0xFFFFC040
+    else
+        a2FillBox x+w-24, y+h-24, x+w-1, y+h-1, 0xFF808080
+    endif
+    
+    a2SetLineAA 0
+    a2Line x+w-24, y+h-24, x+w-24, y+h-3, 0xFF000000
+    a2Line x+w-24, y+h-24, x+w-3, y+h-24, 0xFF000000
+    a2SetLineAA 1
+    
+    a2Line x+w-5, y+h-4, x+w-4, y+h-5, 0x80FFFFFF
+    a2Line x+w-7, y+h-4, x+w-4, y+h-7, 0x80000000
+    a2Line x+w-10, y+h-4, x+w-4, y+h-10, 0x80FFFFFF
+    a2Line x+w-12, y+h-4, x+w-4, y+h-12, 0x80000000
+    a2Line x+w-15, y+h-4, x+w-4, y+h-15, 0x80FFFFFF
+    a2Line x+w-17, y+h-4, x+w-4, y+h-17, 0x80000000
 endfunction
 
 function guiWindowLogic(id as guiId, w, h)
@@ -93,30 +161,30 @@ function guiWindowLogic(id as guiId, w, h)
                 newx = gui.dragX + gui.msx
                 newy = gui.dragY + gui.msy
                 
-                gui.deltaX = newx-x
-                gui.deltaY = newy-y
+                gui.interaction.deltaX = newx-x
+                gui.interaction.deltaY = newy-y
             endif
             if (gui.dragMode and 2)
                 newx = gui.dragX + gui.msx
                 
-                gui.deltaX = newx-x
-                gui.deltaW = -gui.deltaX
+                gui.interaction.deltaX = newx-x
+                gui.interaction.deltaW = -gui.interaction.deltaX
             endif
             if (gui.dragMode and 4)
                 newy = gui.dragY + gui.msy
                 
-                gui.deltaY = newy-y
-                gui.deltaH = -gui.deltaY
+                gui.interaction.deltaY = newy-y
+                gui.interaction.deltaH = -gui.interaction.deltaY
             endif
             if (gui.dragMode and 8)
                 neww = gui.dragX + gui.msx
                 
-                gui.deltaW = neww-w
+                gui.interaction.deltaW = neww-w
             endif
             if (gui.dragMode and 16)
                 newh = gui.dragY + gui.msy
                 
-                gui.deltaH = newh-h
+                gui.interaction.deltaH = newh-h
             endif
         endif
     endif
@@ -154,12 +222,18 @@ function guiWindowListNames(arrayptr as integer, focused)
     endif
 endfunction
 
-function guiWindowDraw(id as guiId, w, h, caption$, focused)
+function guiWindowDrawBackground(id as guiId, w, h)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
     a2FillBox x, y, x+w, y+h, 0x80000000
+endfunction
+
+function guiWindowDraw(id as guiId, w, h, caption$, focused)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
     
+    a2SetLineAA 0
     if focused
         a2FillBox x, y, x+w, y+25, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
         a2Box x+1, y+25, x+w-2, y+h-2, 0xFFFFC040
@@ -173,5 +247,6 @@ function guiWindowDraw(id as guiId, w, h, caption$, focused)
     a2Box x, y, x+w-1, y+h-1, 0xFF000000
     a2Box x+3, y+25, x+w-4, y+h-4, 0xFF000000
     a2Text gui.fontId, x+6, y+4, caption$, 0xFF000000
+    a2SetLineAA 1
     
 endfunction

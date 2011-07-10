@@ -1,5 +1,14 @@
 #constant guiId integer
 
+type guiInteractionType
+    deltaX as integer
+    deltaY as integer
+    deltaW as integer
+    deltaH as integer
+    scrollX as integer
+    scrollY as integer
+endtype
+
 ` All global non-array data related to the gui should be stored in here:
 type guiContextType
     hotId as guiId
@@ -22,10 +31,7 @@ type guiContextType
     delayTime as integer
     
     ` Moving/resizing
-    deltaX as integer
-    deltaY as integer
-    deltaW as integer
-    deltaH as integer
+    interaction as guiInteractionType
     
     ` Focus data
     focusId as guiId
@@ -65,6 +71,7 @@ function guiInit()
     global dim guiIdStack() as guiId
     global dim guiHotParentIds() as guiId
     global dim guiFocusParentIds() as guiId
+    global dim guiInteractions() as guiInteractionType
     
     gui.defaultFontId = a2CreateFont("Tahoma", 12, a2Size_Point(), a2Style_Bold())
     gui.fontId = gui.defaultFontId
@@ -148,9 +155,17 @@ endfunction result
 
 ` GEN_ID - Generate a unique but consistent control ID
 ` INDEX_ID(x) - Generate a control ID based on an index
+` CHILD_ID(x) - Generate a control ID based on a parent ID
+` CHILD_INDEX_ID(x) - Generate a control ID based on a parent ID and an index
 #constant GEN_ID INDEX_ID(0)
 function INDEX_ID(index)
     result = -(getReturnAddress() << 12) + index
+endfunction result
+function CHILD_ID(parentId as guiId)
+    result = -(getReturnAddress() << 12) + (parentId << 16)
+endfunction result
+function CHILD_INDEX_ID(parentId as guiId, index)
+    result = -(getReturnAddress() << 12) + (parentId << 16) + index
 endfunction result
 
 function guiUpdate()
@@ -163,7 +178,6 @@ function guiUpdate()
         gui.stayActive = 0
     endif
     
-    ` A control must keep itself focused to stay focused
     gui.veryOldFocusId = gui.oldFocusId
     gui.oldFocusId = gui.focusId
     if gui.overrideFocusId <> -1
@@ -211,10 +225,10 @@ endfunction
 function guiMoveX(x, minX, maxX, w, minW, maxW)
     oldx = x
     oldw = w
-    x = clamp(x + gui.deltaX, minX, maxX)
-    w = clamp(w + gui.deltaW, minW, maxW)
+    x = clamp(x + gui.interaction.deltaX, minX, maxX)
+    w = clamp(w + gui.interaction.deltaW, minW, maxW)
     
-    if gui.deltaW <> 0 and gui.deltaX <> 0
+    if gui.interaction.deltaW <> 0 and gui.interaction.deltaX <> 0
         x = oldx+oldw-w
         if x < minX
             x = minX
@@ -222,17 +236,17 @@ function guiMoveX(x, minX, maxX, w, minW, maxW)
         endif
     endif
     
-    gui.deltaW = w-oldw
-    gui.deltaX = 0
+    gui.interaction.deltaW = w-oldw
+    gui.interaction.deltaX = 0
 endfunction x
 
 function guiMoveY(y, minY, maxY, h, minH, maxH)
     oldy = y
     oldh = h
-    y = clamp(y + gui.deltaY, minY, maxY)
-    h = clamp(h + gui.deltaH, minH, maxH)
+    y = clamp(y + gui.interaction.deltaY, minY, maxY)
+    h = clamp(h + gui.interaction.deltaH, minH, maxH)
     
-    if gui.deltaH <> 0 and gui.deltaY <> 0
+    if gui.interaction.deltaH <> 0 and gui.interaction.deltaY <> 0
         y = oldy+oldh-h
         if y < minY
             y = minY
@@ -240,19 +254,25 @@ function guiMoveY(y, minY, maxY, h, minH, maxH)
         endif
     endif
     
-    gui.deltaH = h-oldh
-    gui.deltaY = 0
+    gui.interaction.deltaH = h-oldh
+    gui.interaction.deltaY = 0
 endfunction y
 
 function guiResizeW(w)
-    inc w, gui.deltaW
-    gui.deltaW = 0
+    inc w, gui.interaction.deltaW
+    gui.interaction.deltaW = 0
 endfunction w
 
 function guiResizeH(h)
-    inc h, gui.deltaH
-    gui.deltaH = 0
+    inc h, gui.interaction.deltaH
+    gui.interaction.deltaH = 0
 endfunction h
+
+function guiScrollX()
+endfunction gui.interaction.scrollX
+
+function guiScrollY()
+endfunction gui.interaction.scrollY
 
 function guiPushClip(x1, y1, x2, y2, scrollx, scrolly, child)
 
@@ -433,8 +453,26 @@ function guiSetFont(fontId)
     endif
 endfunction
 
+function guiPushInteraction()
+    add to stack guiInteractions()
+    guiInteractions() = gui.interaction
+
+    gui.interaction.deltaX = 0
+    gui.interaction.deltaY = 0
+    gui.interaction.deltaW = 0
+    gui.interaction.deltaH = 0
+    gui.interaction.scrollX = 0
+    gui.interaction.scrollY = 0
+endfunction
+
+function guiPopInteraction()
+    gui.interaction = guiInteractions()
+    remove from stack guiInteractions()
+endfunction
+
 function guiBeginContainer(id as guiId, x, y, w, h, scrollx, scrolly)
     guiPushClip(x, y, x+w, y+h, scrollx, scrolly, 1)
+    guiPushInteraction()
     
     add to stack guiIdStack()
     guiIdStack() = id
@@ -443,6 +481,7 @@ endfunction
 function guiEndContainer()
     remove from stack guiIdStack()
 
+    guiPopInteraction()
     guiPopClip()
 endfunction
 

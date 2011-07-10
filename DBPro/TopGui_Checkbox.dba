@@ -63,7 +63,9 @@ function guiCheckboxDraw(id as guiId, w, h, caption$, checked)
         a2Triangle boxx+8, boxy+17, boxx+8, boxy+13, boxx+16, boxy+3, 0xFF000000
     endif
     
+    a2SetLineAA 0
     a2Box boxx, boxy, boxx+19, boxy+19, 0xFF000000
+    a2SetLineAA 1
     
     a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
     

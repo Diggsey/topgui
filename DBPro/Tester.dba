@@ -22,6 +22,8 @@ global windowChecked1 = 0
 global windowChecked2 as guiId
 global windowValue3 = 0
 global windowText$ = "Edit me!"
+global windowScrollX2
+global windowScrollY2
 
 dim windowFuncPtrs(1) as integer
 windowFuncPtrs(0) = get ptr to function("window1")
@@ -45,18 +47,18 @@ function window1(focused)
         
         windowChecked1 = guiCheckbox(GEN_ID, 100, 100, 120, 30, "Check me", windowChecked1)
         
-        windowX = guiMoveX(windowX, 0, 1000000, windowW, 50, 1000000)
-        windowY = guiMoveY(windowY, 0, 1000000, windowH, 50, 1000000)
-        windowW = guiResizeW(windowW)
-        windowH = guiResizeH(windowH)
         
     guiWindowEnd()
-    
+    windowX = guiMoveX(windowX, 0, 1000000, windowW, 50, 1000000)
+    windowY = guiMoveY(windowY, 0, 1000000, windowH, 50, 1000000)
+    windowW = guiResizeW(windowW)
+    windowH = guiResizeH(windowH)
+
 endfunction clicked
 
 function window2(focused)
 
-    clicked = guiWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", 0, focused)
+    clicked = guiScrollWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", windowScrollX2, windowScrollY2, 1000, 1000, 0, focused)
         
         if guiButton(GEN_ID, windowW2-300, windowH2-300, 200, 50, "Click me!")
             `msgbox "Hello!", 0, 0
@@ -67,15 +69,16 @@ function window2(focused)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", windowChecked2)
         
-        windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)
-        windowY2 = guiMoveY(windowY2, 0, 1000000, windowH2, 50, 1000000)
-        windowW2 = guiResizeW(windowW2)
-        windowH2 = guiResizeH(windowH2)
-        
         window3(focused)
         
-    guiWindowEnd()
-    
+    guiScrollWindowEnd()
+    windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)
+    windowY2 = guiMoveY(windowY2, 0, 1000000, windowH2, 50, 1000000)
+    windowW2 = guiResizeW(windowW2)
+    windowH2 = guiResizeH(windowH2)
+    windowScrollX2 = guiScrollX()
+    windowScrollY2 = guiScrollY()
+
 endfunction clicked
 
 function window3(focused)
@@ -86,13 +89,12 @@ function window3(focused)
         windowValue3 = guiVScrollbar(GEN_ID, 30, 60, 21, 250, windowValue3, 100, 20)
         windowText$ = guiTextbox(GEN_ID, 60, 60, 150, 25, windowText$, 0)
         
-        windowX3 = guiMoveX(windowX3, 0, 1000000, windowW3, 50, 1000000)
-        windowY3 = guiMoveY(windowY3, 0, 1000000, windowH3, 50, 1000000)
-        windowW3 = guiResizeW(windowW3)
-        windowH3 = guiResizeH(windowH3)
-        
     guiWindowEnd()
-    
+    windowX3 = guiMoveX(windowX3, 0, 1000000, windowW3, 50, 1000000)
+    windowY3 = guiMoveY(windowY3, 0, 1000000, windowH3, 50, 1000000)
+    windowW3 = guiResizeW(windowW3)
+    windowH3 = guiResizeH(windowH3)
+
 endfunction clicked
 
 end

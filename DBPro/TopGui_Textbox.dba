@@ -156,7 +156,11 @@ function guiTextboxDraw(id as guiId, w, h, text$)
     endif
     
     a2BoxText gui.fontId, x+4-scroll, y+4, x+w-2, y+h-2, text$, 0, 1, 0, 0xFF000000
+    
+    a2SetLineAA 0
     a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2SetLineAA 1
+    
 endfunction
 
 function guiGetCursorPos(text$, pos)

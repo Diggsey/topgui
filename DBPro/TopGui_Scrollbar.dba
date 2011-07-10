@@ -20,15 +20,20 @@ endfunction value
 function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
-
-    slideSize = (w-h*2)
-    barSize = (pageSize*slideSize)/(maxValue+pageSize)
-    barPos = ((slideSize-barSize)*value)/maxValue
     
     ` If mouse over, try becoming hot
     if guiInClip(gui.msx, gui.msy)
         guiSetHot(id)
     endif
+    
+    ` If disabled
+    if maxValue <= 0
+        exitfunction 0
+    endif
+
+    slideSize = (w-h*2)
+    barSize = (pageSize*slideSize)/(maxValue+pageSize)
+    barPos = ((slideSize-barSize)*value)/maxValue
     
     inButton1 = guiInRect(gui.msx, gui.msy, x, y, x+h, y+h)
     inButton2 = guiInRect(gui.msx, gui.msy, x+w-h, y, x+w, y+h)
@@ -98,14 +103,19 @@ function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
 
-    slideSize = (h-w*2)
-    barSize = (pageSize*slideSize)/(maxValue+pageSize)
-    barPos = ((slideSize-barSize)*value)/maxValue
-    
     ` If mouse over, try becoming hot
     if guiInClip(gui.msx, gui.msy)
         guiSetHot(id)
     endif
+    
+    ` If disabled
+    if maxValue <= 0
+        exitfunction 0
+    endif
+
+    slideSize = (h-w*2)
+    barSize = (pageSize*slideSize)/(maxValue+pageSize)
+    barPos = ((slideSize-barSize)*value)/maxValue
     
     inButton1 = guiInRect(gui.msx, gui.msy, x, y, x+w, y+w)
     inButton2 = guiInRect(gui.msx, gui.msy, x, y+h-w, x+w, y+h)
@@ -175,64 +185,99 @@ function guiHScrollbarDraw(id, w, h, value, maxValue, pageSize)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    slideSize = (w-h*2)
-    barSize = (pageSize*slideSize)/(maxValue+pageSize)
-    barPos = ((slideSize-barSize)*value)/maxValue
+    disabled = maxValue <= 0
     
     a2FillBox x, y, x+w, y+h, 0xFF808080, 0xFF808080, 0xFFC0C0C0, 0xFFC0C0C0
     
-    if guiGetHot() = id
-        a2FillBox x, y, x+h, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
-        a2FillBox x+w-h, y, x+w, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+    if disabled = 0
+        slideSize = (w-h*2)
+        barSize = (pageSize*slideSize)/(maxValue+pageSize)
+        barPos = ((slideSize-barSize)*value)/maxValue
         
-        a2FillBox x+h+barPos, y, x+h+barPos+barSize, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        if guiGetHot() = id
+            a2FillBox x, y, x+h, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+            a2FillBox x+w-h, y, x+w, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+            
+            a2FillBox x+h+barPos, y, x+h+barPos+barSize, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        else
+            a2FillBox x, y, x+h, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+            a2FillBox x+w-h, y, x+w, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+            
+            a2FillBox x+h+barPos, y, x+h+barPos+barSize, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+        endif
+        
+        a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0xFF000000
+        a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0xFF000000
+        a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0xFF000000
+        a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0xFF000000
+        
+        a2SetLineAA 0
+        a2Box x, y, x+h-1, y+h-1, 0xFF000000
+        a2Box x+w-h, y, x+w-1, y+h-1, 0xFF000000
+        
+        a2Box x+h+barPos, y, x+h+barPos+barSize-1, y+h-1, 0xFF000000
+        a2SetLineAA 1
     else
-        a2FillBox x, y, x+h, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
-        a2FillBox x+w-h, y, x+w, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+        a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0x80000000
+        a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0x80000000
+        a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0x80000000
+        a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0x80000000
         
-        a2FillBox x+h+barPos, y, x+h+barPos+barSize, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+        a2SetLineAA 0
+        a2Box x, y, x+h-1, y+h-1, 0x80000000
+        a2Box x+w-h, y, x+w-1, y+h-1, 0x80000000
+        a2SetLineAA 1
     endif
     
     
-    a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0xFF000000
-    a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0xFF000000
-    a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0xFF000000
-    a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0xFF000000
-    a2Box x, y, x+h-1, y+h-1, 0xFF000000
-    a2Box x+w-h, y, x+w-1, y+h-1, 0xFF000000
-    
-    a2Box x+h+barPos, y, x+h+barPos+barSize-1, y+h-1, 0xFF000000
 endfunction
 
 function guiVScrollbarDraw(id, w, h, value, maxValue, pageSize)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    slideSize = (h-w*2)
-    barSize = (pageSize*slideSize)/(maxValue+pageSize)
-    barPos = ((slideSize-barSize)*value)/maxValue
+    disabled = maxValue <= 0
     
     a2FillBox x, y, x+w, y+h, 0xFF808080, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080
     
-    if guiGetHot() = id
-        a2FillBox x, y, x+w, y+w, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
-        a2FillBox x, y+h-w, x+w, y+h, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+    if disabled = 0
+        slideSize = (h-w*2)
+        barSize = (pageSize*slideSize)/(maxValue+pageSize)
+        barPos = ((slideSize-barSize)*value)/maxValue
         
-        a2FillBox x, y+w+barPos, x+w, y+w+barPos+barSize, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+        if guiGetHot() = id
+            a2FillBox x, y, x+w, y+w, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+            a2FillBox x, y+h-w, x+w, y+h, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+            
+            a2FillBox x, y+w+barPos, x+w, y+w+barPos+barSize, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+        else
+            a2FillBox x, y, x+w, y+w, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+            a2FillBox x, y+h-w, x+w, y+h, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+            
+            a2FillBox x, y+w+barPos, x+w, y+w+barPos+barSize, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+        endif
+        
+        a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0xFF000000
+        a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0xFF000000
+        a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0xFF000000
+        a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0xFF000000
+        
+        a2SetLineAA 0
+        a2Box x, y, x+w-1, y+w-1, 0xFF000000
+        a2Box x, y+h-w, x+w-1, y+h-1, 0xFF000000
+        
+        a2Box x, y+w+barPos, x+w-1, y+w+barPos+barSize-1, 0xFF000000
+        a2SetLineAA 1
     else
-        a2FillBox x, y, x+w, y+w, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
-        a2FillBox x, y+h-w, x+w, y+h, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+        a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0x80000000
+        a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0x80000000
+        a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0x80000000
+        a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0x80000000
         
-        a2FillBox x, y+w+barPos, x+w, y+w+barPos+barSize, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+        a2SetLineAA 0
+        a2Box x, y, x+w-1, y+w-1, 0x80000000
+        a2Box x, y+h-w, x+w-1, y+h-1, 0x80000000
+        a2SetLineAA 1
     endif
-    
-    
-    a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0xFF000000
-    a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0xFF000000
-    a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0xFF000000
-    a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0xFF000000
-    a2Box x, y, x+w-1, y+w-1, 0xFF000000
-    a2Box x, y+h-w, x+w-1, y+h-1, 0xFF000000
-    
-    a2Box x, y+w+barPos, x+w-1, y+w+barPos+barSize-1, 0xFF000000
+
 endfunction
