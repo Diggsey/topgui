@@ -29,8 +29,12 @@ type guiContextType
     
     ` Focus data
     focusId as guiId
-    stayFocused as boolean
-    tempFocusId as guiId
+    oldFocusId as guiId
+    veryOldFocusId as guiId
+    newFocusId as guiId
+    prevFocusId as guiId
+    nextFocusId as guiId
+    overrideFocusId as guiId
     selStart as integer
     selEnd as integer
     entryBuffer as string
@@ -60,6 +64,7 @@ function guiInit()
     global dim guiClip() as guiRectType
     global dim guiIdStack() as guiId
     global dim guiHotParentIds() as guiId
+    global dim guiFocusParentIds() as guiId
     
     gui.defaultFontId = a2CreateFont("Tahoma", 12, a2Size_Point(), a2Style_Bold())
     gui.fontId = gui.defaultFontId
@@ -149,6 +154,7 @@ function INDEX_ID(index)
 endfunction result
 
 function guiUpdate()
+
     ` A control must keep itself active to stay active
     if gui.stayActive = 0
         gui.activeId = 0
@@ -158,11 +164,20 @@ function guiUpdate()
     endif
     
     ` A control must keep itself focused to stay focused
-    if gui.stayFocused = 0
-        gui.focusId = 0
-        gui.tempFocusId = 0
+    gui.veryOldFocusId = gui.oldFocusId
+    gui.oldFocusId = gui.focusId
+    if gui.overrideFocusId <> -1
+        gui.focusId = gui.overrideFocusId
+        gui.overrideFocusId = -1
     else
-        gui.stayFocused = 0
+        gui.focusId = gui.newFocusId
+    endif
+    gui.newFocusId = 0
+    
+    if gui.oldFocusId <> gui.focusId
+        gui.tempScroll = 0
+        gui.selStart = 0
+        gui.selEnd = 2147483647
     endif
     
     if gui.activeId
@@ -349,6 +364,15 @@ function guiIsChildHot(id as guiId)
     next i
 endfunction 0
 
+function guiIsChildFocused(id as guiId)
+    N = array count(guiFocusParentIds())
+    for i = 0 to N
+        if id = guiFocusParentIds(i)
+            exitfunction 1
+        endif
+    next i
+endfunction 0
+
 function guiGetHot()
 endfunction gui.hotId
 
@@ -441,45 +465,44 @@ function guiHasDelayed()
 endfunction 0
 
 function guiFocus(id as guiId, tabFocus)
-    if gui.focusId = 0
-        gui.focusId = id
-        gui.stayFocused = 1
-    else
-        if gui.focusId = id
-            gui.stayFocused = 1
+    if gui.newFocusId = 0 then gui.newFocusId = id
+    if gui.overrideFocusId = 0 then gui.overrideFocusId = id
+
+    if gui.focusId = id
+        gui.newFocusId = id
         
-            if gui.tempFocusId
-                gui.focusId = gui.tempFocusId
-                gui.tempFocusId = 0
+        if guiProcessKeyDown(id, VK_TAB, 0) and tabFocus
+            if shiftkey()
+                gui.newFocusId = gui.prevFocusId
             else
-                if guiProcessKeyDown(id, VK_TAB, 0) and tabFocus
-                    gui.tempScroll = 0
-                    gui.selStart = 0
-                    gui.selEnd = 2147483647
-                    if shiftkey()
-                        gui.tempFocusId = id
-                    else
-                        gui.focusId = 0
-                    endif
-                endif
-            endif
-        else
-            if gui.tempFocusId
-                gui.tempFocusId = id
+                gui.newFocusId = gui.nextFocusId
             endif
         endif
+        
+        gui.nextFocusId = 0
+    else
+        gui.prevFocusId = id
+        if gui.nextFocusId = 0 then gui.nextFocusId = id
     endif
-    
+
     result = (gui.focusId = id)
+    
+    if result
+        N = array count(guiIdStack())
+        
+        global dim guiFocusParentIds(N) as guiId
+        for i = 0 to N
+            guiFocusParentIds(i) = guiIdStack(i)
+        next i
+    endif
 endfunction result
 
 function guiGetFocus()
 endfunction gui.focusId
 
 function guiSetFocus(id as guiId)
-    gui.focusId = id
-    gui.tempFocusId = 0
-    gui.stayFocused = 1
+    gui.overrideFocusId = id
+    gui.newFocusId = 0
 endfunction
 
 function guiDrawFocusRect(x1, y1, x2, y2, color)
@@ -529,4 +552,7 @@ function guiSetCursorVisible(visible)
     endif
 endfunction
 
+function guiFocusChanged()
+    result = gui.veryOldFocusId <> gui.oldFocusId
+endfunction result
 

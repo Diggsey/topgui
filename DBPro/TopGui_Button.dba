@@ -46,6 +46,7 @@ function guiButtonLogic(id as guiId, w, h)
             if gui.msd = 1
                 ` Make us active
                 guiSetActive(id)
+                guiSetFocus(id)
             endif
         endif
     endif

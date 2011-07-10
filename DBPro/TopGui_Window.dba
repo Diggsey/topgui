@@ -29,6 +29,16 @@ function guiWindowLogic(id as guiId, w, h)
     if gui.msd
         if guiGetHot() = id or guiIsChildHot(id)
             activated = 1
+            
+            if guiIsChildFocused(id) = 0
+                guiSetFocus(0)
+            endif
+        endif
+    endif
+    
+    if guiFocusChanged()
+        if guiIsChildFocused(id)
+            activated = 1
         endif
     endif
     
