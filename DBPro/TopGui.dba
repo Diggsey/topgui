@@ -74,6 +74,7 @@ function guiInit()
     global dim guiHotParentIds() as guiId
     global dim guiFocusParentIds() as guiId
     global dim guiInteractions() as guiInteractionType
+    global dim guiDataStackInteger() as integer
     
     gui.defaultFontId = a2CreateFont("Tahoma", 12, a2Size_Point(), a2Style_Bold())
     gui.fontId = gui.defaultFontId
@@ -279,7 +280,7 @@ endfunction gui.interaction.scrollY
 
 function guiPushClip(x1, y1, x2, y2, scrollx, scrolly, child)
 
-    if child and array count(guiClip()) >= 0
+    if child and get array index(guiClip()) >= 0
         ox = guiClip().offsetx
         oy = guiClip().offsety
         offsetx = x1 + ox - scrollx
@@ -295,7 +296,9 @@ function guiPushClip(x1, y1, x2, y2, scrollx, scrolly, child)
         offsety = y1 - scrolly
     endif
 
-    add to stack guiClip()
+    `add to stack guiClip()
+    next array index guiClip()
+    if array index valid(guiClip()) = 0 then array insert at bottom guiClip()
     guiClip().x1 = x1
     guiClip().y1 = y1
     guiClip().x2 = x2
@@ -319,9 +322,10 @@ function guiPushClip(x1, y1, x2, y2, scrollx, scrolly, child)
 endfunction
 
 function guiPopClip()
-    remove from stack guiClip()
+    `remove from stack guiClip()
+    previous array index guiClip()
     
-    if array count(guiClip()) >= 0
+    if get array index(guiClip()) >= 0
         x1 = guiClip().x1
         y1 = guiClip().y1
         x2 = guiClip().x2
@@ -346,13 +350,13 @@ function guiPopClip()
 endfunction
 
 function guiAdjustX(x)
-    if array count(guiClip()) >= 0
+    if get array index(guiClip()) >= 0
         inc x, guiClip().offsetx
     endif
 endfunction x
 
 function guiAdjustY(y)
-    if array count(guiClip()) >= 0
+    if get array index(guiClip()) >= 0
         inc y, guiClip().offsety
     endif
 endfunction y
@@ -369,7 +373,7 @@ function guiSetHot(id as guiId)
     gui.nextHotId = id
     
     if gui.hotId = id
-        N = array count(guiIdStack())
+        N = get array index(guiIdStack())
         
         global dim guiHotParentIds(N) as guiId
         for i = 0 to N
@@ -429,7 +433,7 @@ function guiInRect(x, y, x1, y1, x2, y2)
 endfunction 0
 
 function guiInClip(x, y)
-    if array count(guiClip()) >= 0
+    if get array index(guiClip()) >= 0
         result = guiInRect(x, y, guiClip().x1, guiClip().y1, guiClip().x2, guiClip().y2)
     else
         result = 1
@@ -457,7 +461,9 @@ function guiSetFont(fontId)
 endfunction
 
 function guiPushInteraction()
-    add to stack guiInteractions()
+    `add to stack guiInteractions()
+    next array index guiInteractions()
+    if array index valid(guiInteractions()) = 0 then array insert at bottom guiInteractions()
     guiInteractions() = gui.interaction
 
     gui.interaction.deltaX = 0
@@ -470,19 +476,23 @@ endfunction
 
 function guiPopInteraction()
     gui.interaction = guiInteractions()
-    remove from stack guiInteractions()
+    `remove from stack guiInteractions()
+    previous array index guiInteractions()
 endfunction
 
 function guiBeginContainer(id as guiId, x, y, w, h, scrollx, scrolly)
     guiPushClip(x, y, x+w, y+h, scrollx, scrolly, 1)
     guiPushInteraction()
     
-    add to stack guiIdStack()
+    `add to stack guiIdStack()
+    next array index guiIdStack()
+    if array index valid(guiIdStack()) = 0 then array insert at bottom guiIdStack()
     guiIdStack() = id
 endfunction
 
 function guiEndContainer()
-    remove from stack guiIdStack()
+    `remove from stack guiIdStack()
+    previous array index guiIdStack()
 
     guiPopInteraction()
     guiPopClip()
@@ -530,7 +540,7 @@ function guiFocus(id as guiId, tabFocus)
     result = (gui.focusId = id)
     
     if result
-        N = array count(guiIdStack())
+        N = get array index(guiIdStack())
         
         global dim guiFocusParentIds(N) as guiId
         for i = 0 to N
@@ -610,4 +620,21 @@ function guiGetScroll(id as guiId, redirectId as guiId)
         scroll = 0
     endif
 endfunction scroll
+
+function guiPushInteger(value)
+    `add to stack guiDataStackInteger()
+    next array index guiDataStackInteger()
+    if array index valid(guiDataStackInteger()) = 0 then array insert at bottom guiDataStackInteger()
+    guiDataStackInteger() = value
+endfunction
+
+function guiPopInteger()
+    value = guiDataStackInteger()
+    `remove from stack guiDataStackInteger()
+    previous array index guiDataStackInteger()
+endfunction value
+
+function guiPeekInteger()
+    value = guiDataStackInteger()
+endfunction value
 

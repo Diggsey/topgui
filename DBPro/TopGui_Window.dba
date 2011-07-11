@@ -22,7 +22,7 @@ function guiScrollWindowBegin(id as guiId, x, y, w, h, caption$, scrollx, scroll
     activated = guiScrollWindowLogic(id, w, h)
     guiScrollWindowDraw(id, w, h, caption$, scrollx, scrolly, scrollw, scrollh, focused)
     
-    guiBeginContainer(id, 4, 26, w-29, h-51, scrollx, scrolly)
+    guiBeginContainer(id, 4, 26, w-28, h-50, scrollx, scrolly)
 endfunction activated
 
 function guiScrollWindowEnd()

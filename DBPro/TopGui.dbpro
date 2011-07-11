@@ -13,6 +13,8 @@ include5=TopGui_Radiobutton.dba
 include6=TopGui_Scrollbar.dba
 include7=TopGui_Textbox.dba
 include8=TopGui_Keys.dba
+include9=TopGui_Label.dba
+include10=TopGui_Listbox.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***

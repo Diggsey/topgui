@@ -222,14 +222,14 @@ function guiHScrollbarDraw(id, w, h, value, maxValue, pageSize)
         a2Box x+h+barPos, y, x+h+barPos+barSize-1, y+h-1, 0xFF000000
         a2SetLineAA 1
     else
-        a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0x80000000
-        a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0x80000000
-        a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0x80000000
-        a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0x80000000
+        a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0x40000000
+        a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0x40000000
+        a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0x40000000
+        a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0x40000000
         
         a2SetLineAA 0
-        a2Box x, y, x+h-1, y+h-1, 0x80000000
-        a2Box x+w-h, y, x+w-1, y+h-1, 0x80000000
+        a2Box x, y, x+h-1, y+h-1, 0x40000000
+        a2Box x+w-h, y, x+w-1, y+h-1, 0x40000000
         a2SetLineAA 1
     endif
     
@@ -273,14 +273,14 @@ function guiVScrollbarDraw(id, w, h, value, maxValue, pageSize)
         a2Box x, y+w+barPos, x+w-1, y+w+barPos+barSize-1, 0xFF000000
         a2SetLineAA 1
     else
-        a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0x80000000
-        a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0x80000000
-        a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0x80000000
-        a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0x80000000
+        a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0x40000000
+        a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0x40000000
+        a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0x40000000
+        a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0x40000000
         
         a2SetLineAA 0
-        a2Box x, y, x+w-1, y+w-1, 0x80000000
-        a2Box x, y+h-w, x+w-1, y+h-1, 0x80000000
+        a2Box x, y, x+w-1, y+w-1, 0x40000000
+        a2Box x, y+h-w, x+w-1, y+h-1, 0x40000000
         a2SetLineAA 1
     endif
 

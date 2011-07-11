@@ -1,12 +1,12 @@
-sync on
-set display mode desktop width(), desktop height(), 32, 1
+sync on : sync rate 0
+set display mode desktop width(), desktop height(), 32, 0
 
 guiInit()
 
 global windowX = 100
 global windowY = 100
 global windowW = 500
-global windowH = 500
+global windowH = 600
 
 global windowX2 = 300
 global windowY2 = 300
@@ -24,6 +24,9 @@ global windowValue3 = 0
 global windowText$ = "Edit me!"
 global windowScrollX2
 global windowScrollY2
+global windowItem
+global windowScrollX1
+global windowScrollY1
 
 dim windowFuncPtrs(2) as integer
 windowFuncPtrs(0) = get ptr to function("window1")
@@ -31,9 +34,9 @@ windowFuncPtrs(1) = get ptr to function("window2")
 windowFuncPtrs(2) = get ptr to function("window3")
 
 do
-    
     guiWindowListPtrs(get arrayptr(windowFuncPtrs()), 1)
     
+    print screen fps()
     guiUpdate()
     sync
     cls 0xFFC0D0FF
@@ -43,11 +46,15 @@ function window1(focused)
 
     clicked = guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!", 0, focused)
         
-        if guiButton(GEN_ID, windowW-300, windowH-300, 200, 50, "Click me!")
-        endif
-        
         windowChecked1 = guiCheckbox(GEN_ID, 100, 100, 120, 30, "Check me", windowChecked1)
         
+        guiListboxBegin(GEN_ID, 100, 200, 300, 300, windowScrollX1, windowScrollY1, 0, 1)
+            for i = 0 to 20
+                if guiListboxItem("Item "+str$(i), i mod 3, windowItem = i) then windowItem = i
+            next i
+        guiListboxEnd()
+        windowScrollX1 = guiScrollX()
+        windowScrollY1 = guiScrollY()
         
     guiWindowEnd()
     windowX = guiMoveX(windowX, 0, 1000000, windowW, 50, 1000000)
@@ -87,6 +94,7 @@ function window3(focused)
         windowValue3 = guiHScrollbar(GEN_ID, 30, 30, 250, 21, windowValue3, 100, 20, 5)
         windowValue3 = guiVScrollbar(GEN_ID, 30, 60, 21, 250, windowValue3, 100, 20, 5)
         windowText$ = guiTextbox(GEN_ID, 60, 60, 150, 25, windowText$, 0)
+        guiLabel(GEN_ID, 60, 100, 100, 50, "Some text on a label.", 1, 1, 0xFFFFFFFF)
         
     guiWindowEnd()
     windowX3 = guiMoveX(windowX3, 0, 1000000, windowW3, 50, 1000000)

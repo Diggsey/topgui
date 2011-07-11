@@ -1,0 +1,186 @@
+
+function guiListboxBegin(id as guiId, x, y, w, h, scrollx, scrolly, allowScrollX, allowScrollY)
+    guiBeginControl(x, y, w, h, 1)
+    
+    focused = guiFocus(id, 1)
+    
+    ` If mouse over, try becoming hot
+    if guiInClip(gui.msx, gui.msy)
+        guiSetHot(id)
+    endif
+    
+    if guiGetHot() = id
+        if gui.msd = 1
+            guiSetFocus(id)
+        endif
+    endif
+    
+    guiListboxDrawBackground(id, w, h)
+    
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(scrollx)
+    guiPushInteger(scrolly)
+    guiPushInteger(id)
+    guiPushInteger(allowScrollX)
+    guiPushInteger(allowScrollY)
+
+    clientw = w-2
+    if allowScrollY then dec clientw, 20
+    guiPushInteger(clientw)
+    guiPushInteger(0)
+    guiPushInteger(0)
+    
+    guiBeginContainer(id, 1, 1, w-2, h-2, scrollx, scrolly)
+endfunction
+
+function guiListboxItem(caption$, halign, selected)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    index = guiPopInteger()
+    clienth = guiPopInteger()
+    clientw = guiPopInteger()
+    allowScrollY = guiPopInteger()
+    allowScrollX = guiPopInteger()
+    id = guiPopInteger()
+    scrolly = guiPopInteger()
+    scrollx = guiPopInteger()
+    h = guiPeekInteger()
+    if allowScrollX then dec h, 20
+    
+    focused = guiGetFocus() = id
+    height = a2GetLineHeight(gui.fontId)+4
+    width = guiGetTextWidth(caption$)
+    clicked = 0
+    
+    if gui.msd = 1
+        if guiGetHot() = id
+            if guiInRect(gui.msx, gui.msy, x, y+clienth, x+2000, y+clienth+height)
+                clicked = 1
+                gui.selStart = index
+            endif
+        endif
+    endif
+    
+    if allowScrollX then clientw = max(clientw, width+10) : halign = 0
+    
+    if selected then a2FillBox x, y+clienth, x+2000, y+clienth+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+    
+    a2BoxText gui.fontId, x+5, y+clienth, x+clientw-5, y+clienth+height, caption$, halign, 1, 0, 0xFF000000
+    
+    if focused
+        if gui.selStart = index
+            if gui.selEnd <> index
+                
+                if scrolly > clienth
+                    scrolly = clienth
+                endif
+                if scrolly+h-2 < clienth+height
+                    scrolly = clienth+height+2-h
+                endif
+                
+                gui.selEnd = index
+            endif
+            
+            select halign
+                case 0
+                    guiDrawFocusRect(x+2, y+clienth+2, x+width+6, y+clienth+height-3, 0xFF000000)
+                endcase
+                case 1
+                    guiDrawFocusRect(x+clientw/2-width/2-3, y+clienth+2, x+clientw/2+width/2+2, y+clienth+height-3, 0xFF000000)
+                endcase
+                case 2
+                    guiDrawFocusRect(x+clientw-width-8, y+clienth+2, x+clientw-3, y+clienth+height-3, 0xFF000000)
+                endcase
+            endselect
+            
+            if guiProcessKeyUp(id, VK_SPACE) then clicked = 1
+        endif
+        
+        if guiFocusChanged() and selected
+            gui.selStart = index
+        endif
+    endif
+    
+    inc clienth, height
+    
+    guiPushInteger(scrollx)
+    guiPushInteger(scrolly)
+    guiPushInteger(id)
+    guiPushInteger(allowScrollX)
+    guiPushInteger(allowScrollY)
+    guiPushInteger(clientw)
+    guiPushInteger(clienth)
+    guiPushInteger(index+1)
+endfunction clicked
+
+function guiListboxEnd()
+    guiEndContainer()
+    
+    itemNum = guiPopInteger()
+    clienth = guiPopInteger()
+    clientw = guiPopInteger()
+    
+    allowScrollY = guiPopInteger()
+    allowScrollX = guiPopInteger()
+    id = guiPopInteger()
+    scrolly = guiPopInteger()
+    scrollx = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    
+    focused = guiGetFocus() = id
+    if focused
+        if guiProcessKeyDown(id, VK_UP, 0) then dec gui.selStart
+        if guiProcessKeyDown(id, VK_DOWN, 0) then inc gui.selStart
+        
+        gui.selStart = clamp(gui.selStart, 0, itemNum-1)
+    endif
+    
+    guiListboxDraw(id, w, h, scrollx, scrolly, allowScrollX, allowScrollY, clientw, clienth)
+
+    guiEndControl()
+endfunction
+
+function guiListboxDrawBackground(id as guiId, w, h)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    a2FillBox x, y, x+w, y+h, 0x80FFFFFF
+endfunction
+
+function guiListboxDraw(id as guiId, w, h, scrollx, scrolly, allowScrollX, allowScrollY, clientw, clienth)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    pageSizeH = w-2
+    pageSizeV = h-2
+    if allowScrollX then dec pageSizeV, 20
+    if allowScrollY then dec pageSizeH, 20
+    
+    horzId = CHILD_ID(id)
+    vertId = CHILD_ID(id)
+    
+    redirectId = 0
+    if allowScrollX then redirectId = horzId
+    if allowScrollY then redirectId = vertId
+    
+    if redirectId then guiGetScroll(id, redirectId)
+    
+    if allowScrollX
+        gui.interaction.scrollX = guiHScrollbar(horzId, 0, h-21, pageSizeH+2, 21, scrollx, clientw-pageSizeH, pageSizeH, 20)
+    endif
+    if allowScrollY
+        gui.interaction.scrollY = guiVScrollbar(vertId, w-21, 0, 21, pageSizeV+2, scrolly, clienth-pageSizeV, pageSizeV, 20)
+    endif
+    if allowScrollX and allowScrollY
+        a2FillBox x+w-20, y+h-20, x+w, y+h, 0xFFC0C0C0
+    endif
+    
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2SetLineAA 1
+    
+endfunction
+
