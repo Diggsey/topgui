@@ -3,18 +3,18 @@ set display mode desktop width(), desktop height(), 32, 0
 
 guiInit()
 
-global windowX = 100
+global windowX = 750
 global windowY = 100
-global windowW = 500
-global windowH = 600
+global windowW = 400
+global windowH = 400
 
-global windowX2 = 300
-global windowY2 = 300
+global windowX2 = 200
+global windowY2 = 50
 global windowW2 = 500
-global windowH2 = 500
+global windowH2 = 600
 
-global windowX3 = 200
-global windowY3 = 200
+global windowX3 = 50
+global windowY3 = 300
 global windowW3 = 350
 global windowH3 = 400
 
@@ -27,15 +27,29 @@ global windowScrollY2
 global windowItem
 global windowScrollX1
 global windowScrollY1
-global windowTabIndex
+global windowTabIndex = 1
 
-dim windowFuncPtrs(2) as integer
-windowFuncPtrs(0) = get ptr to function("window1")
-windowFuncPtrs(1) = get ptr to function("window2")
-windowFuncPtrs(2) = get ptr to function("window3")
+dim windowFuncPtrs(2) as string
+windowFuncPtrs(0) = "window2"
+windowFuncPtrs(1) = "window1"
+windowFuncPtrs(2) = "window3"
+
+make camera 1
+set current camera 1
+set camera aspect 1, 1
+set camera to image 1, 1, 300, 300, 2
+color backdrop 1, 0
+make object cube 1, 1
+set object mask 1, %10
+backdrop off 0
+set current camera 0
+
+ink 0, 0
 
 do
-    guiWindowListPtrs(get arrayptr(windowFuncPtrs()), 1)
+    guiWindowListNames(get arrayptr(windowFuncPtrs()), 1)
+    
+    yrotate object 1, hitimer()*0.02
     
     print screen fps()
     guiUpdate()
@@ -47,10 +61,10 @@ function window1(focused)
 
     clicked = guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!", 0, focused)
         
-        windowChecked1 = guiCheckbox(GEN_ID, 100, 100, 120, 30, "Check me", windowChecked1)
+        windowChecked1 = guiCheckbox(GEN_ID, 20, 20, 120, 30, "Check me", windowChecked1)
         
-        guiListboxBegin(GEN_ID, 100, 200, 300, 300, windowScrollX1, windowScrollY1, 0, 1)
-            for i = 0 to 20
+        guiListboxBegin(GEN_ID, 20, 100, 200, 200, windowScrollX1, windowScrollY1, 0, 1)
+            for i = 0 to 10
                 if guiListboxItem("Item "+str$(i), i mod 3, windowItem = i) then windowItem = i
             next i
         guiListboxEnd()
@@ -69,21 +83,22 @@ function window2(focused)
 
     clicked = guiScrollWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", windowScrollX2, windowScrollY2, 1000, 1000, 0, focused)
         
-        if guiButton(GEN_ID, windowW2-300, windowH2-300, 200, 50, "Click me!")
-            `msgbox "Hello!", 0, 0
-        endif
         
         windowChecked2 = guiRadioButton(GEN_ID, 100, 40, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 80, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", windowChecked2)
         
-        guiTabsBegin(GEN_ID, 100, 200, 300, 300, 25, windowTabIndex)
+        guiTabsBegin(GEN_ID, 100, 200, 308, 332, 25, windowTabIndex)
             if guiTabBegin("Tab 0", 0)
+            
+                if guiButton(GEN_ID, 20, 20, 200, 50, "Click me!")
+                endif
+                
                 guiTabEnd()
             endif
             if guiTabBegin("Tab 1", 0)
-                `a2FillBox 0, 0, 10000, 10000, 0xFFFFFFFF
+                a2DrawImage 1, guiAdjustX(0), guiAdjustY(0), 0, 0, 0, 1, 0, 0xFFFFFFFF
                 guiTabEnd()
             endif
             if guiTabBegin("Tab 2", 0)

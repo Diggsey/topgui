@@ -405,7 +405,7 @@ endfunction gui.hotId
 
 function guiSetActive(id as guiId)
     if id
-        if gui.activeId = 0
+        if gui.activeId = 0 or gui.activeId = id
             gui.activeId = id
             gui.stayActive = 1
         else

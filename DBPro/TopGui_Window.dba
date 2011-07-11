@@ -35,9 +35,11 @@ function guiScrollWindowLogic(id, w, h)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
+    activated = guiWindowLogic(id, w, h)
+    
     if guiGetHot() = id
         if gui.msd = 1
-            if guiInRect(gui.msx, gui.msy, x+w-24, y+h-24, x+w-4, y+h-4)
+            if guiInRect(gui.msx, gui.msy, x+w-24, y+h-24, x+w, y+h)
                 if guiSetActive(id)
                     gui.dragMode = (1 << 3) or (1 << 4)
                     gui.dragX = w - gui.msx
@@ -46,8 +48,6 @@ function guiScrollWindowLogic(id, w, h)
             endif
         endif
     endif
-    
-    activated = guiWindowLogic(id, w, h)
     
 endfunction activated
 
@@ -217,7 +217,7 @@ function guiWindowListNames(arrayptr as integer, focused)
     windowFocus = -1
     
     for i = 0 to windowCount
-        name$ = peek string(get arrayptr item ptr(arrayptr, i))
+        name$ = peek string(peek integer(get arrayptr item ptr(arrayptr, i)))
         if call function name(name$, (i = windowCount) and focused)
             windowFocus = i
         endif
