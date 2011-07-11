@@ -27,6 +27,7 @@ global windowScrollY2
 global windowItem
 global windowScrollX1
 global windowScrollY1
+global windowTabIndex
 
 dim windowFuncPtrs(2) as integer
 windowFuncPtrs(0) = get ptr to function("window1")
@@ -76,6 +77,19 @@ function window2(focused)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 80, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", windowChecked2)
+        
+        guiTabsBegin(GEN_ID, 100, 200, 300, 300, 25, windowTabIndex)
+            if guiTabBegin("Tab 0", 0)
+                guiTabEnd()
+            endif
+            if guiTabBegin("Tab 1", 0)
+                `a2FillBox 0, 0, 10000, 10000, 0xFFFFFFFF
+                guiTabEnd()
+            endif
+            if guiTabBegin("Tab 2", 0)
+                guiTabEnd()
+            endif
+        windowTabIndex = guiTabsEnd()
         
     guiScrollWindowEnd()
     windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)

@@ -1,0 +1,123 @@
+
+function guiTabsBegin(id as guiId, x, y, w, h, tabHeight, index)
+    guiBeginControl(x, y, w, h, 1)
+    
+    focused = guiFocus(id, 1)
+    
+    ` If mouse over, try becoming hot
+    if guiInClip(gui.msx, gui.msy)
+        guiSetHot(id)
+    endif
+    
+    if guiGetHot() = id
+        if gui.msd = 1
+            guiSetFocus(id)
+        endif
+    endif
+    
+    guiPushInteger(guiAdjustX(0))
+    guiPushInteger(tabHeight)
+    guiPushInteger(0)
+    guiPushInteger(index)
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(id)
+    guiPushInteger(index)
+endfunction
+
+function guiTabBegin(caption$, width)
+    newIndex = guiPopInteger()
+    id = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    index = guiPopInteger()
+    tabIndex = guiPopInteger()
+    tabHeight = guiPopInteger()
+    tabX = guiPopInteger()
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    selected = (index = tabIndex)
+    focused = guiGetFocus() = id
+    
+    if width = 0
+        width = a2GetTextWidth(gui.fontId, caption$)+12
+    endif
+    
+    if selected
+        a2FillBox tabX, y, tabX+width, y+tabHeight, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        
+        a2SetLineAA 0
+        a2Line tabX, y+tabHeight-1, tabX, y, 0xFF000000
+        a2Line tabX, y, tabX+width-1, y, 0xFF000000
+        a2Line tabX+width-1, y, tabX+width-1, y+tabHeight, 0xFF000000
+        a2Line x, y+tabHeight-1, tabX, y+tabHeight-1, 0xFF000000
+        a2Line tabX+width, y+tabHeight-1, x+w, y+tabHeight-1, 0xFF000000
+        
+        a2Line x+w-1, y+tabHeight-1, x+w-1, y+h-1, 0xFF000000
+        a2Line x+w-1, y+h-1, x, y+h-1, 0xFF000000
+        a2Line x, y+h-1, x, y+tabHeight-1, 0xFF000000
+        
+        a2Box x+1, y+tabHeight, x+w-2, y+h-2, 0xFFFFC040
+        a2Box x+2, y+tabHeight+1, x+w-3, y+h-3, 0xFFFFC040
+        a2Box x+3, y+tabHeight+2, x+w-4, y+h-4, 0xFF000000
+        a2SetLineAA 1
+        
+        a2BoxText gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, 0xFF000000
+        
+        if focused
+            guiDrawFocusRect(tabX+3, y+3, tabX+width-4, y+tabHeight-4, 0xFF000000)
+        endif
+    else
+        if guiGetHot() = id
+            if guiInRect(gui.msx, gui.msy, tabX, y, tabX+width, y+tabHeight)
+                a2FillBox tabX, y, tabX+width, y+tabHeight, 0x80FFFF80, 0x80FFFF80, 0x80FFC040, 0x80FFC040
+                
+                a2SetLineAA 0
+                a2Line tabX, y+tabHeight-1, tabX, y, 0x80000000
+                a2Line tabX, y, tabX+width-1, y, 0x80000000
+                a2Line tabX+width-1, y, tabX+width-1, y+tabHeight, 0x80000000
+                a2SetLineAA 1
+                
+                if gui.msd = 1 then newIndex = tabIndex : gui.selStart = index
+            endif
+        endif
+    
+        a2BoxText gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, 0xFFFFFFFF
+    endif
+    
+    guiPushInteger(tabX+width)
+    guiPushInteger(tabHeight)
+    guiPushInteger(tabIndex+1)
+    guiPushInteger(index)
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(id)
+    guiPushInteger(newIndex)
+    
+    if selected then guiBeginContainer(id, 4, tabHeight+3, w-8, h-tabHeight-7, 0, 0)
+endfunction selected
+
+function guiTabEnd()
+    guiEndContainer()
+endfunction
+
+function guiTabsEnd()
+    newIndex = guiPopInteger()
+    id = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    index = guiPopInteger()
+    tabNum = guiPopInteger()
+    tabHeight = guiPopInteger()
+    guiPopInteger()
+
+    focused = guiGetFocus() = id
+    if focused
+        if guiProcessKeyDown(id, VK_LEFT, 0) then dec newIndex
+        if guiProcessKeyDown(id, VK_RIGHT, 0) then inc newIndex
+    endif
+    newIndex = clamp(newIndex, 0, tabNum-1)
+    
+    guiEndControl()
+endfunction newIndex
