@@ -252,7 +252,9 @@ function guiWindowDraw(id as guiId, w, h, caption$, focused)
     
     a2Box x, y, x+w-1, y+h-1, 0xFF000000
     a2Box x+3, y+25, x+w-4, y+h-4, 0xFF000000
-    a2Text gui.fontId, x+6, y+4, caption$, 0xFF000000
     a2SetLineAA 1
-    
+
+    `a2Text gui.fontId, x+6, y+4, caption$, 0xFF000000
+    guiFastText(gui.fontId, x+6, y+4, caption$, 0xFF000000)
+
 endfunction

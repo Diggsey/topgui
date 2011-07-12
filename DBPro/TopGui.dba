@@ -45,6 +45,7 @@ type guiContextType
     overrideFocusId as guiId
     selStart as integer
     selEnd as integer
+    tempBuffer as string
     entryBuffer as string
     cursorTimer as integer
     tempScroll as integer
@@ -57,6 +58,32 @@ type guiRectType
     y2 as integer
     offsetx as integer
     offsety as integer
+endtype
+
+type guiDrawTargetType
+    targetId as integer
+    targetType as integer `0 = Bitmap, 1 = Camera, 2 = Image
+endtype
+
+type guiOverlayType
+    ownerId as guiId
+    imageId as integer
+    used as boolean
+    x as integer
+    y as integer
+    color as integer
+endtype
+
+type guiCachedTextType
+    fontId as integer
+    textStr as string
+    imageId as integer
+    halign as integer
+    valign as integer
+    width as integer
+    height as integer
+    wordWrap as boolean
+    used as boolean
 endtype
 
 global gui as guiContextType
@@ -75,6 +102,12 @@ function guiInit()
     global dim guiFocusParentIds() as guiId
     global dim guiInteractions() as guiInteractionType
     global dim guiDataStackInteger() as integer
+    global dim guiDrawTargetStack() as guiDrawTargetType
+    global dim guiOverlays() as guiOverlayType
+    global dim guiCachedText() as guiCachedTextType
+    
+    ` Alpha blend RGB channels, add alpha channels
+    a2SetBlendMode 5, 6, 1, 2, 2, 1
     
     gui.defaultFontId = a2CreateFont("Tahoma", 12, a2Size_Point(), a2Style_Bold())
     gui.fontId = gui.defaultFontId
@@ -91,7 +124,7 @@ function guiWndProc(hwnd as dword, msg as dword, wparam as dword, lparam as dwor
         case guiWM_CHAR
             repeatCount = lparam and 0xFFFF
             for i = 1 to repeatCount
-                gui.entryBuffer = gui.entryBuffer + chr$(1) + chr$(wparam and 0xFF)
+                gui.tempBuffer = gui.tempBuffer + chr$(1) + chr$(wparam and 0xFF)
             next i
         endcase
         case guiWM_KEYDOWN
@@ -99,16 +132,16 @@ function guiWndProc(hwnd as dword, msg as dword, wparam as dword, lparam as dwor
             for i = 1 to repeatCount
                 firstTime = (lparam and 0x40000000) <> 0 and i = 1
                 if firstTime
-                    gui.entryBuffer = gui.entryBuffer + chr$(2) + chr$(wparam and 0xFF)
+                    gui.tempBuffer = gui.tempBuffer + chr$(2) + chr$(wparam and 0xFF)
                 else
-                    gui.entryBuffer = gui.entryBuffer + chr$(3) + chr$(wparam and 0xFF)
+                    gui.tempBuffer = gui.tempBuffer + chr$(3) + chr$(wparam and 0xFF)
                 endif
             next i
         endcase
         case guiWM_KEYUP
             repeatCount = lparam and 0xFFFF
             for i = 1 to repeatCount
-                gui.entryBuffer = gui.entryBuffer + chr$(4) + chr$(wparam and 0xFF)
+                gui.tempBuffer = gui.tempBuffer + chr$(4) + chr$(wparam and 0xFF)
             next i
         endcase
     endselect
@@ -222,8 +255,23 @@ function guiUpdate()
     ` Mouse up = clicked before and not clicked now
     gui.msu = gui.omc and (not gui.msc)
     
-    ` Clear entry
-    gui.entryBuffer = ""
+    ` Clear unused text from the cache
+    n = array count(guiCachedText())
+    for i = 0 to n
+        if guiCachedText(i).used = 0
+            delete image guiCachedText(i).imageId
+            array delete element guiCachedText(), i
+            dec i
+            dec n
+        else
+            guiCachedText(i).used = 0
+        endif
+    next i
+    
+    ` Fetch new events
+    gui.entryBuffer = gui.tempBuffer
+    gui.tempBuffer = ""
+    
 endfunction
 
 function guiMoveX(x, minX, maxX, w, minW, maxW)
@@ -319,6 +367,7 @@ function guiPushClip(x1, y1, x2, y2, scrollx, scrolly, child)
     endif
         
     a2SetClip x1, y1, x2, y2
+
 endfunction
 
 function guiPopClip()
@@ -480,6 +529,47 @@ function guiPopInteraction()
     previous array index guiInteractions()
 endfunction
 
+function guiGetOverlay(id as guiId, w, h)
+    n = array count(guiOverlays())
+    overlayIndex = -1
+    for i = 0 to n
+        if guiOverlays(i).ownerId = id
+            imageId = guiOverlays(i).imageId
+            if (image width(imageId) >= w) and (image height(imageId) >= h)
+                overlayIndex = i
+                exit
+            endif
+        endif
+    next i
+    
+    if overlayIndex = -1
+        array insert at bottom guiOverlays()
+        overlayIndex = n+1
+        
+        imageId = reserve free image()
+        make image imageId, w, h, 21
+        
+        guiOverlays(overlayIndex).ownerId = id
+        guiOverlays(overlayIndex).imageId = imageId
+    endif
+    
+    guiOverlays(overlayIndex).used = 1
+endfunction overlayIndex
+
+function guiBeginOverlay(id as guiId, x, y, w, h, color)
+    overlayIndex = guiGetOverlay(id, w, h)
+    guiOverlays(overlayIndex).x = x
+    guiOverlays(overlayIndex).y = y
+    guiOverlays(overlayIndex).color = color
+    
+    guiPushClip(0, 0, w, h, scrollx, scrolly, 1)
+    
+endfunction
+
+function guiEndOverlay()
+    guiPopClip()
+endfunction
+
 function guiBeginContainer(id as guiId, x, y, w, h, scrollx, scrolly)
     guiPushClip(x, y, x+w, y+h, scrollx, scrolly, 1)
     guiPushInteraction()
@@ -637,4 +727,93 @@ endfunction value
 function guiPeekInteger()
     value = guiDataStackInteger()
 endfunction value
+
+function guiFastText(fontId, x, y, text$, color)
+    n = array count(guiCachedText())
+    for i = 0 to n
+        if guiCachedText(i).textStr = text$
+            if guiCachedText(i).fontId = fontId
+                if guiCachedText(i).halign = -1
+                    exit
+                endif
+            endif
+        endif
+    next i
+    
+    if i > n
+        array insert at bottom guiCachedText()
+        guiCachedText(i).fontId = fontId
+        guiCachedText(i).textStr = text$
+        guiCachedText(i).width = a2GetTextWidth(fontId, text$)
+        guiCachedText(i).height = a2GetLineHeight(fontId)
+        guiCachedText(i).imageId = reserve free image()
+        guiCachedText(i).halign = -1
+        guiCachedText(i).valign = -1
+        guiCachedText(i).used = 1
+        make image guiCachedText(i).imageId, guiCachedText(i).width, guiCachedText(i).height, 21
+        
+        drawTargetType = draw target type()
+        drawTargetId = draw target()
+        
+        draw to image guiCachedText(i).imageId
+        guiPushClip(0, 0, guiCachedText(i).width, guiCachedText(i).height, 0, 0, 0)
+        
+        cls 0
+        a2Text guiCachedText(i).fontId, 0, 0, guiCachedText(i).textStr, 0xFFFFFFFF
+        
+        guiPopClip()
+        set draw target drawTargetType, drawTargetId
+    endif
+    
+    guiCachedText(i).used = 1
+
+    a2DrawImage guiCachedText(i).imageId, x, y, 0, 0, 0, 1, 0, color
+    
+endfunction
+
+function guiFastBoxText(fontId, x1, y1, x2, y2, text$, halign, valign, wordWrap, color)
+    n = array count(guiCachedText())
+    for i = 0 to n
+        if guiCachedText(i).textStr = text$
+            if guiCachedText(i).width = x2-x1 and guiCachedText(i).height = y2-y1
+                if guiCachedText(i).fontId = fontId and guiCachedText(i).wordWrap = wordWrap
+                    if guiCachedText(i).halign = halign and guiCachedText(i).valign = valign
+                        exit
+                    endif
+                endif
+            endif
+        endif
+    next i
+    
+    if i > n
+        array insert at bottom guiCachedText()
+        guiCachedText(i).fontId = fontId
+        guiCachedText(i).textStr = text$
+        guiCachedText(i).width = x2-x1
+        guiCachedText(i).height = y2-y1
+        guiCachedText(i).imageId = reserve free image()
+        guiCachedText(i).halign = halign
+        guiCachedText(i).valign = valign
+        guiCachedText(i).wordWrap = wordWrap
+        guiCachedText(i).used = 1
+        make image guiCachedText(i).imageId, guiCachedText(i).width, guiCachedText(i).height, 21
+        
+        drawTargetType = draw target type()
+        drawTargetId = draw target()
+        
+        draw to image guiCachedText(i).imageId
+        guiPushClip(0, 0, guiCachedText(i).width, guiCachedText(i).height, 0, 0, 0)
+        
+        cls 0
+        a2BoxText guiCachedText(i).fontId, 0, 0, x2-x1, y2-y1, guiCachedText(i).textStr, halign, valign, wordWrap, 0xFFFFFFFF
+        
+        guiPopClip()
+        set draw target drawTargetType, drawTargetId
+    endif
+    
+    guiCachedText(i).used = 1
+
+    a2DrawImage guiCachedText(i).imageId, x1, y1, 0, 0, 0, 1, 0, color
+    
+endfunction
 

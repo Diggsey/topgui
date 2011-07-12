@@ -67,7 +67,8 @@ function guiCheckboxDraw(id as guiId, w, h, caption$, checked)
     a2Box boxx, boxy, boxx+19, boxy+19, 0xFF000000
     a2SetLineAA 1
     
-    a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
+    `a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
+    guiFastBoxText(gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF)
     
     if focused
         guiDrawFocusRect(x, y, x+w-1, y+h-1, 0x80FFFFFF)

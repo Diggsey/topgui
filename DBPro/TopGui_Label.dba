@@ -11,5 +11,6 @@ function guiLabelDraw(id as guiId, w, h, caption$, halign, valign, color)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
 
-    a2BoxText gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color
+    `a2BoxText gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color
+    guiFastBoxText(gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color)
 endfunction

@@ -80,8 +80,10 @@ function guiButtonDraw(id as guiId, w, h, caption$)
     a2Box x, y, x+w-1, y+h-1, 0xFF000000
     a2SetLineAA 1
     
-    a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, 0x80FFFFFF
-    a2BoxText gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000
+    `a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, 0x80FFFFFF
+    `a2BoxText gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000
+    guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, 0x80FFFFFF)
+    guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000)
     
     if focused
         guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, 0xFF000000)

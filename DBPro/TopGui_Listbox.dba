@@ -2,6 +2,27 @@
 function guiListboxBegin(id as guiId, x, y, w, h, scrollx, scrolly, allowScrollX, allowScrollY)
     guiBeginControl(x, y, w, h, 1)
     
+    guiListboxBeginLogic(id)
+    guiListboxBeginDraw(id, w, h)
+    
+    clientw = w-2
+    if allowScrollY then dec clientw, 20
+    
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(scrollx)
+    guiPushInteger(scrolly)
+    guiPushInteger(id)
+    guiPushInteger(allowScrollX)
+    guiPushInteger(allowScrollY)
+    guiPushInteger(clientw)
+    guiPushInteger(0)
+    guiPushInteger(0)
+    
+    guiBeginContainer(id, 1, 1, w-2, h-2, scrollx, scrolly)
+endfunction
+
+function guiListboxBeginLogic(id as guiId)
     focused = guiFocus(id, 1)
     
     ` If mouse over, try becoming hot
@@ -14,46 +35,43 @@ function guiListboxBegin(id as guiId, x, y, w, h, scrollx, scrolly, allowScrollX
             guiSetFocus(id)
         endif
     endif
-    
-    guiListboxDrawBackground(id, w, h)
-    
-    guiPushInteger(w)
-    guiPushInteger(h)
-    guiPushInteger(scrollx)
-    guiPushInteger(scrolly)
-    guiPushInteger(id)
-    guiPushInteger(allowScrollX)
-    guiPushInteger(allowScrollY)
-
-    clientw = w-2
-    if allowScrollY then dec clientw, 20
-    guiPushInteger(clientw)
-    guiPushInteger(0)
-    guiPushInteger(0)
-    
-    guiBeginContainer(id, 1, 1, w-2, h-2, scrollx, scrolly)
 endfunction
 
 function guiListboxItem(caption$, halign, selected)
-    x = guiAdjustX(0)
-    y = guiAdjustY(0)
-    
     index = guiPopInteger()
     clienth = guiPopInteger()
     clientw = guiPopInteger()
     allowScrollY = guiPopInteger()
     allowScrollX = guiPopInteger()
     id = guiPopInteger()
+    
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    height = a2GetLineHeight(gui.fontId)+4
+    width = guiGetTextWidth(caption$)
+    if allowScrollX then clientw = max(clientw, width+10) : halign = 0
+    
+    clicked = guiListboxItemLogic(id, index, selected, clienth, height)
+    guiListboxItemDraw(id, index, selected, clientw, clienth, width, height, caption$, halign)
+    
+    guiPushInteger(id)
+    guiPushInteger(allowScrollX)
+    guiPushInteger(allowScrollY)
+    guiPushInteger(clientw)
+    guiPushInteger(clienth+height)
+    guiPushInteger(index+1)
+endfunction clicked
+
+function guiListboxItemLogic(id as guiId, index, selected, clienth, height)
     scrolly = guiPopInteger()
     scrollx = guiPopInteger()
     h = guiPeekInteger()
+    
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
     if allowScrollX then dec h, 20
     
-    focused = guiGetFocus() = id
-    height = a2GetLineHeight(gui.fontId)+4
-    width = guiGetTextWidth(caption$)
     clicked = 0
-    
     if gui.msd = 1
         if guiGetHot() = id
             if guiInRect(gui.msx, gui.msy, x, y+clienth, x+2000, y+clienth+height)
@@ -63,13 +81,7 @@ function guiListboxItem(caption$, halign, selected)
         endif
     endif
     
-    if allowScrollX then clientw = max(clientw, width+10) : halign = 0
-    
-    if selected then a2FillBox x, y+clienth, x+2000, y+clienth+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
-    
-    a2BoxText gui.fontId, x+5, y+clienth, x+clientw-5, y+clienth+height, caption$, halign, 1, 0, 0xFF000000
-    
-    if focused
+    if guiGetFocus() = id
         if gui.selStart = index
             if gui.selEnd <> index
                 
@@ -83,6 +95,29 @@ function guiListboxItem(caption$, halign, selected)
                 gui.selEnd = index
             endif
             
+            if guiProcessKeyUp(id, VK_SPACE) then clicked = 1
+        endif
+        
+        if guiFocusChanged() and selected
+            gui.selStart = index
+        endif
+    endif
+    
+    guiPushInteger(scrollx)
+    guiPushInteger(scrolly)
+endfunction clicked
+
+function guiListboxItemDraw(id as guiId, index, selected, clientw, clienth, width, height, caption$, halign)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    if selected then a2FillBox x, y+clienth, x+2000, y+clienth+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+    
+    `a2BoxText gui.fontId, x+5, y+clienth, x+clientw-5, y+clienth+height, caption$, halign, 1, 0, 0xFF000000
+    guiFastBoxText(gui.fontId, x+5, y+clienth, x+clientw-5, y+clienth+height, caption$, halign, 1, 0, 0xFF000000)
+    
+    if guiGetFocus() = id
+        if gui.selStart = index
             select halign
                 case 0
                     guiDrawFocusRect(x+2, y+clienth+2, x+width+6, y+clienth+height-3, 0xFF000000)
@@ -94,26 +129,9 @@ function guiListboxItem(caption$, halign, selected)
                     guiDrawFocusRect(x+clientw-width-8, y+clienth+2, x+clientw-3, y+clienth+height-3, 0xFF000000)
                 endcase
             endselect
-            
-            if guiProcessKeyUp(id, VK_SPACE) then clicked = 1
-        endif
-        
-        if guiFocusChanged() and selected
-            gui.selStart = index
         endif
     endif
-    
-    inc clienth, height
-    
-    guiPushInteger(scrollx)
-    guiPushInteger(scrolly)
-    guiPushInteger(id)
-    guiPushInteger(allowScrollX)
-    guiPushInteger(allowScrollY)
-    guiPushInteger(clientw)
-    guiPushInteger(clienth)
-    guiPushInteger(index+1)
-endfunction clicked
+endfunction
 
 function guiListboxEnd()
     guiEndContainer()
@@ -121,7 +139,6 @@ function guiListboxEnd()
     itemNum = guiPopInteger()
     clienth = guiPopInteger()
     clientw = guiPopInteger()
-    
     allowScrollY = guiPopInteger()
     allowScrollX = guiPopInteger()
     id = guiPopInteger()
@@ -130,27 +147,29 @@ function guiListboxEnd()
     h = guiPopInteger()
     w = guiPopInteger()
     
-    focused = guiGetFocus() = id
-    if focused
-        if guiProcessKeyDown(id, VK_UP, 0) then dec gui.selStart
-        if guiProcessKeyDown(id, VK_DOWN, 0) then inc gui.selStart
-        
-        gui.selStart = clamp(gui.selStart, 0, itemNum-1)
-    endif
-    
-    guiListboxDraw(id, w, h, scrollx, scrolly, allowScrollX, allowScrollY, clientw, clienth)
+    guiListboxEndLogic(id, itemNum)
+    guiListboxEndDraw(id, w, h, scrollx, scrolly, allowScrollX, allowScrollY, clientw, clienth)
 
     guiEndControl()
 endfunction
 
-function guiListboxDrawBackground(id as guiId, w, h)
+function guiListboxBeginDraw(id as guiId, w, h)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
 
     a2FillBox x, y, x+w, y+h, 0x80FFFFFF
 endfunction
 
-function guiListboxDraw(id as guiId, w, h, scrollx, scrolly, allowScrollX, allowScrollY, clientw, clienth)
+function guiListboxEndLogic(id as guiId, itemNum)
+    if guiGetFocus() = id
+        if guiProcessKeyDown(id, VK_UP, 0) then dec gui.selStart
+        if guiProcessKeyDown(id, VK_DOWN, 0) then inc gui.selStart
+        
+        gui.selStart = clamp(gui.selStart, 0, itemNum-1)
+    endif
+endfunction
+
+function guiListboxEndDraw(id as guiId, w, h, scrollx, scrolly, allowScrollX, allowScrollY, clientw, clienth)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
 

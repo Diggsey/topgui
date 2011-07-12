@@ -46,16 +46,47 @@ set current camera 0
 
 ink 0, 0
 
+global perf_a
+global perf_b
+global perf_d1
+global perf_d2
+tmp$ = ""
 do
+    perf_start = hitimer(10000)
+
     guiWindowListNames(get arrayptr(windowFuncPtrs()), 1)
     
     yrotate object 1, hitimer()*0.02
     
     print screen fps()
+    
+    perf_end = hitimer(10000)
+    print perf_end-perf_start
+    
+    perf_d1 = 0
+    perf_d2 = 0
+    
     guiUpdate()
     sync
+
     cls 0xFFC0D0FF
 loop
+
+function perfstart1()
+    perf_a = hitimer(10000)
+endfunction
+
+function perfend1()
+    inc perf_d1, hitimer(10000)-perf_a
+endfunction
+
+function perfstart2()
+    perf_b = hitimer(10000)
+endfunction
+
+function perfend2()
+    inc perf_d2, hitimer(10000)-perf_b
+endfunction
 
 function window1(focused)
 
@@ -88,7 +119,7 @@ function window2(focused)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 80, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", windowChecked2)
-        
+
         guiTabsBegin(GEN_ID, 100, 200, 308, 332, 25, windowTabIndex)
             if guiTabBegin("Tab 0", 0)
             
@@ -105,7 +136,7 @@ function window2(focused)
                 guiTabEnd()
             endif
         windowTabIndex = guiTabsEnd()
-        
+
     guiScrollWindowEnd()
     windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)
     windowY2 = guiMoveY(windowY2, 0, 1000000, windowH2, 50, 1000000)

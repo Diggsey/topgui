@@ -63,7 +63,8 @@ function guiRadioButtonDraw(id as guiId, w, h, caption$, checkedId as guiId)
     
     a2Circle boxx+10, boxy+10, 10, 0xFF000000
     
-    a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
+    `a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
+    guiFastBoxText(gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF)
     
     if focused
         guiDrawFocusRect(x, y, x+w-1, y+h-1, 0x80FFFFFF)
