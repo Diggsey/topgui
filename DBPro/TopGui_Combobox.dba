@@ -1,0 +1,221 @@
+
+function guiComboboxBegin(id as guiId, x, y, w, h, selectedIndex, dropDownHeight, allowScrollY)
+    guiBeginControl(x, y, w, h, 1)
+    
+    isOpen = guiComboboxBeginLogic(id, selectedIndex)
+    guiComboboxBeginDraw(id, w, h)
+    
+    if isOpen
+        clientw = w-2
+        if allowScrollY then dec clientw, 20
+        
+        guiBeginOverlay(id, guiAdjustX(0), guiAdjustY(0)+h, w, dropDownHeight, 0xFFFFFFFF, 4, 150)
+        
+        guiComboboxBeginOverlayDraw(id, w, dropDownHeight)
+        guiBeginContainer(id, 1, 1, clientw, dropDownHeight-2, 0, gui.tempScroll)
+    endif
+    
+    guiPushInteger(allowScrollY)
+    guiPushString("") ` Caption
+    guiPushInteger(0) ` halign
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(dropDownHeight)
+    guiPushInteger(isOpen)
+    guiPushInteger(selectedIndex)
+    guiPushInteger(0)
+    guiPushInteger(0)
+    guiPushInteger(id)
+endfunction
+
+function guiComboboxBeginOverlayDraw(id as guiId, w, dropDownHeight)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    a2FillBox x, y, x+w, y+dropDownHeight, 0xC0FFFFFF
+endfunction
+
+function guiComboboxBeginLogic(id as guiId, selectedIndex)
+    focused = guiFocus(id, 1)
+    isOpen = focused and (gui.selStart <> -1)
+    
+    ` If mouse over, try becoming hot
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+    
+endfunction isOpen
+
+function guiComboboxBeginDraw(id as guiId, w, h)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    a2FillBox x, y, x+w, y+h, 0x80FFFFFF
+endfunction
+
+function guiComboboxItem(caption$, height, halign)
+    id = guiPopInteger()
+    itemy = guiPopInteger()
+    index = guiPopInteger()
+    selectedIndex = guiPopInteger()
+    isOpen = guiPopInteger()
+    dropDownHeight = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    selhalign = guiPopInteger()
+    selcaption$ = guiPopString()
+    allowScrollY = guiPopInteger()
+    
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    clientw = w-2
+    if allowScrollY then dec clientw, 20
+    
+    if isOpen
+        guiComboboxItemLogic(id, index, itemy, clientw, height)
+        guiComboboxItemDraw(id, index, caption$, itemy, clientw, height, halign)
+    
+        inc itemy, height
+    endif
+    
+    if index = selectedIndex
+        selcaption$ = caption$
+        selhalign = halign
+    endif
+    
+    guiPushInteger(allowScrollY)
+    guiPushString(selcaption$)
+    guiPushInteger(selhalign)
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(dropDownHeight)
+    guiPushInteger(isOpen)
+    guiPushInteger(selectedIndex)
+    guiPushInteger(index+1)
+    guiPushInteger(itemy)
+    guiPushInteger(id)
+endfunction
+
+function guiComboboxItemLogic(id as guiId, index, itemy, clientw, height)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    hot = 0
+    if guiInClip(guiMouseX(), guiMouseY()) and (guiGetHot() = id)
+        hot = guiInRect(guiMouseX(), guiMouseY(), x+1, y+itemy, x+clientw-1, y+itemy+height)
+    endif
+    
+    if hot then gui.selStart = index
+endfunction
+
+function guiComboboxItemDraw(id as guiId, index, caption$, itemy, clientw, height, halign)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    if gui.selStart = index
+        a2FillBox x, y+itemy, x+clientw, y+itemy+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+    endif
+
+    guiFastBoxText(gui.fontId, x+5, y+itemy, x+clientw-5, y+itemy+height, caption$, halign, 1, 0, 0xFF000000)
+endfunction
+
+function guiComboboxEnd()
+    id = guiPopInteger()
+    itemy = guiPopInteger()
+    itemNum = guiPopInteger()
+    selectedIndex = guiPopInteger()
+    isOpen = guiPopInteger()
+    dropDownHeight = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    selhalign = guiPopInteger()
+    selcaption$ = guiPopString()
+    allowScrollY = guiPopInteger()
+    
+    vertId = CHILD_ID(id)
+    guiGetScroll(id, vertId)
+    
+    if isOpen
+        guiEndContainer()
+        guiComboboxEndOverlayDraw(id, w, dropDownHeight, itemy, allowScrollY, vertId)
+        guiEndOverlay()
+    endif
+    
+    selectedIndex = guiComboboxEndLogic(id, isOpen, selectedIndex, itemNum, vertId)
+    guiComboboxEndDraw(id, selcaption$, w, h, selhalign)
+    
+    guiEndControl()
+endfunction selectedIndex
+
+function guiComboboxEndLogic(id as guiId, isOpen, selectedIndex, itemNum, vertId as guiId)
+    if gui.msd = 1
+        if guiGetHot() = id
+            if isOpen
+                if guiInClip(guiMouseX(), guiMouseY()) = 0
+                    if gui.selStart <> -1
+                        selectedIndex = gui.selStart
+                    endif
+                endif
+                
+                guiSetFocus(id, -1, 0)
+            else
+                guiSetFocus(id, selectedIndex, 0)
+            endif
+        else
+            if guiGetFocus() = id and guiGetHot() <> vertId
+                gui.selStart = -1
+            endif
+        endif
+    endif
+    
+    if isOpen
+        if guiProcessKeyDown(id, VK_UP, 0) then dec selectedIndex : gui.selStart = -1
+        if guiProcessKeyDown(id, VK_DOWN, 0) then inc selectedIndex : gui.selStart = -1
+    else
+        if guiProcessKeyDown(id, VK_UP, 0) then dec selectedIndex
+        if guiProcessKeyDown(id, VK_DOWN, 0) then inc selectedIndex
+    endif
+    
+    selectedIndex = clamp(selectedIndex, 0, itemNum-1)
+endfunction selectedIndex
+
+function guiComboboxEndDraw(id as guiId, caption$, w, h, halign)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    guiFastBoxText(gui.fontId, x+5, y, x+w-20, y+h, caption$, halign, 1, 0, 0xFF000000)
+    
+    if guiGetHot() = id
+        a2FillBox x+w-h, y, x+w, y+h, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+    else
+        a2FillBox x+w-h, y, x+w, y+h, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+    endif
+    
+    if guiGetFocus() = id
+        guiDrawFocusRect(x+2, y+2, x+w-h-2, y+h-3, 0xFF000000)
+    endif
+    
+    a2FillTriangle x+w-h+h/2, y+h-8, x+w-h+5, y+8, x+w-6, y+8, 0xFF000000
+    a2Triangle x+w-h+h/2, y+h-8, x+w-h+5, y+8, x+w-6, y+8, 0xFF000000
+    
+    a2SetLineAA 0
+    a2Box x+w-h, y, x+w-1, y+w-1, 0xFF000000
+    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2SetLineAA 1
+endfunction
+
+function guiComboboxEndOverlayDraw(id as guiId, w, dropDownHeight, itemy, allowScrollY, vertId as guiId)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    if allowScrollY
+        gui.tempScroll = guiVScrollbar(vertId, w-21, 0, 21, dropDownHeight, gui.tempScroll, itemy+2-dropDownHeight, dropDownHeight-2, 20)
+    endif
+    
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+dropDownHeight-1, 0xFF000000
+    a2SetLineAA 1
+endfunction
+
+

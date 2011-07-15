@@ -18,13 +18,13 @@ function guiTabsBeginLogic(id as guiId)
     focused = guiFocus(id, 1)
     
     ` If mouse over, try becoming hot
-    if guiInClip(gui.msx, gui.msy)
+    if guiInClip(guiMouseX(), guiMouseY())
         guiSetHot(id)
     endif
     
     if guiGetHot() = id
         if gui.msd = 1
-            guiSetFocus(id)
+            guiSetFocus(id, 0, 0)
         endif
     endif
     
@@ -44,7 +44,7 @@ function guiTabBegin(caption$, width)
     
     if width = 0 then width = a2GetTextWidth(gui.fontId, caption$)+12
     
-    tabHot = (guiGetHot() = id) and guiInRect(gui.msx, gui.msy, tabX, y, tabX+width, y+tabHeight)
+    tabHot = (guiGetHot() = id) and guiInRect(guiMouseX(), guiMouseY(), tabX, y, tabX+width, y+tabHeight)
     selected = index = tabIndex
     
     newIndex = guiTabLogic(id, index, newIndex, tabIndex, tabHot)

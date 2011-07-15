@@ -26,13 +26,13 @@ function guiListboxBeginLogic(id as guiId)
     focused = guiFocus(id, 1)
     
     ` If mouse over, try becoming hot
-    if guiInClip(gui.msx, gui.msy)
+    if guiInClip(guiMouseX(), guiMouseY())
         guiSetHot(id)
     endif
     
     if guiGetHot() = id
         if gui.msd = 1
-            guiSetFocus(id)
+            guiSetFocus(id, 0, 0)
         endif
     endif
 endfunction
@@ -74,7 +74,7 @@ function guiListboxItemLogic(id as guiId, index, selected, clienth, height)
     clicked = 0
     if gui.msd = 1
         if guiGetHot() = id
-            if guiInRect(gui.msx, gui.msy, x, y+clienth, x+2000, y+clienth+height)
+            if guiInRect(guiMouseX(), guiMouseY(), x, y+clienth, x+2000, y+clienth+height)
                 clicked = 1
                 gui.selStart = index
             endif

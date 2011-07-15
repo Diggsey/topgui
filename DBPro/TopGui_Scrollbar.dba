@@ -17,12 +17,12 @@ function guiVScrollbar(id as guiId, x, y, w, h, value, maxValue, pageSize, small
     guiEndControl()
 endfunction value
 
-function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
+function guiHScrollbarLogic(id as guiId, w, h, value, maxValue, pageSize, smallStep)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
     ` If mouse over, try becoming hot
-    if guiInClip(gui.msx, gui.msy)
+    if guiInClip(guiMouseX(), guiMouseY())
         guiSetHot(id)
     endif
     
@@ -37,12 +37,12 @@ function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
     barSize = (pageSize*slideSize)/(maxValue+pageSize)
     barPos = ((slideSize-barSize)*value)/maxValue
     
-    inButton1 = guiInRect(gui.msx, gui.msy, x, y, x+h, y+h)
-    inButton2 = guiInRect(gui.msx, gui.msy, x+w-h, y, x+w, y+h)
-    inBar = guiInRect(gui.msx, gui.msy, x+h+barPos, y, x+h+barPos+barSize, y+h)
+    inButton1 = guiInRect(guiMouseX(), guiMouseY(), x, y, x+h, y+h)
+    inButton2 = guiInRect(guiMouseX(), guiMouseY(), x+w-h, y, x+w, y+h)
+    inBar = guiInRect(guiMouseX(), guiMouseY(), x+h+barPos, y, x+h+barPos+barSize, y+h)
     inSlider = (inButton1 = 0) and (inButton2 = 0) and (inBar = 0)
-    inSlider1 = inSlider and (gui.msx <= x+h+barPos)
-    inSlider2 = inSlider and (gui.msx > x+h+barPos)
+    inSlider1 = inSlider and (guiMouseX() <= x+h+barPos)
+    inSlider2 = inSlider and (guiMouseX() > x+h+barPos)
     
     if gui.msd = 1
         if guiGetHot() = id
@@ -50,7 +50,7 @@ function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
             if guiSetActive(id)
                 if inBar
                     gui.dragMode = 1
-                    gui.dragX = barPos - gui.msx
+                    gui.dragX = barPos - guiMouseX()
                 else
                     guiSetDelay(id, 500)
                     
@@ -70,7 +70,7 @@ function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
             
             select gui.dragMode
                 case 1
-                    barPos = gui.dragX + gui.msx
+                    barPos = gui.dragX + guiMouseX()
                     value = (barPos*maxValue)/(slideSize-barSize)
                 endcase
                 case 2
@@ -101,12 +101,12 @@ function guiHScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
     
 endfunction value
 
-function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
+function guiVScrollbarLogic(id as guiId, w, h, value, maxValue, pageSize, smallStep)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
 
     ` If mouse over, try becoming hot
-    if guiInClip(gui.msx, gui.msy)
+    if guiInClip(guiMouseX(), guiMouseY())
         guiSetHot(id)
     endif
     
@@ -121,12 +121,12 @@ function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
     barSize = (pageSize*slideSize)/(maxValue+pageSize)
     barPos = ((slideSize-barSize)*value)/maxValue
     
-    inButton1 = guiInRect(gui.msx, gui.msy, x, y, x+w, y+w)
-    inButton2 = guiInRect(gui.msx, gui.msy, x, y+h-w, x+w, y+h)
-    inBar = guiInRect(gui.msx, gui.msy, x, y+w+barPos, x+w, y+w+barPos+barSize)
+    inButton1 = guiInRect(guiMouseX(), guiMouseY(), x, y, x+w, y+w)
+    inButton2 = guiInRect(guiMouseX(), guiMouseY(), x, y+h-w, x+w, y+h)
+    inBar = guiInRect(guiMouseX(), guiMouseY(), x, y+w+barPos, x+w, y+w+barPos+barSize)
     inSlider = (inButton1 = 0) and (inButton2 = 0) and (inBar = 0)
-    inSlider1 = inSlider and (gui.msy <= y+w+barPos)
-    inSlider2 = inSlider and (gui.msy > y+w+barPos)
+    inSlider1 = inSlider and (guiMouseY() <= y+w+barPos)
+    inSlider2 = inSlider and (guiMouseY() > y+w+barPos)
     
     if gui.msd = 1
         if guiGetHot() = id
@@ -134,7 +134,7 @@ function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
             if guiSetActive(id)
                 if inBar
                     gui.dragMode = 1
-                    gui.dragY = barPos - gui.msy
+                    gui.dragY = barPos - guiMouseY()
                 else
                     guiSetDelay(id, 500)
                     
@@ -154,7 +154,7 @@ function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
             
             select gui.dragMode
                 case 1
-                    barPos = gui.dragY + gui.msy
+                    barPos = gui.dragY + guiMouseY()
                     value = (barPos*maxValue)/(slideSize-barSize)
                 endcase
                 case 2
@@ -185,7 +185,7 @@ function guiVScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
     
 endfunction value
 
-function guiHScrollbarDraw(id, w, h, value, maxValue, pageSize)
+function guiHScrollbarDraw(id as guiId, w, h, value, maxValue, pageSize)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
@@ -236,7 +236,7 @@ function guiHScrollbarDraw(id, w, h, value, maxValue, pageSize)
     
 endfunction
 
-function guiVScrollbarDraw(id, w, h, value, maxValue, pageSize)
+function guiVScrollbarDraw(id as guiId, w, h, value, maxValue, pageSize)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     

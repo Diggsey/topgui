@@ -31,6 +31,8 @@ type guiContextType
     dragX as integer
     dragY as integer
     delayTime as integer
+    currentOverlay as integer
+    overlayHotId as integer
     
     ` Moving/resizing
     interaction as guiInteractionType
@@ -45,6 +47,8 @@ type guiContextType
     overrideFocusId as guiId
     selStart as integer
     selEnd as integer
+    overrideSelStart as integer
+    overrideSelEnd as integer
     tempBuffer as string
     entryBuffer as string
     cursorTimer as integer
@@ -72,6 +76,9 @@ type guiOverlayType
     x as integer
     y as integer
     color as integer
+    animationType as integer
+    animationStart as integer
+    animationLength as integer
 endtype
 
 type guiCachedTextType
@@ -102,6 +109,7 @@ function guiInit()
     global dim guiFocusParentIds() as guiId
     global dim guiInteractions() as guiInteractionType
     global dim guiDataStackInteger() as integer
+    global dim guiDataStackString() as string
     global dim guiDrawTargetStack() as guiDrawTargetType
     global dim guiOverlays() as guiOverlayType
     global dim guiCachedText() as guiCachedTextType
@@ -111,6 +119,7 @@ function guiInit()
     
     gui.defaultFontId = a2CreateFont("Tahoma", 12, a2Size_Point(), a2Style_Bold())
     gui.fontId = gui.defaultFontId
+    gui.currentOverlay = -1
     
     set message callback "guiWndProc"
 endfunction
@@ -206,6 +215,61 @@ endfunction result
 
 function guiUpdate()
 
+    ` Update overlays
+    n = array count(guiOverlays())
+    for i = 0 to n
+        if guiOverlays(i).used
+            overlay as guiOverlayType
+            overlay = guiOverlays(i)
+            
+            width = image width(overlay.imageId)
+            height = image height(overlay.imageId)
+            
+            guiOverlays(i).used = 0
+            
+            x1 = overlay.x
+            y1 = overlay.y
+            
+            deltaTime = min(timer()-overlay.animationStart, overlay.animationLength)
+            
+            ` Fade in
+            if overlay.animationType and 1
+                alpha = rgba(overlay.color)
+                alpha = (deltaTime*alpha)/overlay.animationLength
+                color = set alpha(overlay.color, alpha)
+            else
+                color = overlay.color
+            endif
+            
+            ` Expand X
+            if overlay.animationType and 2
+                x2 = x1+(deltaTime*width)/overlay.animationLength
+            else
+                x2 = x1+width
+            endif
+            
+            ` Expand Y
+            if overlay.animationType and 4
+                y2 = y1+(deltaTime*height)/overlay.animationLength
+            else
+                y2 = y1+height
+            endif
+            
+            guiPushClip(x1, y1, x2, y2, 0, 0, 1)
+            a2DrawImage overlay.imageId, overlay.x, overlay.y, 0, 0, 0, 1, 0, color
+            guiPopClip()
+            
+            if guiInRect(gui.msx, gui.msy, overlay.x, overlay.y, overlay.x+width, overlay.y+height)
+                guiSetHot(overlay.ownerId)
+            endif
+        else
+            delete image guiOverlays(i).imageId
+            array delete element guiOverlays(), i
+            dec i
+            dec n
+        endif
+    next i
+    
     ` A control must keep itself active to stay active
     if gui.stayActive = 0
         gui.activeId = 0
@@ -218,29 +282,39 @@ function guiUpdate()
     gui.oldFocusId = gui.focusId
     if gui.overrideFocusId <> -1
         gui.focusId = gui.overrideFocusId
+        gui.selStart = gui.overrideSelStart
+        gui.selEnd = gui.overrideSelEnd
+        gui.tempScroll = 0
         gui.overrideFocusId = -1
     else
         gui.focusId = gui.newFocusId
+        
+        if gui.focusId <> gui.oldFocusId
+            gui.tempScroll = 0
+            gui.selStart = -1
+            gui.selEnd = -1
+        endif
     endif
     gui.newFocusId = 0
     
-    if gui.oldFocusId <> gui.focusId
-        gui.tempScroll = 0
-        gui.selStart = 0
-        gui.selEnd = 2147483647
+    nextHotId as guiId
+    if gui.overlayHotId
+        nextHotId = gui.overlayHotId
+    else
+        nextHotId = gui.nextHotId
     endif
-    
     if gui.activeId
         ` Only active control can become hot
-        if gui.activeId = gui.nextHotId
-            gui.hotId = gui.nextHotId
+        if gui.activeId = nextHotId
+            gui.hotId = nextHotId
         else
             gui.hotId = 0
         endif
     else
-        gui.hotId = gui.nextHotId
+        gui.hotId = nextHotId
     endif
     gui.nextHotId = 0
+    gui.overlayHotId = 0
     
     ` Get mouse input
     gui.omc = gui.msc
@@ -273,6 +347,14 @@ function guiUpdate()
     gui.tempBuffer = ""
     
 endfunction
+
+function guiMouseX()
+    x = gui.msx - guiOverlayX()
+endfunction x
+
+function guiMouseY()
+    y = gui.msy - guiOverlayY()
+endfunction y
 
 function guiMoveX(x, minX, maxX, w, minW, maxW)
     oldx = x
@@ -410,6 +492,22 @@ function guiAdjustY(y)
     endif
 endfunction y
 
+function guiOverlayX()
+    if gui.currentOverlay <> -1
+        x = guiOverlays(gui.currentOverlay).x
+    else
+        x = 0
+    endif
+endfunction x
+
+function guiOverlayY()
+    if gui.currentOverlay <> -1
+        y = guiOverlays(gui.currentOverlay).y
+    else
+        y = 0
+    endif
+endfunction y
+
 function guiBeginControl(x, y, w, h, child)
     guiPushClip(x, y, x+w, y+h, 0, 0, child)
 endfunction
@@ -419,7 +517,11 @@ function guiEndControl()
 endfunction
 
 function guiSetHot(id as guiId)
-    gui.nextHotId = id
+    if gui.currentOverlay <> -1
+        gui.overlayHotId = id
+    else
+        gui.nextHotId = id
+    endif
     
     if gui.hotId = id
         N = get array index(guiIdStack())
@@ -551,22 +653,46 @@ function guiGetOverlay(id as guiId, w, h)
         
         guiOverlays(overlayIndex).ownerId = id
         guiOverlays(overlayIndex).imageId = imageId
+        guiOverlays(overlayIndex).animationStart = 0
     endif
     
     guiOverlays(overlayIndex).used = 1
 endfunction overlayIndex
 
-function guiBeginOverlay(id as guiId, x, y, w, h, color)
+function guiBeginOverlay(id as guiId, x, y, w, h, color, animationType, animationLength)
+    if guiInRect(gui.msx, gui.msy, x, y, x+w, y+h)
+        gui.overlayHotId = id
+    endif
+
     overlayIndex = guiGetOverlay(id, w, h)
     guiOverlays(overlayIndex).x = x
     guiOverlays(overlayIndex).y = y
     guiOverlays(overlayIndex).color = color
+    guiOverlays(overlayIndex).animationType = animationType
+    guiOverlays(overlayIndex).animationLength = animationLength
+    if guiOverlays(overlayIndex).animationStart = 0
+        guiOverlays(overlayIndex).animationStart = timer()
+    endif
     
-    guiPushClip(0, 0, w, h, scrollx, scrolly, 1)
+    guiPushClip(0, 0, w, h, 0, 0, 0)
     
+    guiPushInteger(draw target type())
+    guiPushInteger(draw target())
+    guiPushInteger(gui.currentOverlay)
+    
+    draw to image guiOverlays(overlayIndex).imageId
+    cls 0
+    
+    gui.currentOverlay = overlayIndex
 endfunction
 
 function guiEndOverlay()
+    gui.currentOverlay = guiPopInteger()
+    drawTarget = guiPopInteger()
+    drawTargetType = guiPopInteger()
+    
+    set draw target drawTargetType, drawTarget
+
     guiPopClip()
 endfunction
 
@@ -642,9 +768,16 @@ endfunction result
 function guiGetFocus()
 endfunction gui.focusId
 
-function guiSetFocus(id as guiId)
+function guiSetFocus(id as guiId, initialSelStart, initialSelEnd)
     gui.overrideFocusId = id
     gui.newFocusId = 0
+    gui.overrideSelStart = initialSelStart
+    gui.overrideSelEnd = initialSelEnd
+    
+    if gui.focusId = id
+        gui.selStart = initialSelStart
+        gui.selEnd = initialSelEnd
+    endif
 endfunction
 
 function guiDrawFocusRect(x1, y1, x2, y2, color)
@@ -727,6 +860,23 @@ endfunction value
 function guiPeekInteger()
     value = guiDataStackInteger()
 endfunction value
+
+function guiPushString(value$)
+    `add to stack guiDataStackInteger()
+    next array index guiDataStackString()
+    if array index valid(guiDataStackString()) = 0 then array insert at bottom guiDataStackString()
+    guiDataStackString() = value$
+endfunction
+
+function guiPopString()
+    value$ = guiDataStackString()
+    `remove from stack guiDataStackInteger()
+    previous array index guiDataStackString()
+endfunction value$
+
+function guiPeekString()
+    value$ = guiDataStackString()
+endfunction value$
 
 function guiFastText(fontId, x, y, text$, color)
     n = array count(guiCachedText())

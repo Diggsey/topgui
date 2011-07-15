@@ -18,11 +18,11 @@ function guiRadioButtonLogic(id as guiId, w, h, checkedId as guiId)
     boxy = y+h/2-10
     
     ` If mouse over, try becoming hot
-    if guiInClip(gui.msx, gui.msy)
-        if guiInEllipse(gui.msx, gui.msy, boxx, boxy, boxx+20, boxy+20)
+    if guiInClip(guiMouseX(), guiMouseY())
+        if guiInEllipse(guiMouseX(), guiMouseY(), boxx, boxy, boxx+20, boxy+20)
             guiSetHot(id)
         else
-            if guiInRect(gui.msx, gui.msy, x+25, y, x+w, y+h)
+            if guiInRect(guiMouseX(), guiMouseY(), x+25, y, x+w, y+h)
                 guiSetHot(id)
             endif
         endif
@@ -31,7 +31,7 @@ function guiRadioButtonLogic(id as guiId, w, h, checkedId as guiId)
     if gui.msd = 1
         if guiGetHot() = id
             checkedId = id
-            guiSetFocus(id)
+            guiSetFocus(id, 0, 0)
         endif
     endif
     

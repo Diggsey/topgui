@@ -31,17 +31,15 @@ function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
     y = guiAdjustY(0)
 
     ` If mouse over, try becoming hot
-    if guiInClip(gui.msx, gui.msy)
+    if guiInClip(guiMouseX(), guiMouseY())
         guiSetHot(id)
     endif
     
     if guiGetHot() = id
         if gui.msd = 1
             if guiSetActive(id)
-                guiSetFocus(id)
-                
-                gui.selStart = guiGetCursorPos(text$, gui.msx+gui.tempScroll-x-4)
-                gui.selEnd = gui.selStart
+                sel = guiGetCursorPos(text$, guiMouseX()+gui.tempScroll-x-4)
+                guiSetFocus(id, sel, sel)
             endif
         endif
     endif
@@ -50,12 +48,14 @@ function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
         if gui.msc = 1
             guiStayActive()
             
-            gui.selEnd = guiGetCursorPos(text$, gui.msx+gui.tempScroll-x-4)
+            gui.selEnd = guiGetCursorPos(text$, guiMouseX()+gui.tempScroll-x-4)
             guiSetCursorVisible(1)
         endif
     endif
     
     if focused
+        if gui.selEnd = -1 then gui.selEnd = 2147483647
+    
         l = fast len(gui.entryBuffer)
         while l
             mode = mid ascii(gui.entryBuffer, 1)

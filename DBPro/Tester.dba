@@ -28,6 +28,7 @@ global windowItem
 global windowScrollX1
 global windowScrollY1
 global windowTabIndex = 1
+global windowIndex3 = 0
 
 dim windowFuncPtrs(2) as string
 windowFuncPtrs(0) = "window2"
@@ -155,6 +156,16 @@ function window3(focused)
         windowValue3 = guiVScrollbar(GEN_ID, 30, 60, 21, 250, windowValue3, 100, 20, 5)
         windowText$ = guiTextbox(GEN_ID, 60, 60, 150, 25, windowText$, 0)
         guiLabel(GEN_ID, 60, 100, 100, 50, "Some text on a label.", 1, 1, 0xFFFFFFFF)
+        
+        guiComboboxBegin(GEN_ID, 60, 200, 150, 21, windowIndex3, 100, 1)
+            guiComboboxItem("Hello", 20, 0)
+            guiComboboxItem("world!", 20, 1)
+            guiComboboxItem("Another item", 20, 1)
+            guiComboboxItem("Item 4", 20, 1)
+            guiComboboxItem("Item 5", 20, 1)
+            guiComboboxItem("Item 6", 20, 1)
+            guiComboboxItem("Item 7", 20, 1)
+        windowIndex3 = guiComboboxEnd()
         
     guiWindowEnd()
     windowX3 = guiMoveX(windowX3, 0, 1000000, windowW3, 50, 1000000)
