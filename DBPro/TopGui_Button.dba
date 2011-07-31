@@ -8,6 +8,15 @@ function guiButton(id as guiId, x, y, w, h, caption$)
     guiEndControl()
 endfunction clicked
 
+function guiPicButton(id as guiId, x, y, w, h, imageId)
+    guiBeginControl(x, y, w, h, 1)
+    
+    clicked = guiButtonLogic(id, w, h)
+    guiPicButtonDraw(id, w, h, imageId)
+    
+    guiEndControl()
+endfunction clicked
+
 function guiButtonLogic(id as guiId, w, h)
     focused = guiFocus(id, 1)
     
@@ -85,6 +94,40 @@ function guiButtonDraw(id as guiId, w, h, caption$)
     guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, 0x80FFFFFF)
     guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000)
     
+    if focused
+        guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, 0xFF000000)
+    endif
+    
+endfunction
+
+function guiPicButtonDraw(id as guiId, w, h, imageId)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiGetFocus() = id
+    pressed = focused and spacekey()
+    
+    if guiGetHot() = id or pressed
+        if guiGetActive() = id or pressed
+            ` Active (pressed)
+            a2FillBox x, y, x+w, y+h, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80, 0xFFFFFF80
+        else
+            ` Hot
+            a2FillBox x, y, x+w, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        endif
+    else
+        ` Normal
+        a2FillBox x, y, x+w, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+    endif
+    
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2SetLineAA 1
+    
+    if image exist(imageId)
+        a2DrawImage imageId, (x+w/2)-(image width(imageId)/2), (y+h/2)-(image height(imageId)/2), 0, 0, 0, 1, 0, 0xFFFFFFFF
+    endif
+        
     if focused
         guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, 0xFF000000)
     endif

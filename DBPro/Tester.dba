@@ -57,6 +57,30 @@ do
 
     guiWindowListNames(get arrayptr(windowFuncPtrs()), 1)
     
+    if gui.msd = 2
+        menux = gui.msx
+        menuy = gui.msy
+        menuopen = 1
+    else
+        menuopen = 0
+    endif
+    
+    if guiContextMenuBegin(GEN_ID, menux, menuy, 150, 300, menuopen)
+        guiMenuItem("Item 0", 0, 20)
+        guiMenuItem("Item 1", 0, 20)
+        guiMenuItem("Item 2", 0, 20)
+        if guiDropDownMenuItemBegin(GEN_ID, "Submenu", 0, 20, 150, 100)
+            guiMenuItem("Item 0", 0, 20)
+            guiMenuItem("Item 1", 0, 20)
+            guiMenuItem("Item 2", 0, 20)
+            guiDropDownMenuItemEnd()
+        endif
+        guiMenuItem("Item 3", 0, 20)
+        guiMenuItem("Item 4", 0, 20)
+        guiMenuItem("Item 5", 0, 20)
+        guiContextMenuEnd()
+    endif
+    
     yrotate object 1, hitimer()*0.02
     
     print screen fps()

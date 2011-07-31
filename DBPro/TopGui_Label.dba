@@ -14,3 +14,21 @@ function guiLabelDraw(id as guiId, w, h, caption$, halign, valign, color)
     `a2BoxText gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color
     guiFastBoxText(gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color)
 endfunction
+
+function guiShadowLabel(id as guiId, x, y, w, h, caption$, halign, valign, color, xoffset, yoffset, shadowcolor)
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiShadowLabelDraw(id, w, h, caption$, halign, valign, color, xoffset, yoffset, shadowcolor)
+    
+    guiEndControl()
+endfunction
+
+function guiShadowLabelDraw(id as guiId, w, h, caption$, halign, valign, color, xoffset, yoffset, shadowcolor)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    `a2BoxText gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color
+    guiFastBoxText(gui.fontID, x+xoffset, y+yoffset, x+w+xoffset, y+h+yoffset, caption$, halign, valign, 1,shadowcolor)    
+    guiFastBoxText(gui.fontId, x, y, x+w, y+h, caption$, halign, valign, 1, color)
+    
+endfunction

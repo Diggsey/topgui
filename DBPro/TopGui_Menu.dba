@@ -1,0 +1,145 @@
+
+function guiContextMenuBegin(id as guiId, x, y, w, h, opened)
+    if opened
+        guiMenuOpen(id, 0)
+    endif
+    
+    open = guiMenuStackIndex(id) <> -1
+    if open then guiDropDownMenuBegin(id, x, y, w, h)
+endfunction open
+
+function guiContextMenuEnd()
+    closed = guiDropDownMenuEnd()
+endfunction closed
+
+function guiDropDownMenuBegin(id as guiId, x, y, w, h)
+    guiBeginOverlay(id, x, y, w, h, 0xFFFFFFFF, 1, 200)
+    
+    guiDropDownMenuBeginDraw(id, w, h)
+    
+    guiBeginContainer(id, 1, 1, w-2, h-2, 0, 0)
+    
+    guiPushInteger(id)
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(0)
+    guiPushInteger(0)
+endfunction
+
+function guiDropDownMenuBeginDraw(id as guiId, w, h)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    a2FillBox x, y, x+w, y+h, 0xFFC0C0C0
+endfunction
+
+function guiMenuItem(caption$, halign, height)
+    close = guiPopInteger()
+    itemy = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    id = guiPopInteger()
+    
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    hot = guiInRect(guiMouseX(), guiMouseY(), x, y+itemy, x+w-2, y+itemy+height) and (guiGetHot() = id)
+    clicked = guiMenuItemLogic(hot)
+    guiMenuItemDraw(caption$, halign, itemy, w-2, height, hot)
+    
+    if clicked then close = 1
+    
+    guiPushInteger(id)
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(itemy+height)
+    guiPushInteger(close)
+endfunction clicked
+
+function guiDropDownMenuItemBegin(id as guiId, caption$, halign, height, menuw, menuh)
+    close = guiPopInteger()
+    itemy = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    parentId = guiPopInteger()
+    
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    hot = guiInRect(guiMouseX(), guiMouseY(), x, y+itemy, x+w-2, y+itemy+height) and (guiGetHot() = parentId)
+    if hot then guiMenuOpen(id, parentId)
+    open = guiMenuStackIndex(id) <> -1
+    
+    clicked = guiMenuItemLogic(hot)
+    guiMenuItemDraw(caption$, halign, itemy, w-2, height, open)
+    guiDropDownMenuItemDraw(itemy, height, menuw)
+    
+    if clicked then close = 1
+    
+    guiPushInteger(parentId)
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(itemy+height)
+    guiPushInteger(close)
+    
+    if open
+        guiDropDownMenuBegin(id, guiOverlayX()+x+w-5, guiOverlayY()+y+itemy-3, menuw, menuh)
+    endif
+endfunction open
+
+function guiDropDownMenuItemDraw(itemy, height, menuw)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    a2FillTriangle x+menuw-8, y+itemy+height/2, x+menuw+8-height, y+itemy+5, x+menuw+8-height, y+itemy+height-6, 0xFF000000
+    a2Triangle x+menuw-8, y+itemy+height/2, x+menuw+8-height, y+itemy+5, x+menuw+8-height, y+itemy+height-6, 0xFF000000
+endfunction
+
+function guiDropDownMenuItemEnd()
+    if guiDropDownMenuEnd()
+        guiPopInteger()
+        guiPushInteger(1)
+    endif
+endfunction
+
+function guiMenuItemLogic(hot)
+    clicked = hot and (gui.msu = 1)
+endfunction clicked
+
+function guiMenuItemDraw(caption$, halign, itemy, clientw, height, hot)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    if hot
+        a2FillBox x, y+itemy, x+clientw, y+itemy+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+    endif
+
+    guiFastBoxText(gui.fontId, x, y+itemy, x+clientw, y+itemy+height, caption$, halign, 1, 0, 0xFF000000)
+    
+endfunction
+
+function guiDropDownMenuEnd()
+    close = guiPopInteger()
+    itemy = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    id = guiPopInteger()
+
+    guiEndContainer()
+    
+    guiDropDownMenuEndDraw(id, w, h)
+
+    guiEndOverlay()
+    
+    if close then guiMenuClose(id)
+endfunction close
+
+function guiDropDownMenuEndDraw(id as guiId, w, h)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2SetLineAA 1
+endfunction
+

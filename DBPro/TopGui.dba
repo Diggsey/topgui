@@ -113,6 +113,19 @@ function guiInit()
     global dim guiDrawTargetStack() as guiDrawTargetType
     global dim guiOverlays() as guiOverlayType
     global dim guiCachedText() as guiCachedTextType
+    global dim guiMenuStack() as guiId
+    
+    set array index guiClip(), -1
+    set array index guiIdStack(), -1
+    set array index guiHotParentIds(), -1
+    set array index guiFocusParentIds(), -1
+    set array index guiInteractions(), -1
+    set array index guiDataStackInteger(), -1
+    set array index guiDataStackString(), -1
+    set array index guiDrawTargetStack(), -1
+    set array index guiOverlays(), -1
+    set array index guiCachedText(), -1
+    set array index guiMenuStack(), -1
     
     ` Alpha blend RGB channels, add alpha channels
     a2SetBlendMode 5, 6, 1, 2, 2, 1
@@ -410,7 +423,7 @@ endfunction gui.interaction.scrollY
 
 function guiPushClip(x1, y1, x2, y2, scrollx, scrolly, child)
 
-    if child and get array index(guiClip()) >= 0
+    if child and (get array index(guiClip()) >= 0)
         ox = guiClip().offsetx
         oy = guiClip().offsety
         offsetx = x1 + ox - scrollx
@@ -966,4 +979,38 @@ function guiFastBoxText(fontId, x1, y1, x2, y2, text$, halign, valign, wordWrap,
     a2DrawImage guiCachedText(i).imageId, x1, y1, 0, 0, 0, 1, 0, color
     
 endfunction
+
+function guiMenuStackIndex(id as guiId)
+    n = get array index(guiMenuStack())
+    for i = 0 to n
+        if guiMenuStack(i) = id then exitfunction i
+    next i
+endfunction -1
+
+function guiMenuOpen(id as guiId, parentId as guiId)
+    parentIndex = guiMenuStackIndex(parentId)
+    set array index guiMenuStack(), parentIndex
+    
+    guiPushMenu(id)
+endfunction
+
+function guiMenuClose(id as guiId)
+    index = guiMenuStackIndex(id)
+    if index <> -1 then dec index
+    set array index guiMenuStack(), index
+endfunction
+
+function guiPushMenu(id as guiId)
+    `add to stack guiDataStackInteger()
+    next array index guiMenuStack()
+    if array index valid(guiMenuStack()) = 0 then array insert at bottom guiMenuStack()
+    guiMenuStack() = id
+endfunction
+
+function guiPopMenu()
+    id as guiId
+    id = guiMenuStack()
+    `remove from stack guiDataStackInteger()
+    previous array index guiMenuStack()
+endfunction id
 
