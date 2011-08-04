@@ -79,6 +79,7 @@ type guiOverlayType
     animationType as integer
     animationStart as integer
     animationLength as integer
+    shadowRadius as integer
 endtype
 
 type guiCachedTextType
@@ -227,6 +228,10 @@ function CHILD_INDEX_ID(parentId as guiId, index)
 endfunction result
 
 function guiUpdate()
+    ` Close submenus when parent is clicked
+    if gui.msd = 1
+        guiMenuCloseChildren(guiGetHot())
+    endif
 
     ` Update overlays
     n = array count(guiOverlays())
@@ -266,6 +271,10 @@ function guiUpdate()
                 y2 = y1+(deltaTime*height)/overlay.animationLength
             else
                 y2 = y1+height
+            endif
+            
+            if overlay.shadowRadius
+                guiDrawShadow(x1, y1, x2, y2, overlay.shadowRadius)
             endif
             
             guiPushClip(x1, y1, x2, y2, 0, 0, 1)
@@ -672,7 +681,7 @@ function guiGetOverlay(id as guiId, w, h)
     guiOverlays(overlayIndex).used = 1
 endfunction overlayIndex
 
-function guiBeginOverlay(id as guiId, x, y, w, h, color, animationType, animationLength)
+function guiBeginOverlay(id as guiId, x, y, w, h, color, animationType, animationLength, shadowRadius)
     if guiInRect(gui.msx, gui.msy, x, y, x+w, y+h)
         gui.overlayHotId = id
     endif
@@ -683,6 +692,7 @@ function guiBeginOverlay(id as guiId, x, y, w, h, color, animationType, animatio
     guiOverlays(overlayIndex).color = color
     guiOverlays(overlayIndex).animationType = animationType
     guiOverlays(overlayIndex).animationLength = animationLength
+    guiOverlays(overlayIndex).shadowRadius = shadowRadius
     if guiOverlays(overlayIndex).animationStart = 0
         guiOverlays(overlayIndex).animationStart = timer()
     endif
@@ -1000,6 +1010,11 @@ function guiMenuClose(id as guiId)
     set array index guiMenuStack(), index
 endfunction
 
+function guiMenuCloseChildren(parentId as guiId)
+    index = guiMenuStackIndex(parentId)
+    set array index guiMenuStack(), index
+endfunction
+
 function guiPushMenu(id as guiId)
     `add to stack guiDataStackInteger()
     next array index guiMenuStack()
@@ -1014,3 +1029,27 @@ function guiPopMenu()
     previous array index guiMenuStack()
 endfunction id
 
+function guiDrawSector(x, y, radius#, startAngle#, endAngle#, color1, color2)
+    a2StartTriangleBatch 60
+    for i = 0 to 60
+        angle# = i*(endAngle#-startAngle#)/60.0+startAngle#
+        x1# = x2#
+        y1# = y2#
+        x2# = x+sin(angle#)*radius#
+        y2# = y-cos(angle#)*radius#
+        
+        if i
+            a2FillTriangle x, y, x1#, y1#, x2#, y2#, color1, color2, color2
+        endif
+    next i
+    a2EndBatch
+endfunction
+
+function guiDrawShadow(x1, y1, x2, y2, offset)
+    guiDrawSector(x1+offset, y2, offset, 180, 270, 0xC0000000, 0x00000000)
+    guiDrawSector(x2, y2, offset, 90, 180, 0xC0000000, 0x00000000)
+    guiDrawSector(x2, y1+offset, offset, 0, 90, 0xC0000000, 0x00000000)
+    
+    a2FillBox x1+offset, y2, x2, y2+offset, 0xC0000000, 0xC0000000, 0x00000000, 0x00000000
+    a2FillBox x2, y1+offset, x2+offset, y2, 0xC0000000, 0x00000000, 0x00000000, 0xC0000000
+endfunction

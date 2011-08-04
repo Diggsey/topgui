@@ -9,7 +9,7 @@ function guiComboboxBegin(id as guiId, x, y, w, h, selectedIndex, dropDownHeight
         clientw = w-2
         if allowScrollY then dec clientw, 20
         
-        guiBeginOverlay(id, guiAdjustX(0), guiAdjustY(0)+h, w, dropDownHeight, 0xFFFFFFFF, 4, 150)
+        guiBeginOverlay(id, guiAdjustX(0), guiAdjustY(0)+h, w, dropDownHeight, 0xFFFFFFFF, 4, 150, 0)
         
         guiComboboxBeginOverlayDraw(id, w, dropDownHeight)
         guiBeginContainer(id, 1, 1, clientw, dropDownHeight-2, 0, gui.tempScroll)
