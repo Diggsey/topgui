@@ -66,20 +66,7 @@ do
     endif
     
     if guiContextMenuBegin(GEN_ID, menux, menuy, 150, 180, menuopen)
-        guiMenuItem("Item 0", 0, 24)
-        guiMenuItem("Item 1", 0, 24)
-        guiSplitterMenuItem(5)
-        guiMenuItem("Item 2", 0, 24)
-        if guiDropDownMenuItemBegin(GEN_ID, "Submenu", 0, 24, 150, 74)
-            guiMenuItem("Item 0", 0, 24)
-            guiMenuItem("Item 1", 0, 24)
-            guiMenuItem("Item 2", 0, 24)
-            guiDropDownMenuItemEnd()
-        endif
-        guiMenuItem("Item 3", 0, 24)
-        guiMenuItem("Item 4", 0, 24)
-        guiSplitterMenuItem(5)
-        guiMenuItem("Item 5", 0, 24)
+        doExampleMenu()
         guiContextMenuEnd()
     endif
     
@@ -98,6 +85,23 @@ do
 
     cls 0xFFC0D0FF
 loop
+
+function doExampleMenu()
+    guiMenuItem("Item 0", 0, 24)
+    guiMenuItem("Item 1", 0, 24)
+    guiSplitterMenuItem(5)
+    guiMenuItem("Item 2", 0, 24)
+    if guiDropDownMenuItemBegin(GEN_ID, "Submenu", 24, 150, 74)
+        guiMenuItem("Item 0", 0, 24)
+        guiMenuItem("Item 1", 0, 24)
+        guiMenuItem("Item 2", 0, 24)
+        guiDropDownMenuItemEnd()
+    endif
+    guiMenuItem("Item 3", 0, 24)
+    guiMenuItem("Item 4", 0, 24)
+    guiSplitterMenuItem(5)
+    guiMenuItem("Item 5", 0, 24)
+endfunction
 
 function perfstart1()
     perf_a = hitimer(10000)
@@ -119,7 +123,22 @@ function window1(focused)
 
     clicked = guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!", 0, focused)
         
-        windowChecked1 = guiCheckbox(GEN_ID, 20, 20, 120, 30, "Check me", windowChecked1)
+        guiMenuBegin(GEN_ID, 0, 0, windowW-8, 24)
+        if guiDropDownMenuItemBegin(GEN_ID, "File", 24, 150, 180)
+            doExampleMenu()
+            guiDropDownMenuItemEnd()
+        endif
+        if guiDropDownMenuItemBegin(GEN_ID, "Edit", 24, 150, 180)
+            doExampleMenu()
+            guiDropDownMenuItemEnd()
+        endif
+        if guiDropDownMenuItemBegin(GEN_ID, "View", 24, 150, 180)
+            doExampleMenu()
+            guiDropDownMenuItemEnd()
+        endif
+        guiMenuEnd()
+        
+        windowChecked1 = guiCheckbox(GEN_ID, 20, 40, 120, 30, "Check me", windowChecked1)
         
         guiListboxBegin(GEN_ID, 20, 100, 200, 200, windowScrollX1, windowScrollY1, 0, 1)
             for i = 0 to 10

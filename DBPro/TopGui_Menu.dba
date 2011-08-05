@@ -1,4 +1,41 @@
 
+function guiMenuBegin(id as guiId, x, y, w, h)
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiMenuLogic(id)
+    guiMenuDraw(w, h)
+    
+    guiPushInteger(0)
+    guiPushInteger(id)
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(0)
+endfunction
+
+function guiMenuEnd()
+    itemx = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    id = guiPopInteger()
+    guiPopInteger()
+
+    guiEndControl()
+endfunction
+
+function guiMenuLogic(id as guiId)
+    ` If mouse over, try becoming hot
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+endfunction
+
+function guiMenuDraw(w, h)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    a2FillBox x, y, x+w, y+h, 0xFFC0C0C0
+endfunction
+
 function guiContextMenuBegin(id as guiId, x, y, w, h, opened)
     if opened
         guiMenuOpen(id, 0)
@@ -19,6 +56,7 @@ function guiDropDownMenuBegin(id as guiId, x, y, w, h)
     
     guiBeginContainer(id, 1, 1, w-2, h-2, 0, 0)
     
+    guiPushInteger(1)
     guiPushInteger(id)
     guiPushInteger(w)
     guiPushInteger(h)
@@ -43,7 +81,7 @@ function guiMenuItem(caption$, halign, height)
     
     hot = guiInRect(guiMouseX(), guiMouseY(), x, y+itemy, x+w-2, y+itemy+height) and (guiGetHot() = id)
     clicked = guiMenuItemLogic(hot)
-    guiMenuItemDraw(caption$, halign, itemy, w-2, height, hot)
+    guiMenuItemDraw(caption$, halign, 0, itemy, w-2, height, hot)
     
     if clicked then guiMenuClose(0)
     if hot then guiMenuCloseChildren(id)
@@ -74,30 +112,63 @@ function guiSplitterMenuItemDraw(itemy, clientw, height)
     a2SetLineAA 1
 endfunction
 
-function guiDropDownMenuItemBegin(id as guiId, caption$, halign, height, menuw, menuh)
-    itemy = guiPopInteger()
+function guiDropDownMenuItemBegin(id as guiId, caption$, height, menuw, menuh)
+    itemoffset = guiPopInteger()
     h = guiPopInteger()
     w = guiPopInteger()
     parentId = guiPopInteger()
+    direction = guiPeekInteger()
     
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    hot = guiInRect(guiMouseX(), guiMouseY(), x, y+itemy, x+w-2, y+itemy+height) and (guiGetHot() = parentId)
-    if hot then guiMenuOpen(id, parentId)
+    itemx = 0
+    itemy = 0
+    if direction
+        itemy = itemoffset
+        itemw = w-2
+        halign = 0
+        inc itemoffset, height
+    else
+        itemx = itemoffset
+        itemw = a2GetTextWidth(gui.fontId, caption$)+20
+        halign = 1
+        inc itemoffset, itemw
+    endif
+    
+    hot = guiInRect(guiMouseX(), guiMouseY(), x+itemx, y+itemy, x+itemx+itemw, y+itemy+height) and (guiGetHot() = parentId)
+    clicked = guiMenuItemLogic(hot)
+    
+    if clicked
+        if direction = 0 then guiMenuOpen(parentId, 0)
+        guiMenuOpen(id, parentId)
+    else
+        if hot
+            if direction
+                guiMenuOpen(id, parentId)
+            else
+                if guiMenuStackIndex(parentId) <> -1
+                    guiMenuOpen(id, parentId)
+                endif
+            endif
+        endif
+    endif
     open = guiMenuStackIndex(id) <> -1
     
-    clicked = guiMenuItemLogic(hot)
-    guiMenuItemDraw(caption$, halign, itemy, w-2, height, open)
-    guiDropDownMenuItemDraw(itemy, height, menuw)
+    guiMenuItemDraw(caption$, halign, itemx, itemy, itemw, height, open or hot)
+    if direction then guiDropDownMenuItemDraw(itemy, height, menuw)
     
     guiPushInteger(parentId)
     guiPushInteger(w)
     guiPushInteger(h)
-    guiPushInteger(itemy+height)
+    guiPushInteger(itemoffset)
     
     if open
-        guiDropDownMenuBegin(id, guiOverlayX()+x+w-5, guiOverlayY()+y+itemy-3, menuw, menuh)
+        if direction
+            guiDropDownMenuBegin(id, guiOverlayX()+x+w-5, guiOverlayY()+y+itemy-3, menuw, menuh)
+        else
+            guiDropDownMenuBegin(id, x+itemx, y+height, menuw, menuh)
+        endif
     endif
 endfunction open
 
@@ -117,15 +188,15 @@ function guiMenuItemLogic(hot)
     clicked = hot and (gui.msu = 1)
 endfunction clicked
 
-function guiMenuItemDraw(caption$, halign, itemy, clientw, height, hot)
+function guiMenuItemDraw(caption$, halign, itemx, itemy, clientw, height, hot)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
     if hot
-        a2FillBox x, y+itemy, x+clientw, y+itemy+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        a2FillBox x+itemx, y+itemy, x+itemx+clientw, y+itemy+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
     endif
 
-    guiFastBoxText(gui.fontId, x+5, y+itemy, x+clientw, y+itemy+height, caption$, halign, 1, 0, 0xFF000000)
+    guiFastBoxText(gui.fontId, x+itemx+5, y+itemy, x+itemx+clientw-5, y+itemy+height, caption$, halign, 1, 0, 0xFF000000)
 endfunction
 
 function guiDropDownMenuEnd()
@@ -133,6 +204,7 @@ function guiDropDownMenuEnd()
     h = guiPopInteger()
     w = guiPopInteger()
     id = guiPopInteger()
+    guiPopInteger()
 
     guiEndContainer()
     
