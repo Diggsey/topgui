@@ -19,6 +19,7 @@ include11=TopGui_Tabs.dba
 include12=TopGui_Combobox.dba
 include13=TopGui_Menu.dba
 include14=TopGui_Theme.dba
+include15=TopGui_Panel.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***

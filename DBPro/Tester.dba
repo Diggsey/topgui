@@ -31,6 +31,8 @@ global windowTabIndex = 1
 global windowIndex3 = 0
 global menuChecked = 0
 global menuCheckedIndex = 0
+global panelScrollX
+global panelScrollY
 
 dim windowFuncPtrs(2) as string
 windowFuncPtrs(0) = "window2"
@@ -71,12 +73,6 @@ do
     yrotate object 1, hitimer()*0.02
     
     print screen fps()
-    
-    perf_end = hitimer(10000)
-    print perf_end-perf_start
-    
-    perf_d1 = 0
-    perf_d2 = 0
     
     guiUpdate()
     sync
@@ -159,7 +155,6 @@ function window2(focused)
 
     clicked = guiScrollWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", windowScrollX2, windowScrollY2, 1000, 1000, 0, focused)
         
-        
         windowChecked2 = guiRadioButton(GEN_ID, 100, 40, 120, 30, "Check me", 0, windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 80, 120, 30, "Check me", 1, windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", 2, windowChecked2)
@@ -181,6 +176,13 @@ function window2(focused)
                 guiTabEnd()
             endif
         windowTabIndex = guiTabsEnd()
+        
+        guiScrollPanelBegin(GEN_ID, 500, 100, 300, 300, panelScrollX, panelScrollY, 600, 600, 0, 1, 1)
+            if guiButton(GEN_ID, 200, 300, 200, 50, "Click me!")
+            endif
+        guiScrollPanelEnd()
+        panelScrollX = guiScrollX()
+        panelScrollY = guiScrollY()
 
     guiScrollWindowEnd()
     windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)

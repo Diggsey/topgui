@@ -1,0 +1,99 @@
+
+function guiPanelBegin(id as guiId, x, y, w, h, borderColor, color, image, tile)
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiPanelLogic(id)
+    guiPanelDraw(id, w, h, borderColor, color, image, tile)
+    
+    guiBeginContainer(id, 1, 1, w-2, h-2, 0, 0)
+endfunction activated
+
+function guiPanelEnd()
+    guiEndContainer()
+    
+    guiEndControl()
+endfunction
+
+function guiScrollPanelBegin(id as guiId, x, y, w, h, scrollx, scrolly, scrollw, scrollh, color, image, tile)
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiPanelLogic(id)
+    guiScrollPanelDraw(id, w, h, scrollx, scrolly, scrollw, scrollh, color, image, tile)
+    
+    guiBeginContainer(id, 1, 1, w-22, h-22, scrollx, scrolly)
+endfunction activated
+
+function guiScrollPanelEnd()
+    guiEndContainer()
+    
+    guiEndControl()
+endfunction
+
+function guiPanelLogic(id as guiId)
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+endfunction
+
+function guiPanelDraw(id as guiId, w, h, borderColor, color, image, tile)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    a2FillBox x+1, y+1, x+w-1, y+h-1, color
+    if image
+        if tile
+            iw = image width(image)
+            ih = image height(image)
+            repeatx = (w-1)/iw
+            repeaty = (h-1)/ih
+            for iy = 0 to repeaty
+                for ix = 0 to repeatx
+                    a2DrawImage image, x+ix*iw, y+iy*ih, 0, 0, 0, 1, 0, 0xFFFFFFFF
+                next ix
+            next iy
+        else
+            a2DrawImage image, x, y, 0, 0, 0, 1, 0, 0xFFFFFFFF
+        endif
+    endif
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, borderColor
+    a2SetLineAA 1
+endfunction
+
+function guiScrollPanelDraw(id, w, h, scrollx, scrolly, scrollw, scrollh, color, image, tile)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    a2FillBox x+1, y+1, x+w-1, y+h-1, color
+    if image
+        if tile
+            iw = image width(image)
+            ih = image height(image)
+            repeatx = (w+iw-1)/iw
+            repeaty = (h+ih-1)/ih
+            for iy = 0 to repeaty
+                for ix = 0 to repeatx
+                    a2DrawImage image, x+ix*iw, y+iy*ih, 0, scrollx mod iw, scrolly mod ih, 1, 0, 0xFFFFFFFF
+                next ix
+            next iy
+        else
+            a2DrawImage image, x-scrollx, y-scrolly, 0, 0, 0, 1, 0, 0xFFFFFFFF
+        endif
+    endif
+
+    pageSizeH = w-23
+    pageSizeV = h-23
+    
+    horzId = CHILD_ID(id)
+    vertId = CHILD_ID(id)
+    
+    guiGetScroll(id, vertId)
+    gui.interaction.scrollX = guiHScrollbar(horzId, 0, h-21, w-20, 21, scrollx, scrollw-pageSizeH, pageSizeH, 25)
+    gui.interaction.scrollY = guiVScrollbar(vertId, w-21, 0, 21, h-20, scrolly, scrollh-pageSizeV, pageSizeV, 25)
+    
+    a2FillBox x+w-20, y+h-20, x+w-1, y+h-1, THEME_INACTIVE_DARK
+    
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+endfunction
