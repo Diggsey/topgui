@@ -191,7 +191,7 @@ function guiHScrollbarDraw(id as guiId, w, h, value, maxValue, pageSize)
     
     disabled = maxValue <= 0
     
-    a2FillBox x, y, x+w, y+h, 0xFF808080, 0xFF808080, 0xFFC0C0C0, 0xFFC0C0C0
+    a2FillBox x, y, x+w, y+h, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT
     
     if disabled = 0
         slideSize = (w-h*2)
@@ -199,37 +199,37 @@ function guiHScrollbarDraw(id as guiId, w, h, value, maxValue, pageSize)
         barPos = ((slideSize-barSize)*value)/maxValue
         
         if guiGetHot() = id
-            a2FillBox x, y, x+h, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
-            a2FillBox x+w-h, y, x+w, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+            a2FillBox x, y, x+h, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+            a2FillBox x+w-h, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
             
-            a2FillBox x+h+barPos, y, x+h+barPos+barSize, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+            a2FillBox x+h+barPos, y, x+h+barPos+barSize, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
         else
-            a2FillBox x, y, x+h, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
-            a2FillBox x+w-h, y, x+w, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+            a2FillBox x, y, x+h, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
+            a2FillBox x+w-h, y, x+w, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
             
-            a2FillBox x+h+barPos, y, x+h+barPos+barSize, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+            a2FillBox x+h+barPos, y, x+h+barPos+barSize, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
         endif
         
-        a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0xFF000000
-        a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0xFF000000
-        a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0xFF000000
-        a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0xFF000000
+        a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, THEME_ARROW_COLOR
+        a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, THEME_ARROW_COLOR
+        a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, THEME_ARROW_COLOR
+        a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, THEME_ARROW_COLOR
         
         a2SetLineAA 0
-        a2Box x, y, x+h-1, y+h-1, 0xFF000000
-        a2Box x+w-h, y, x+w-1, y+h-1, 0xFF000000
+        a2Box x, y, x+h-1, y+h-1, THEME_OUTLINE_DARK
+        a2Box x+w-h, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
         
-        a2Box x+h+barPos, y, x+h+barPos+barSize-1, y+h-1, 0xFF000000
+        a2Box x+h+barPos, y, x+h+barPos+barSize-1, y+h-1, THEME_OUTLINE_DARK
         a2SetLineAA 1
     else
-        a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0x40000000
-        a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0x40000000
-        a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, 0x40000000
-        a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, 0x40000000
+        a2FillTriangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, guiFadeColor(THEME_ARROW_COLOR, 0x40)
+        a2FillTriangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, guiFadeColor(THEME_ARROW_COLOR, 0x40)
+        a2Triangle x+7, y+h/2, x+h-9, y+5, x+h-9, y+h-6, guiFadeColor(THEME_ARROW_COLOR, 0x40)
+        a2Triangle x+w-8, y+h/2, x+w+8-h, y+5, x+w+8-h, y+h-6, guiFadeColor(THEME_ARROW_COLOR, 0x40)
         
         a2SetLineAA 0
-        a2Box x, y, x+h-1, y+h-1, 0x40000000
-        a2Box x+w-h, y, x+w-1, y+h-1, 0x40000000
+        a2Box x, y, x+h-1, y+h-1, guiFadeColor(THEME_OUTLINE_DARK, 0x40)
+        a2Box x+w-h, y, x+w-1, y+h-1, guiFadeColor(THEME_OUTLINE_DARK, 0x40)
         a2SetLineAA 1
     endif
     
@@ -242,7 +242,7 @@ function guiVScrollbarDraw(id as guiId, w, h, value, maxValue, pageSize)
     
     disabled = maxValue <= 0
     
-    a2FillBox x, y, x+w, y+h, 0xFF808080, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080
+    a2FillBox x, y, x+w, y+h, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK
     
     if disabled = 0
         slideSize = (h-w*2)
@@ -250,37 +250,37 @@ function guiVScrollbarDraw(id as guiId, w, h, value, maxValue, pageSize)
         barPos = ((slideSize-barSize)*value)/maxValue
         
         if guiGetHot() = id
-            a2FillBox x, y, x+w, y+w, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
-            a2FillBox x, y+h-w, x+w, y+h, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+            a2FillBox x, y, x+w, y+w, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT
+            a2FillBox x, y+h-w, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT
             
-            a2FillBox x, y+w+barPos, x+w, y+w+barPos+barSize, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+            a2FillBox x, y+w+barPos, x+w, y+w+barPos+barSize, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT
         else
-            a2FillBox x, y, x+w, y+w, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
-            a2FillBox x, y+h-w, x+w, y+h, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+            a2FillBox x, y, x+w, y+w, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT
+            a2FillBox x, y+h-w, x+w, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT
             
-            a2FillBox x, y+w+barPos, x+w, y+w+barPos+barSize, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+            a2FillBox x, y+w+barPos, x+w, y+w+barPos+barSize, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT
         endif
         
-        a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0xFF000000
-        a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0xFF000000
-        a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0xFF000000
-        a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0xFF000000
+        a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, THEME_ARROW_COLOR
+        a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, THEME_ARROW_COLOR
+        a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, THEME_ARROW_COLOR
+        a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, THEME_ARROW_COLOR
         
         a2SetLineAA 0
-        a2Box x, y, x+w-1, y+w-1, 0xFF000000
-        a2Box x, y+h-w, x+w-1, y+h-1, 0xFF000000
+        a2Box x, y, x+w-1, y+w-1, THEME_OUTLINE_DARK
+        a2Box x, y+h-w, x+w-1, y+h-1, THEME_OUTLINE_DARK
         
-        a2Box x, y+w+barPos, x+w-1, y+w+barPos+barSize-1, 0xFF000000
+        a2Box x, y+w+barPos, x+w-1, y+w+barPos+barSize-1, THEME_OUTLINE_DARK
         a2SetLineAA 1
     else
-        a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0x40000000
-        a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0x40000000
-        a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, 0x40000000
-        a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, 0x40000000
+        a2FillTriangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, guiFadeColor(THEME_ARROW_COLOR, 0x40)
+        a2FillTriangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, guiFadeColor(THEME_ARROW_COLOR, 0x40)
+        a2Triangle x+w/2, y+7, x+5, y+w-9, x+w-6, y+w-9, guiFadeColor(THEME_ARROW_COLOR, 0x40)
+        a2Triangle x+w/2, y+h-8, x+5, y+h+8-w, x+w-6, y+h+8-w, guiFadeColor(THEME_ARROW_COLOR, 0x40)
         
         a2SetLineAA 0
-        a2Box x, y, x+w-1, y+w-1, 0x40000000
-        a2Box x, y+h-w, x+w-1, y+h-1, 0x40000000
+        a2Box x, y, x+w-1, y+w-1, guiFadeColor(THEME_OUTLINE_DARK, 0x40)
+        a2Box x, y+h-w, x+w-1, y+h-1, guiFadeColor(THEME_OUTLINE_DARK, 0x40)
         a2SetLineAA 1
     endif
 

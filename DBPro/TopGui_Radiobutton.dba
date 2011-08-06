@@ -51,22 +51,22 @@ function guiRadioButtonDraw(id as guiId, w, h, caption$, checkedId as guiId)
     boxy = y+h/2-10
     
     if (guiGetHot() = id) or (focused and spacekey())
-        a2FillCircle boxx+10, boxy+10, 10, 0xFFFFC040
+        a2FillCircle boxx+10, boxy+10, 10, THEME_ACTIVE_DARK
     else
-        a2FillCircle boxx+10, boxy+10, 10, 0xFFC0C0C0
+        a2FillCircle boxx+10, boxy+10, 10, THEME_INACTIVE_LIGHT
     endif
     
     if checkedId = id
-        a2FillCircle boxx+10, boxy+10, 5, 0xFF000000
-        a2Circle boxx+10, boxy+10, 5, 0xFF000000
+        a2FillCircle boxx+10, boxy+10, 5, THEME_RADIO_COLOR
+        a2Circle boxx+10, boxy+10, 5, THEME_RADIO_COLOR
     endif
     
-    a2Circle boxx+10, boxy+10, 10, 0xFF000000
+    a2Circle boxx+10, boxy+10, 10, THEME_OUTLINE_DARK
     
-    `a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF
-    guiFastBoxText(gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, 0xFFFFFFFF)
+    `a2BoxText gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, THEME_TEXT_LIGHT
+    guiFastBoxText(gui.fontId, x+30, y, x+w, y+h, caption$, 0, 1, 1, THEME_TEXT_LIGHT)
     
     if focused
-        guiDrawFocusRect(x, y, x+w-1, y+h-1, 0x80FFFFFF)
+        guiDrawFocusRect(x, y, x+w-1, y+h-1, THEME_FOCUS_LIGHT)
     endif
 endfunction

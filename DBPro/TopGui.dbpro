@@ -18,6 +18,7 @@ include10=TopGui_Listbox.dba
 include11=TopGui_Tabs.dba
 include12=TopGui_Combobox.dba
 include13=TopGui_Menu.dba
+include14=TopGui_Theme.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***
@@ -39,7 +40,7 @@ window resolution=1024x768
 
 
 ;*****Media files, icons, cursors*****
-media root path=C:\Program Files\The Game Creators\Dark Basic Professional\Projects\TopGui\DBPro\
+media root path=C:\Program Files\The Game Creators\Dark Basic Professional\Projects\TopGui\top-gui\DBPro\
 
 ;****Version Information****
 VerComments=

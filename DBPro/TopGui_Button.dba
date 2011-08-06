@@ -75,27 +75,27 @@ function guiButtonDraw(id as guiId, w, h, caption$)
     if guiGetHot() = id or pressed
         if guiGetActive() = id or pressed
             ` Active (pressed)
-            a2FillBox x, y, x+w, y+h, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80, 0xFFFFFF80
+            a2FillBox x, y, x+w, y+h, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT
         else
             ` Hot
-            a2FillBox x, y, x+w, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+            a2FillBox x, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
         endif
     else
         ` Normal
-        a2FillBox x, y, x+w, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+        a2FillBox x, y, x+w, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
     endif
     
     a2SetLineAA 0
-    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
     a2SetLineAA 1
     
-    `a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, 0x80FFFFFF
-    `a2BoxText gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000
-    guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, 0x80FFFFFF)
-    guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, 0xFF000000)
+    `a2BoxText gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW
+    `a2BoxText gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_DARK
+    guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW)
+    guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_DARK)
     
     if focused
-        guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, 0xFF000000)
+        guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, THEME_FOCUS_DARK)
     endif
     
 endfunction
@@ -110,18 +110,18 @@ function guiPicButtonDraw(id as guiId, w, h, imageId)
     if guiGetHot() = id or pressed
         if guiGetActive() = id or pressed
             ` Active (pressed)
-            a2FillBox x, y, x+w, y+h, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80, 0xFFFFFF80
+            a2FillBox x, y, x+w, y+h, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT
         else
             ` Hot
-            a2FillBox x, y, x+w, y+h, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+            a2FillBox x, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
         endif
     else
         ` Normal
-        a2FillBox x, y, x+w, y+h, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
+        a2FillBox x, y, x+w, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
     endif
     
     a2SetLineAA 0
-    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
     a2SetLineAA 1
     
     if image exist(imageId)
@@ -129,7 +129,7 @@ function guiPicButtonDraw(id as guiId, w, h, imageId)
     endif
         
     if focused
-        guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, 0xFF000000)
+        guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, THEME_FOCUS_DARK)
     endif
     
 endfunction

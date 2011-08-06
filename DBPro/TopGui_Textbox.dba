@@ -146,22 +146,22 @@ function guiTextboxDraw(id as guiId, w, h, text$)
         scroll = 0
     endif
     
-    a2FillBox x, y, x+w-1, y+h-1, 0xC0FFFFFF
+    a2FillBox x, y, x+w-1, y+h-1, THEME_BACKGROUND_LIGHTER
     
     if focused
         selStartX = guiGetTextWidth(fast left$(text$, gui.selStart))+x+4-scroll
         selEndX = guiGetTextWidth(fast left$(text$, gui.selEnd))+x+4-scroll
-        a2FillBox min(selStartX, selEndX), y+2, max(selStartX, selEndX), y+h-2, 0xFFFFC040
-        if guiGetCursorVisible() then a2Line selEndX, y+2, selEndX, y+h-3, 0xFF000000
+        a2FillBox min(selStartX, selEndX), y+2, max(selStartX, selEndX), y+h-2, THEME_ACTIVE_DARK
+        if guiGetCursorVisible() then a2Line selEndX, y+2, selEndX, y+h-3, THEME_CURSOR_COLOR
         
         ` When editing don't cache text
-        a2BoxText gui.fontId, x+4-scroll, y+4, x+w-2, y+h-2, text$, 0, 1, 0, 0xFF000000
+        a2BoxText gui.fontId, x+4-scroll, y+4, x+w-2, y+h-2, text$, 0, 1, 0, THEME_TEXT_DARK
     else
-        guiFastBoxText(gui.fontId, x+4-scroll, y+4, x+w-2, y+h-2, text$, 0, 1, 0, 0xFF000000)
+        guiFastBoxText(gui.fontId, x+4-scroll, y+4, x+w-2, y+h-2, text$, 0, 1, 0, THEME_TEXT_DARK)
     endif
     
     a2SetLineAA 0
-    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
     a2SetLineAA 1
     
 endfunction

@@ -29,6 +29,7 @@ global windowScrollX1
 global windowScrollY1
 global windowTabIndex = 1
 global windowIndex3 = 0
+global menuChecked = 0
 
 dim windowFuncPtrs(2) as string
 windowFuncPtrs(0) = "window2"
@@ -47,10 +48,6 @@ set current camera 0
 
 ink 0, 0
 
-global perf_a
-global perf_b
-global perf_d1
-global perf_d2
 tmp$ = ""
 do
     perf_start = hitimer(10000)
@@ -87,36 +84,20 @@ do
 loop
 
 function doExampleMenu()
-    guiMenuItem("Item 0", 0, 24)
-    guiMenuItem("Item 1", 0, 24)
+    guiMenuItem("Item 0", 0, 24, 20, 0)
+    menuChecked = guiCheckboxMenuItem("Check me", 0, 24, 20, menuChecked)
     guiSplitterMenuItem(5)
-    guiMenuItem("Item 2", 0, 24)
-    if guiDropDownMenuItemBegin(GEN_ID, "Submenu", 24, 150, 74)
-        guiMenuItem("Item 0", 0, 24)
-        guiMenuItem("Item 1", 0, 24)
-        guiMenuItem("Item 2", 0, 24)
+    guiMenuItem("Item 2", 0, 24, 20, 0)
+    if guiDropDownMenuItemBegin(GEN_ID, "Submenu", 24, 20, 0, 150, 74)
+        guiMenuItem("Item 0", 0, 24, 20, 0)
+        guiMenuItem("Item 1", 0, 24, 20, 0)
+        guiMenuItem("Item 2", 0, 24, 20, 0)
         guiDropDownMenuItemEnd()
     endif
-    guiMenuItem("Item 3", 0, 24)
-    guiMenuItem("Item 4", 0, 24)
+    guiMenuItem("Item 3", 0, 24, 20, 0)
+    guiMenuItem("Item 4", 0, 24, 20, 0)
     guiSplitterMenuItem(5)
-    guiMenuItem("Item 5", 0, 24)
-endfunction
-
-function perfstart1()
-    perf_a = hitimer(10000)
-endfunction
-
-function perfend1()
-    inc perf_d1, hitimer(10000)-perf_a
-endfunction
-
-function perfstart2()
-    perf_b = hitimer(10000)
-endfunction
-
-function perfend2()
-    inc perf_d2, hitimer(10000)-perf_b
+    guiMenuItem("Item 5", 0, 24, 20, 0)
 endfunction
 
 function window1(focused)
@@ -124,15 +105,15 @@ function window1(focused)
     clicked = guiWindowBegin(GEN_ID, windowX, windowY, windowW, windowH, "Hello world!", 0, focused)
         
         guiMenuBegin(GEN_ID, 0, 0, windowW-8, 24)
-        if guiDropDownMenuItemBegin(GEN_ID, "File", 24, 150, 180)
+        if guiDropDownMenuItemBegin(GEN_ID, "File", 24, 0, 0, 150, 180)
             doExampleMenu()
             guiDropDownMenuItemEnd()
         endif
-        if guiDropDownMenuItemBegin(GEN_ID, "Edit", 24, 150, 180)
+        if guiDropDownMenuItemBegin(GEN_ID, "Edit", 24, 0, 0, 150, 180)
             doExampleMenu()
             guiDropDownMenuItemEnd()
         endif
-        if guiDropDownMenuItemBegin(GEN_ID, "View", 24, 150, 180)
+        if guiDropDownMenuItemBegin(GEN_ID, "View", 24, 0, 0, 150, 180)
             doExampleMenu()
             guiDropDownMenuItemEnd()
         endif

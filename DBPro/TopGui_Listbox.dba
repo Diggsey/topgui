@@ -111,22 +111,22 @@ function guiListboxItemDraw(id as guiId, index, selected, clientw, clienth, widt
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    if selected then a2FillBox x, y+clienth, x+2000, y+clienth+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+    if selected then a2FillBox x, y+clienth, x+2000, y+clienth+height, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
     
-    `a2BoxText gui.fontId, x+5, y+clienth, x+clientw-5, y+clienth+height, caption$, halign, 1, 0, 0xFF000000
-    guiFastBoxText(gui.fontId, x+5, y+clienth, x+clientw-5, y+clienth+height, caption$, halign, 1, 0, 0xFF000000)
+    `a2BoxText gui.fontId, x+5, y+clienth, x+clientw-5, y+clienth+height, caption$, halign, 1, 0, THEME_TEXT_DARK
+    guiFastBoxText(gui.fontId, x+5, y+clienth, x+clientw-5, y+clienth+height, caption$, halign, 1, 0, THEME_TEXT_DARK)
     
     if guiGetFocus() = id
         if gui.selStart = index
             select halign
                 case 0
-                    guiDrawFocusRect(x+2, y+clienth+2, x+width+6, y+clienth+height-3, 0xFF000000)
+                    guiDrawFocusRect(x+2, y+clienth+2, x+width+6, y+clienth+height-3, THEME_FOCUS_DARK)
                 endcase
                 case 1
-                    guiDrawFocusRect(x+clientw/2-width/2-3, y+clienth+2, x+clientw/2+width/2+2, y+clienth+height-3, 0xFF000000)
+                    guiDrawFocusRect(x+clientw/2-width/2-3, y+clienth+2, x+clientw/2+width/2+2, y+clienth+height-3, THEME_FOCUS_DARK)
                 endcase
                 case 2
-                    guiDrawFocusRect(x+clientw-width-8, y+clienth+2, x+clientw-3, y+clienth+height-3, 0xFF000000)
+                    guiDrawFocusRect(x+clientw-width-8, y+clienth+2, x+clientw-3, y+clienth+height-3, THEME_FOCUS_DARK)
                 endcase
             endselect
         endif
@@ -157,7 +157,7 @@ function guiListboxBeginDraw(id as guiId, w, h)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
 
-    a2FillBox x, y, x+w, y+h, 0x80FFFFFF
+    a2FillBox x, y, x+w, y+h, THEME_BACKGROUND_LIGHT
 endfunction
 
 function guiListboxEndLogic(id as guiId, itemNum)
@@ -194,11 +194,11 @@ function guiListboxEndDraw(id as guiId, w, h, scrollx, scrolly, allowScrollX, al
         gui.interaction.scrollY = guiVScrollbar(vertId, w-21, 0, 21, pageSizeV+2, scrolly, clienth-pageSizeV, pageSizeV, 20)
     endif
     if allowScrollX and allowScrollY
-        a2FillBox x+w-20, y+h-20, x+w, y+h, 0xFFC0C0C0
+        a2FillBox x+w-20, y+h-20, x+w, y+h, THEME_INACTIVE_LIGHT
     endif
     
     a2SetLineAA 0
-    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
     a2SetLineAA 1
     
 endfunction

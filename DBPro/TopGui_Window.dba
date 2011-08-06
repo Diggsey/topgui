@@ -70,22 +70,22 @@ function guiScrollWindowDraw(id, w, h, caption$, scrollx, scrolly, scrollw, scro
     guiWindowDraw(id, w, h, caption$, focused)
     
     if focused
-        a2FillBox x+w-24, y+h-24, x+w-1, y+h-1, 0xFFFFC040
+        a2FillBox x+w-24, y+h-24, x+w-1, y+h-1, THEME_ACTIVE_DARK
     else
-        a2FillBox x+w-24, y+h-24, x+w-1, y+h-1, 0xFF808080
+        a2FillBox x+w-24, y+h-24, x+w-1, y+h-1, THEME_INACTIVE_DARK
     endif
     
     a2SetLineAA 0
-    a2Line x+w-24, y+h-24, x+w-24, y+h-3, 0xFF000000
-    a2Line x+w-24, y+h-24, x+w-3, y+h-24, 0xFF000000
+    a2Line x+w-24, y+h-24, x+w-24, y+h-3, THEME_OUTLINE_DARK
+    a2Line x+w-24, y+h-24, x+w-3, y+h-24, THEME_OUTLINE_DARK
     a2SetLineAA 1
     
-    a2Line x+w-5, y+h-4, x+w-4, y+h-5, 0x80FFFFFF
-    a2Line x+w-7, y+h-4, x+w-4, y+h-7, 0x80000000
-    a2Line x+w-10, y+h-4, x+w-4, y+h-10, 0x80FFFFFF
-    a2Line x+w-12, y+h-4, x+w-4, y+h-12, 0x80000000
-    a2Line x+w-15, y+h-4, x+w-4, y+h-15, 0x80FFFFFF
-    a2Line x+w-17, y+h-4, x+w-4, y+h-17, 0x80000000
+    a2Line x+w-5, y+h-4, x+w-4, y+h-5, THEME_GRIP_LIGHT
+    a2Line x+w-7, y+h-4, x+w-4, y+h-7, THEME_GRIP_DARK
+    a2Line x+w-10, y+h-4, x+w-4, y+h-10, THEME_GRIP_LIGHT
+    a2Line x+w-12, y+h-4, x+w-4, y+h-12, THEME_GRIP_DARK
+    a2Line x+w-15, y+h-4, x+w-4, y+h-15, THEME_GRIP_LIGHT
+    a2Line x+w-17, y+h-4, x+w-4, y+h-17, THEME_GRIP_DARK
 endfunction
 
 function guiWindowLogic(id as guiId, w, h)
@@ -232,7 +232,7 @@ function guiWindowDrawBackground(id as guiId, w, h)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    a2FillBox x, y, x+w, y+h, 0x80000000
+    a2FillBox x, y, x+w, y+h, THEME_BACKGROUND_DARK
 endfunction
 
 function guiWindowDraw(id as guiId, w, h, caption$, focused)
@@ -241,20 +241,20 @@ function guiWindowDraw(id as guiId, w, h, caption$, focused)
     
     a2SetLineAA 0
     if focused
-        a2FillBox x, y, x+w, y+25, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
-        a2Box x+1, y+25, x+w-2, y+h-2, 0xFFFFC040
-        a2Box x+2, y+25, x+w-3, y+h-3, 0xFFFFC040
+        a2FillBox x, y, x+w, y+25, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+        a2Box x+1, y+25, x+w-2, y+h-2, THEME_ACTIVE_DARK
+        a2Box x+2, y+25, x+w-3, y+h-3, THEME_ACTIVE_DARK
     else
-        a2FillBox x, y, x+w, y+25, 0xFFC0C0C0, 0xFFC0C0C0, 0xFF808080, 0xFF808080
-        a2Box x+1, y+25, x+w-2, y+h-2, 0xFF808080
-        a2Box x+2, y+25, x+w-3, y+h-3, 0xFF808080
+        a2FillBox x, y, x+w, y+25, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
+        a2Box x+1, y+25, x+w-2, y+h-2, THEME_INACTIVE_DARK
+        a2Box x+2, y+25, x+w-3, y+h-3, THEME_INACTIVE_DARK
     endif
     
-    a2Box x, y, x+w-1, y+h-1, 0xFF000000
-    a2Box x+3, y+25, x+w-4, y+h-4, 0xFF000000
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
+    a2Box x+3, y+25, x+w-4, y+h-4, THEME_OUTLINE_DARK
     a2SetLineAA 1
 
-    `a2Text gui.fontId, x+6, y+4, caption$, 0xFF000000
-    guiFastText(gui.fontId, x+6, y+4, caption$, 0xFF000000)
+    `a2Text gui.fontId, x+6, y+4, caption$, THEME_TEXT_DARK
+    guiFastText(gui.fontId, x+6, y+4, caption$, THEME_TEXT_DARK)
 
 endfunction

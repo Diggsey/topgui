@@ -81,43 +81,43 @@ function guiTabDraw(id as guiId, index, tabIndex, tabX, width, tabHeight, w, h, 
     y = guiAdjustY(0)
     
     if index = tabIndex
-        a2FillBox tabX, y, tabX+width, y+tabHeight, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        a2FillBox tabX, y, tabX+width, y+tabHeight, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
         
         a2SetLineAA 0
-        a2Line tabX, y+tabHeight-1, tabX, y, 0xFF000000
-        a2Line tabX, y, tabX+width-1, y, 0xFF000000
-        a2Line tabX+width-1, y, tabX+width-1, y+tabHeight, 0xFF000000
-        a2Line x, y+tabHeight-1, tabX, y+tabHeight-1, 0xFF000000
-        a2Line tabX+width, y+tabHeight-1, x+w, y+tabHeight-1, 0xFF000000
+        a2Line tabX, y+tabHeight-1, tabX, y, THEME_OUTLINE_DARK
+        a2Line tabX, y, tabX+width-1, y, THEME_OUTLINE_DARK
+        a2Line tabX+width-1, y, tabX+width-1, y+tabHeight, THEME_OUTLINE_DARK
+        a2Line x, y+tabHeight-1, tabX, y+tabHeight-1, THEME_OUTLINE_DARK
+        a2Line tabX+width, y+tabHeight-1, x+w, y+tabHeight-1, THEME_OUTLINE_DARK
         
-        a2Line x+w-1, y+tabHeight-1, x+w-1, y+h-1, 0xFF000000
-        a2Line x+w-1, y+h-1, x, y+h-1, 0xFF000000
-        a2Line x, y+h-1, x, y+tabHeight-1, 0xFF000000
+        a2Line x+w-1, y+tabHeight-1, x+w-1, y+h-1, THEME_OUTLINE_DARK
+        a2Line x+w-1, y+h-1, x, y+h-1, THEME_OUTLINE_DARK
+        a2Line x, y+h-1, x, y+tabHeight-1, THEME_OUTLINE_DARK
         
-        a2Box x+1, y+tabHeight, x+w-2, y+h-2, 0xFFFFC040
-        a2Box x+2, y+tabHeight+1, x+w-3, y+h-3, 0xFFFFC040
-        a2Box x+3, y+tabHeight+2, x+w-4, y+h-4, 0xFF000000
+        a2Box x+1, y+tabHeight, x+w-2, y+h-2, THEME_ACTIVE_DARK
+        a2Box x+2, y+tabHeight+1, x+w-3, y+h-3, THEME_ACTIVE_DARK
+        a2Box x+3, y+tabHeight+2, x+w-4, y+h-4, THEME_OUTLINE_DARK
         a2SetLineAA 1
         
-        `a2BoxText gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, 0xFF000000
-        guiFastBoxText(gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, 0xFF000000)
+        `a2BoxText gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, THEME_TEXT_DARK
+        guiFastBoxText(gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, THEME_TEXT_DARK)
         
         if guiGetFocus() = id
-            guiDrawFocusRect(tabX+3, y+3, tabX+width-4, y+tabHeight-4, 0xFF000000)
+            guiDrawFocusRect(tabX+3, y+3, tabX+width-4, y+tabHeight-4, THEME_FOCUS_DARK)
         endif
     else
         if tabHot
-            a2FillBox tabX, y, tabX+width, y+tabHeight, 0x80FFFF80, 0x80FFFF80, 0x80FFC040, 0x80FFC040
+            a2FillBox tabX, y, tabX+width, y+tabHeight, guiFadeColor(THEME_ACTIVE_LIGHT, 0x80), guiFadeColor(THEME_ACTIVE_LIGHT, 0x80), guiFadeColor(THEME_ACTIVE_DARK, 0x80), guiFadeColor(THEME_ACTIVE_DARK, 0x80)
             
             a2SetLineAA 0
-            a2Line tabX, y+tabHeight-1, tabX, y, 0x80000000
-            a2Line tabX, y, tabX+width-1, y, 0x80000000
-            a2Line tabX+width-1, y, tabX+width-1, y+tabHeight, 0x80000000
+            a2Line tabX, y+tabHeight-1, tabX, y, guiFadeColor(THEME_OUTLINE_DARK, 0x80)
+            a2Line tabX, y, tabX+width-1, y, guiFadeColor(THEME_OUTLINE_DARK, 0x80)
+            a2Line tabX+width-1, y, tabX+width-1, y+tabHeight, guiFadeColor(THEME_OUTLINE_DARK, 0x80)
             a2SetLineAA 1
         endif
     
-        `a2BoxText gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, 0xFFFFFFFF
-        guiFastBoxText(gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, 0xFFFFFFFF)
+        `a2BoxText gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, THEME_TEXT_LIGHT
+        guiFastBoxText(gui.fontId, tabX, y, tabX+width, y+tabHeight, caption$, 1, 1, 1, THEME_TEXT_LIGHT)
     endif
 endfunction
 

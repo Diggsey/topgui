@@ -1046,10 +1046,21 @@ function guiDrawSector(x, y, radius#, startAngle#, endAngle#, color1, color2)
 endfunction
 
 function guiDrawShadow(x1, y1, x2, y2, offset)
-    guiDrawSector(x1+offset, y2, offset, 180, 270, 0xC0000000, 0x00000000)
-    guiDrawSector(x2, y2, offset, 90, 180, 0xC0000000, 0x00000000)
-    guiDrawSector(x2, y1+offset, offset, 0, 90, 0xC0000000, 0x00000000)
+    guiDrawSector(x1+offset, y2, offset, 180, 270, THEME_SHADOW_START, THEME_SHADOW_END)
+    guiDrawSector(x2, y2, offset, 90, 180, THEME_SHADOW_START, THEME_SHADOW_END)
+    guiDrawSector(x2, y1+offset, offset, 0, 90, THEME_SHADOW_START, THEME_SHADOW_END)
     
-    a2FillBox x1+offset, y2, x2, y2+offset, 0xC0000000, 0xC0000000, 0x00000000, 0x00000000
-    a2FillBox x2, y1+offset, x2+offset, y2, 0xC0000000, 0x00000000, 0x00000000, 0xC0000000
+    a2FillBox x1+offset, y2, x2, y2+offset, THEME_SHADOW_START, THEME_SHADOW_START, THEME_SHADOW_END, THEME_SHADOW_END
+    a2FillBox x2, y1+offset, x2+offset, y2, THEME_SHADOW_START, THEME_SHADOW_END, THEME_SHADOW_END, THEME_SHADOW_START
 endfunction
+
+function guiDrawTick(x, y)
+    a2FillTriangle x+2, y+10, x+8, y+13, x+8, y+17, THEME_TICK_COLOR
+    a2FillTriangle x+8, y+17, x+8, y+13, x+16, y+3, THEME_TICK_COLOR
+    a2Triangle x+2, y+10, x+8, y+13, x+8, y+17, THEME_TICK_COLOR
+    a2Triangle x+8, y+17, x+8, y+13, x+16, y+3, THEME_TICK_COLOR
+endfunction
+
+function guiFadeColor(color, alpha)
+    color = set alpha(color, (rgba(color)*alpha)/255)
+endfunction color

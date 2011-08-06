@@ -32,7 +32,7 @@ function guiComboboxBeginOverlayDraw(id as guiId, w, dropDownHeight)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
 
-    a2FillBox x, y, x+w, y+dropDownHeight, 0xC0FFFFFF
+    a2FillBox x, y, x+w, y+dropDownHeight, THEME_BACKGROUND_LIGHTER
 endfunction
 
 function guiComboboxBeginLogic(id as guiId, selectedIndex)
@@ -50,7 +50,7 @@ function guiComboboxBeginDraw(id as guiId, w, h)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    a2FillBox x, y, x+w, y+h, 0x80FFFFFF
+    a2FillBox x, y, x+w, y+h, THEME_BACKGROUND_LIGHT
 endfunction
 
 function guiComboboxItem(caption$, height, halign)
@@ -114,10 +114,10 @@ function guiComboboxItemDraw(id as guiId, index, caption$, itemy, clientw, heigh
     y = guiAdjustY(0)
     
     if gui.selStart = index
-        a2FillBox x, y+itemy, x+clientw, y+itemy+height, 0xFFFFFF80, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040
+        a2FillBox x, y+itemy, x+clientw, y+itemy+height, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
     endif
 
-    guiFastBoxText(gui.fontId, x+5, y+itemy, x+clientw-5, y+itemy+height, caption$, halign, 1, 0, 0xFF000000)
+    guiFastBoxText(gui.fontId, x+5, y+itemy, x+clientw-5, y+itemy+height, caption$, halign, 1, 0, THEME_TEXT_DARK)
 endfunction
 
 function guiComboboxEnd()
@@ -184,24 +184,24 @@ function guiComboboxEndDraw(id as guiId, caption$, w, h, halign)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    guiFastBoxText(gui.fontId, x+5, y, x+w-20, y+h, caption$, halign, 1, 0, 0xFF000000)
+    guiFastBoxText(gui.fontId, x+5, y, x+w-20, y+h, caption$, halign, 1, 0, THEME_TEXT_DARK)
     
     if guiGetHot() = id
-        a2FillBox x+w-h, y, x+w, y+h, 0xFFFFFF80, 0xFFFFC040, 0xFFFFC040, 0xFFFFFF80
+        a2FillBox x+w-h, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT
     else
-        a2FillBox x+w-h, y, x+w, y+h, 0xFFC0C0C0, 0xFF808080, 0xFF808080, 0xFFC0C0C0
+        a2FillBox x+w-h, y, x+w, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT
     endif
     
     if guiGetFocus() = id
-        guiDrawFocusRect(x+2, y+2, x+w-h-2, y+h-3, 0xFF000000)
+        guiDrawFocusRect(x+2, y+2, x+w-h-2, y+h-3, THEME_FOCUS_DARK)
     endif
     
-    a2FillTriangle x+w-h+h/2, y+h-8, x+w-h+5, y+8, x+w-6, y+8, 0xFF000000
-    a2Triangle x+w-h+h/2, y+h-8, x+w-h+5, y+8, x+w-6, y+8, 0xFF000000
+    a2FillTriangle x+w-h+h/2, y+h-8, x+w-h+5, y+8, x+w-6, y+8, THEME_ARROW_COLOR
+    a2Triangle x+w-h+h/2, y+h-8, x+w-h+5, y+8, x+w-6, y+8, THEME_ARROW_COLOR
     
     a2SetLineAA 0
-    a2Box x+w-h, y, x+w-1, y+w-1, 0xFF000000
-    a2Box x, y, x+w-1, y+h-1, 0xFF000000
+    a2Box x+w-h, y, x+w-1, y+w-1, THEME_OUTLINE_DARK
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
     a2SetLineAA 1
 endfunction
 
@@ -214,7 +214,7 @@ function guiComboboxEndOverlayDraw(id as guiId, w, dropDownHeight, itemy, allowS
     endif
     
     a2SetLineAA 0
-    a2Box x, y, x+w-1, y+dropDownHeight-1, 0xFF000000
+    a2Box x, y, x+w-1, y+dropDownHeight-1, THEME_OUTLINE_DARK
     a2SetLineAA 1
 endfunction
 
