@@ -253,8 +253,8 @@ function guiDropDownMenuItemDraw(itemy, height, menuw)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
-    a2FillTriangle x+menuw-8, y+itemy+height/2, x+menuw-12, y+itemy+height/2-5, x+menuw-12, y+itemy+height/2+4, THEME_ARROW_COLOR
-    a2Triangle x+menuw-8, y+itemy+height/2, x+menuw-12, y+itemy+height/2-5, x+menuw-12, y+itemy+height/2+4, THEME_ARROW_COLOR
+    a2FillTriangle x+menuw-8, y+itemy+height/2, x+menuw-12, y+itemy+height/2-4, x+menuw-12, y+itemy+height/2+4, THEME_ARROW_COLOR
+    a2Triangle x+menuw-8, y+itemy+height/2, x+menuw-12, y+itemy+height/2-4, x+menuw-12, y+itemy+height/2+4, THEME_ARROW_COLOR
 endfunction
 
 function guiDropDownMenuItemEnd()

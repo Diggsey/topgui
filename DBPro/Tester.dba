@@ -33,6 +33,7 @@ global menuChecked = 0
 global menuCheckedIndex = 0
 global panelScrollX
 global panelScrollY
+global sliderValue
 
 dim windowFuncPtrs(2) as string
 windowFuncPtrs(0) = "window2"
@@ -183,6 +184,9 @@ function window2(focused)
         guiScrollPanelEnd()
         panelScrollX = guiScrollX()
         panelScrollY = guiScrollY()
+        
+        sliderValue = guiHSlider(GEN_ID, 500, 500, 300, 30, sliderValue, 15, 1)
+        sliderValue = guiVSlider(GEN_ID, 500, 550, 30, 300, sliderValue, 15, 1)
 
     guiScrollWindowEnd()
     windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)

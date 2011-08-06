@@ -1,0 +1,220 @@
+
+function guiHSlider(id as guiId, x, y, w, h, value, maxValue, largeStep)
+    guiBeginControl(x, y, w, h, 1)
+    
+    value = guiHSliderLogic(id, w, h, value, maxValue, largeStep)
+    guiHSliderDraw(id, w, h, value, maxValue)
+    
+    guiEndControl()
+endfunction value
+
+function guiVSlider(id as guiId, x, y, w, h, value, maxValue, largeStep)
+    guiBeginControl(x, y, w, h, 1)
+    
+    value = guiVSliderLogic(id, w, h, value, maxValue, largeStep)
+    guiVSliderDraw(id, w, h, value, maxValue)
+    
+    guiEndControl()
+endfunction value
+
+function guiHSliderLogic(id as guiId, w, h, value, maxValue, largeStep)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiFocus(id, 1)
+    
+    sliderx = x+10+((w-20)*value)/maxValue
+    slidery = y+h/2
+    
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+    
+    inBar = guiInRect(guiMouseX(), guiMouseY(), sliderx-5, slidery-10, sliderx+5, slidery+10)
+    
+    if gui.msd = 1
+        if guiGetHot() = id
+            guiSetFocus(id, 0, 0)
+            
+            if guiSetActive(id)
+                if inBar
+                    gui.dragMode = 1
+                    gui.dragX = sliderx - guiMouseX()
+                else
+                    gui.dragMode = 2
+                    if guiMouseX() < sliderx
+                        dec value, largeStep : guiSetDelay(id, 500)
+                        value = max(value, ((guiMouseX()-x-10)*maxValue+w/2-10)/(w-20))
+                    endif
+                    if guiMouseX() > sliderx
+                        inc value, largeStep : guiSetDelay(id, 500)
+                        value = min(value, ((guiMouseX()-x-10)*maxValue+w/2-10)/(w-20))
+                    endif
+                endif
+            endif
+        endif
+    endif
+    
+    if guiGetActive() = id
+        if gui.msc = 1
+            guiStayActive()
+            
+            select gui.dragMode
+                case 1
+                    newsliderx = gui.dragX + guiMouseX()
+                    value = ((newsliderx-x-10)*maxValue+w/2-10)/(w-20)
+                endcase
+                case 2
+                    if guiHasDelayed()
+                        if guiMouseX() < sliderx
+                            dec value, largeStep : guiSetDelay(id, 50)
+                            value = max(value, ((guiMouseX()-x-10)*maxValue+w/2-10)/(w-20))
+                        endif
+                        if guiMouseX() > sliderx
+                            inc value, largeStep : guiSetDelay(id, 50)
+                            value = min(value, ((guiMouseX()-x-10)*maxValue+w/2-10)/(w-20))
+                        endif
+                    endif
+                endcase
+            endselect
+        endif
+    endif
+    
+    inc value, guiGetScroll(id, id)
+    
+    if focused
+        if guiProcessKeyDown(id, VK_LEFT, 0) then dec value
+        if guiProcessKeyDown(id, VK_RIGHT, 0) then inc value
+    endif
+    
+    value = clamp(value, 0, maxValue)
+    
+endfunction value
+
+function guiVSliderLogic(id as guiId, w, h, value, maxValue, largeStep)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiFocus(id, 1)
+    
+    sliderx = x+w/2
+    slidery = y+10+((h-20)*value)/maxValue
+    
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+    
+    inBar = guiInRect(guiMouseX(), guiMouseY(), sliderx-10, slidery-5, sliderx+10, slidery+5)
+    
+    if gui.msd = 1
+        if guiGetHot() = id
+            guiSetFocus(id, 0, 0)
+            
+            if guiSetActive(id)
+                if inBar
+                    gui.dragMode = 1
+                    gui.dragY = slidery - guiMouseY()
+                else
+                    gui.dragMode = 2
+                    if guiMouseY() < slidery
+                        dec value, largeStep : guiSetDelay(id, 500)
+                        value = max(value, ((guiMouseY()-y-10)*maxValue+h/2-10)/(h-20))
+                    endif
+                    if guiMouseY() > slidery
+                        inc value, largeStep : guiSetDelay(id, 500)
+                        value = min(value, ((guiMouseY()-y-10)*maxValue+h/2-10)/(h-20))
+                    endif
+                endif
+            endif
+        endif
+    endif
+    
+    if guiGetActive() = id
+        if gui.msc = 1
+            guiStayActive()
+            
+            select gui.dragMode
+                case 1
+                    newslidery = gui.dragY + guiMouseY()
+                    value = ((newslidery-y-10)*maxValue+h/2-10)/(h-20)
+                endcase
+                case 2
+                    if guiHasDelayed()
+                        if guiMouseY() < slidery
+                            dec value, largeStep : guiSetDelay(id, 50)
+                            value = max(value, ((guiMouseY()-y-10)*maxValue+h/2-10)/(h-20))
+                        endif
+                        if guiMouseY() > slidery
+                            inc value, largeStep : guiSetDelay(id, 50)
+                            value = min(value, ((guiMouseY()-y-10)*maxValue+h/2-10)/(h-20))
+                        endif
+                    endif
+                endcase
+            endselect
+        endif
+    endif
+    
+    inc value, guiGetScroll(id, id)
+    
+    if focused
+        if guiProcessKeyDown(id, VK_UP, 0) then dec value
+        if guiProcessKeyDown(id, VK_DOWN, 0) then inc value
+    endif
+    
+    value = clamp(value, 0, maxValue)
+    
+endfunction value
+
+function guiHSliderDraw(id as guiId, w, h, value, maxValue)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiGetFocus() = id
+    
+    sliderx = x+10+((w-20)*value)/maxValue
+    slidery = y+h/2
+    
+    a2FillBox x+10, slidery-3, x+w-10, slidery+3, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT
+    
+    a2SetLineAA 0
+    a2Box x+10, slidery-3, x+w-10, slidery+3, THEME_OUTLINE_DARK
+    a2Box sliderx-5, slidery-10, sliderx+5, slidery+10, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+    
+    if guiGetHot() = id
+        a2FillBox sliderx-4, slidery-9, sliderx+5, slidery+10, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+    else
+        a2FillBox sliderx-4, slidery-9, sliderx+5, slidery+10, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
+    endif
+    
+    if focused
+        guiDrawFocusRect(x, y, x+w-1, y+h-1, THEME_FOCUS_LIGHT)
+    endif
+endfunction
+
+function guiVSliderDraw(id as guiId, w, h, value, maxValue)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiGetFocus() = id
+    
+    sliderx = x+w/2
+    slidery = y+10+((h-20)*value)/maxValue
+    
+    a2FillBox sliderx-3, y+10, sliderx+3, y+h-10, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK
+    
+    a2SetLineAA 0
+    a2Box sliderx-3, y+10, sliderx+3, y+h-10, THEME_OUTLINE_DARK
+    a2Box sliderx-10, slidery-5, sliderx+10, slidery+5, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+    
+    if guiGetHot() = id
+        a2FillBox sliderx-9, slidery-4, sliderx+10, slidery+5, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT
+    else
+        a2FillBox sliderx-9, slidery-4, sliderx+10, slidery+5, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK, THEME_INACTIVE_LIGHT
+    endif
+    
+    if focused
+        guiDrawFocusRect(x, y, x+w-1, y+h-1, THEME_FOCUS_LIGHT)
+    endif
+endfunction
