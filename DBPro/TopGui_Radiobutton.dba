@@ -1,14 +1,14 @@
 
-function guiRadioButton(id as guiId, x, y, w, h, caption$, checkedId as guiId)
+function guiRadioButton(id as guiId, x, y, w, h, caption$, index, checkedIndex)
     guiBeginControl(x, y, w, h, 1)
     
-    checkedId = guiRadioButtonLogic(id, w, h, checkedId)
-    guiRadioButtonDraw(id, w, h, caption$, checkedId)
+    checkedIndex = guiRadioButtonLogic(id, w, h, index, checkedIndex)
+    guiRadioButtonDraw(id, w, h, caption$, index, checkedIndex)
     
     guiEndControl()
-endfunction checkedId
+endfunction checkedIndex
 
-function guiRadioButtonLogic(id as guiId, w, h, checkedId as guiId)
+function guiRadioButtonLogic(id as guiId, w, h, index, checkedIndex)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
@@ -30,18 +30,18 @@ function guiRadioButtonLogic(id as guiId, w, h, checkedId as guiId)
     
     if gui.msd = 1
         if guiGetHot() = id
-            checkedId = id
+            checkedIndex = index
             guiSetFocus(id, 0, 0)
         endif
     endif
     
     if focused
-        if guiProcessKeyUp(id, VK_SPACE) then checkedId = id
+        if guiProcessKeyUp(id, VK_SPACE) then checkedIndex = index
     endif
     
-endfunction checkedId
+endfunction checkedIndex
 
-function guiRadioButtonDraw(id as guiId, w, h, caption$, checkedId as guiId)
+function guiRadioButtonDraw(id as guiId, w, h, caption$, index, checkedIndex)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
@@ -56,7 +56,7 @@ function guiRadioButtonDraw(id as guiId, w, h, caption$, checkedId as guiId)
         a2FillCircle boxx+10, boxy+10, 10, THEME_INACTIVE_LIGHT
     endif
     
-    if checkedId = id
+    if checkedIndex = index
         a2FillCircle boxx+10, boxy+10, 5, THEME_RADIO_COLOR
         a2Circle boxx+10, boxy+10, 5, THEME_RADIO_COLOR
     endif

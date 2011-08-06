@@ -128,6 +128,43 @@ function guiCheckboxMenuItemDraw(caption$, halign, itemx, itemy, clientw, height
     endif
 endfunction
 
+function guiRadioButtonMenuItem(caption$, halign, height, indent, index, checkedIndex)
+    itemy = guiPopInteger()
+    h = guiPopInteger()
+    w = guiPopInteger()
+    id = guiPopInteger()
+    
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    hot = guiInRect(guiMouseX(), guiMouseY(), x, y+itemy, x+w-2, y+itemy+height) and (guiGetHot() = id)
+    clicked = guiMenuItemLogic(hot)
+    guiRadioButtonMenuItemDraw(caption$, halign, 0, itemy, w-2, height, indent, index, checkedIndex, hot)
+    
+    if clicked
+        guiMenuClose(0)
+        checkedIndex = index
+    endif
+    if hot then guiMenuCloseChildren(id)
+    
+    guiPushInteger(id)
+    guiPushInteger(w)
+    guiPushInteger(h)
+    guiPushInteger(itemy+height)
+endfunction checkedIndex
+
+function guiRadioButtonMenuItemDraw(caption$, halign, itemx, itemy, clientw, height, indent, index, checkedIndex, hot)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    guiMenuItemDraw(caption$, halign, itemx, itemy, clientw, height, indent, 0, hot)
+    
+    if index = checkedIndex
+        a2FillCircle x+itemx+13, y+itemy+height/2, 5, THEME_RADIO_COLOR
+        a2Circle x+itemx+13, y+itemy+height/2, 5, THEME_RADIO_COLOR
+    endif
+endfunction
+
 function guiSplitterMenuItem(height)
     itemy = guiPopInteger()
     h = guiPopInteger()

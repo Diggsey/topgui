@@ -136,6 +136,8 @@ function guiInit()
     gui.currentOverlay = -1
     
     set message callback "guiWndProc"
+    
+    guiSetTheme("Default")
 endfunction
 
 #constant guiWM_CHAR 0x102

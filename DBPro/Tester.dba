@@ -19,7 +19,7 @@ global windowW3 = 350
 global windowH3 = 400
 
 global windowChecked1 = 0
-global windowChecked2 as guiId
+global windowChecked2 = 0
 global windowValue3 = 0
 global windowText$ = "Edit me!"
 global windowScrollX2
@@ -30,6 +30,7 @@ global windowScrollY1
 global windowTabIndex = 1
 global windowIndex3 = 0
 global menuChecked = 0
+global menuCheckedIndex = 0
 
 dim windowFuncPtrs(2) as string
 windowFuncPtrs(0) = "window2"
@@ -88,10 +89,27 @@ function doExampleMenu()
     menuChecked = guiCheckboxMenuItem("Check me", 0, 24, 20, menuChecked)
     guiSplitterMenuItem(5)
     guiMenuItem("Item 2", 0, 24, 20, 0)
-    if guiDropDownMenuItemBegin(GEN_ID, "Submenu", 24, 20, 0, 150, 74)
-        guiMenuItem("Item 0", 0, 24, 20, 0)
-        guiMenuItem("Item 1", 0, 24, 20, 0)
-        guiMenuItem("Item 2", 0, 24, 20, 0)
+    if guiDropDownMenuItemBegin(GEN_ID, "Set Theme", 24, 20, 0, 150, 98)
+        menuCheckedIndex = guiRadioButtonMenuItem("Default", 0, 24, 20, 0, menuCheckedIndex)
+        menuCheckedIndex = guiRadioButtonMenuItem("Red", 0, 24, 20, 1, menuCheckedIndex)
+        menuCheckedIndex = guiRadioButtonMenuItem("Green", 0, 24, 20, 2, menuCheckedIndex)
+        menuCheckedIndex = guiRadioButtonMenuItem("Blue", 0, 24, 20, 3, menuCheckedIndex)
+        
+        select menuCheckedIndex
+            case 0
+                guiSetTheme("Default")
+            endcase
+            case 1
+                guiSetTheme("Red")
+            endcase
+            case 2
+                guiSetTheme("Green")
+            endcase
+            case 3
+                guiSetTheme("Blue")
+            endcase
+        endselect
+        
         guiDropDownMenuItemEnd()
     endif
     guiMenuItem("Item 3", 0, 24, 20, 0)
@@ -142,10 +160,10 @@ function window2(focused)
     clicked = guiScrollWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", windowScrollX2, windowScrollY2, 1000, 1000, 0, focused)
         
         
-        windowChecked2 = guiRadioButton(GEN_ID, 100, 40, 120, 30, "Check me", windowChecked2)
-        windowChecked2 = guiRadioButton(GEN_ID, 100, 80, 120, 30, "Check me", windowChecked2)
-        windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", windowChecked2)
-        windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", windowChecked2)
+        windowChecked2 = guiRadioButton(GEN_ID, 100, 40, 120, 30, "Check me", 0, windowChecked2)
+        windowChecked2 = guiRadioButton(GEN_ID, 100, 80, 120, 30, "Check me", 1, windowChecked2)
+        windowChecked2 = guiRadioButton(GEN_ID, 100, 120, 120, 30, "Check me", 2, windowChecked2)
+        windowChecked2 = guiRadioButton(GEN_ID, 100, 160, 120, 30, "Check me", 3, windowChecked2)
 
         guiTabsBegin(GEN_ID, 100, 200, 308, 332, 25, windowTabIndex)
             if guiTabBegin("Tab 0", 0)
