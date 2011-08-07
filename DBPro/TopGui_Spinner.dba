@@ -1,0 +1,173 @@
+
+function guiSpinner(id as guiId, x, y, w, h, value#, min#, max#, step#, places, editable)
+    guiBeginControl(x, y, w, h, 1)
+    
+    textboxId as guiId
+    textboxId = CHILD_ID(id)
+    
+    value# = guiSpinnerLogic(id, w, h, textboxId, value#, min#, max#, step#, places, editable)
+    guiSpinnerDraw(id, w, h, textboxId)
+    
+    guiEndControl()
+endfunction value#
+
+function guiSpinnerLogic(id as guiId, w, h, textboxId as guiId, value#, min#, max#, step#, places, editable)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+    
+    textboxFocused = guiGetFocus() = textboxId
+    
+    spinnerw = 21
+    
+    alter = guiProcessKeyDown(textboxId, VK_UP, 0)-guiProcessKeyDown(textboxId, VK_DOWN, 0)
+    guiGetScroll(textboxId, id)
+    inc alter, -guiGetScroll(id, id)
+    
+    if textboxFocused and editable
+        if gui.oldFocusId <> textboxId or guiGetActive() = id
+            gui.tempText = str$(value#, places)
+        endif
+        text$ = gui.tempText
+    else
+        text$ = str$(value#, places)
+    endif
+    text$ = guiTextbox(textboxId, 0, 0, w-spinnerw+1, h, text$, get ptr to function("guiValidateSpinnerText"))
+    if textboxFocused and editable
+        gui.tempText = text$
+        value# = val(text$)
+    endif
+    textlen = fast len(text$)
+    
+    if gui.msd = 1
+        if guiGetHot() = id
+            guiSetFocus(textboxId, textlen, textlen)
+        
+            if guiSetActive(id)
+                if guiMouseX() >= x+w-h
+                    guiSetDelay(id, 500)
+                    
+                    gui.counter = 1
+                    if guiMouseY() < y+h/2
+                        gui.dragMode = 1
+                        inc value#, step#
+                    else
+                        gui.dragMode = 2
+                        dec value#, step#
+                    endif
+                endif
+            endif
+        endif
+    endif
+    
+    if guiGetActive() = id
+        if gui.msc = 1
+            guiStayActive()
+            
+            if guiHasDelayed() 
+                guiSetFocus(textboxId, textlen, textlen)
+                guiSetDelay(id, 50)
+                
+                speed = gui.counter/20
+                factor = 10^speed
+                
+                select gui.dragMode
+                    case 1
+                        inc value#, step#*factor
+                    endcase
+                    case 2
+                        dec value#, step#*factor
+                    endcase
+                endselect
+                
+                inc gui.counter
+            endif
+        endif
+    endif
+    
+    if alter
+        inc value#, step#*alter
+        guiSetFocus(textboxId, textlen, textlen)
+    endif
+    
+    index = floor((value#-min#)/step#+0.5)
+    value# = clamp(index*step#+min#, min#, max#)
+    
+    if alter <> 0 and textboxFocused and editable
+        gui.tempText = str$(value#, places)
+    endif
+endfunction value#
+
+function guiSpinnerDraw(id as guiId, w, h, textboxId as guiId)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    hot = (guiGetHot() = id) or (guiGetHot() = textboxId)
+    
+    spinnerw = 21
+
+    if hot
+        upActive = 0
+        downActive = 0
+        if guiGetActive() = id
+            select gui.dragMode
+                case 1
+                    upActive = 1
+                endcase
+                case 2
+                    downActive = 1
+                endcase
+            endselect
+        endif
+        if upActive
+            a2FillBox x+w-spinnerw, y, x+w, y+h/2, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT
+        else
+            a2FillBox x+w-spinnerw, y, x+w, y+h/2, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+        endif
+        if downActive
+            a2FillBox x+w-spinnerw, y+h/2, x+w, y+h, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT
+        else
+            a2FillBox x+w-spinnerw, y+h/2, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+        endif
+    else
+        a2FillBox x+w-spinnerw, y, x+w, y+h/2, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
+        a2FillBox x+w-spinnerw, y+h/2, x+w, y+h, THEME_INACTIVE_LIGHT, THEME_INACTIVE_LIGHT, THEME_INACTIVE_DARK, THEME_INACTIVE_DARK
+    endif
+    
+    a2SetLineAA 0
+    a2Box x+w-spinnerw, y, x+w-1, y+h/2, THEME_OUTLINE_DARK
+    a2Box x+w-spinnerw, y+h/2, x+w-1, y+h-1, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+    
+    arrowSize = min(h/2-8, spinnerw/2-6)
+    arrowY = h/4-arrowSize/2
+    a2FillTriangle x+w-spinnerw/2-1, y+arrowY, x+w-spinnerw/2+arrowSize-1, y+arrowSize+arrowY, x+w-spinnerw/2-arrowSize-1, y+arrowSize+arrowY, THEME_ARROW_COLOR
+    a2FillTriangle x+w-spinnerw/2-1, y+h-arrowY-1, x+w-spinnerw/2+arrowSize-1, y+h-arrowSize-arrowY-1, x+w-spinnerw/2-arrowSize-1, y+h-arrowSize-arrowY-1, THEME_ARROW_COLOR
+    a2Triangle x+w-spinnerw/2-1, y+arrowY, x+w-spinnerw/2+arrowSize-1, y+arrowSize+arrowY, x+w-spinnerw/2-arrowSize-1, y+arrowSize+arrowY, THEME_ARROW_COLOR
+    a2Triangle x+w-spinnerw/2-1, y+h-arrowY-1, x+w-spinnerw/2+arrowSize-1, y+h-arrowSize-arrowY-1, x+w-spinnerw/2-arrowSize-1, y+h-arrowSize-arrowY-1, THEME_ARROW_COLOR
+    
+endfunction
+
+function guiValidateSpinnerText(text$)
+    l = fast len(text$)
+    foundpoint = 0
+    for i = 1 to l
+        c = mid ascii(text$, i)
+        if c < 48 or c > 57
+            if c = 46
+                if foundpoint
+                    exitfunction 0
+                else
+                    foundpoint = 1
+                endif
+            else
+                if c <> 45 or i <> 1
+                    exitfunction 0
+                endif
+            endif
+        endif
+    next i
+endfunction 1
