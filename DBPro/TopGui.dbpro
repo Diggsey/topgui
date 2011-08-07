@@ -22,6 +22,7 @@ include14=TopGui_Theme.dba
 include15=TopGui_Panel.dba
 include16=TopGui_Slider.dba
 include17=TopGui_Spinner.dba
+include18=TopGui_Textarea.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***

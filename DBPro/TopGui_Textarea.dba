@@ -1,0 +1,145 @@
+
+type guiLogicalLine
+    used as boolean
+    prevLine as integer
+    nextLine as integer
+    text$ as string
+    state as integer
+    endState as integer
+    blockStart as integer
+    blockEnd as integer
+    collapsed as boolean
+    height as integer
+endtype
+
+type guiTextDocument
+    lineArray as integer
+    firstLine as integer
+    lastLine as integer
+    parser as integer
+endtype
+
+global guiCurrentTextDocument as guiTextDocument
+global dim guiCurrentLines() as guiLogicalLine
+
+function guiInitLine(index)
+    guiCurrentLines(index).used = 1
+    guiCurrentLines(index).prevLine = -1
+    guiCurrentLines(index).nextLine = -1
+    guiCurrentLines(index).text$ = ""
+    guiCurrentLines(index).state = -1
+    guiCurrentLines(index).endState = -1
+    guiCurrentLines(index).blockStart = 0
+    guiCurrentLines(index).blockEnd = 0
+    guiCurrentLines(index).collapsed = 0
+    guiCurrentLines(index).height = -1
+endfunction
+
+function guiReserveLine()
+    lineCount = array count(guiCurrentLines())
+    start = rnd(lineCount)
+    for i = 0 to lineCount
+        index = (start+i) mod (lineCount+1)
+        if guiCurrentLines(index).used = 0
+            guiInitLine(index)
+            exitfunction index
+        endif
+    next i
+    
+    index = lineCount+1
+    inc lineCount, 10
+    global dim guiCurrentLines(lineCount) as guiLogicalLine
+    
+    for i = index to lineCount
+        guiCurrentLines(i).used = 0
+    next i
+    
+    guiInitLine(index)
+endfunction index
+
+function guiFreeLine(index)
+    guiCurrentLines(index).used = 0
+    guiCurrentLines(index).text$ = null$()
+endfunction
+
+function guiRemoveLine(index)
+    prevLine = guiCurrentLines(index).prevLine
+    nextLine = guiCurrentLines(index).nextLine
+    
+    if prevLine = -1
+        guiCurrentTextDocument.firstLine = nextLine
+    else
+        guiCurrentLines(prevLine).nextLine = nextLine
+    endif
+    if nextLine = -1
+        guiCurrentTextDocument.lastLine = prevLine
+    else
+        guiCurrentLines(nextLine).prevLine = prevLine
+    endif
+    
+    guiFreeLine(index)
+endfunction
+
+function guiInsertLine(prevLine)
+    index = guiReserveLine()
+    if prevLine = -1
+        nextLine = guiCurrentTextDocument.firstLine
+        guiCurrentTextDocument.firstLine = index
+    else
+        nextLine = guiCurrentLines(prevLine).nextLine
+        guiCurrentLines(prevLine).nextLine = index
+    endif
+    if nextLine = -1
+        guiCurrentTextDocument.lastLine = index
+    else
+        guiCurrentLines(nextLine).prevLine = index
+    endif
+    guiCurrentLines(index).prevLine = prevLine
+    guiCurrentLines(index).nextLine = nextLine
+endfunction index
+
+function guiDefaultParser(state, text$, colorFuncPtr)
+    if colorFuncPtr
+        call function ptr colorFuncPtr, THEME_TEXT_DARK, 0, gui.fontId, text$
+    endif
+endfunction 0
+
+function guiDrawTextDocument(w, h, scrollx, scrolly)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    posx = 0
+    posy = 0
+    
+    colorFuncPtr = get ptr to function("guiDrawTextChunk")
+    
+    state = 0
+    index = guiCurrentTextDocument.firstLine
+    while index <> -1
+        invalid = 0
+        visible = 0
+        if guiCurrentLines(index).state <> state then invalid = 1
+        if guiCurrentLines(index).endState = -1 then invalid = 1
+        if guiCurrentLines(index).height = -1 then invalid = 1 : visible = 1
+        if posy+guiCurrentLines(index).height > scrolly and posy < h+scrolly then visible = 1
+    
+        if invalid or visible
+            guiCurrentLines(index).state = state
+            
+            if visible
+                state = call function ptr(guiCurrentTextDocument.parser, state, text$, colorFuncPtr)
+            else
+                state = call function ptr(guiCurrentTextDocument.parser, state, text$, 0)
+            endif
+            guiCurrentLines(index).endState = state
+        endif
+        
+        inc posy, guiCurrentLines(index).height
+        
+        index = guiCurrentLines(index).nextLine
+    endwhile
+endfunction
+
+function guiDrawTextChunk(color, bgcolor, font, text$)
+endfunction
+
