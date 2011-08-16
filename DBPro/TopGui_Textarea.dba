@@ -7,6 +7,7 @@ type guiLogicalLineType
     blockStart as integer
     blockEnd as integer
     collapsed as boolean
+    width as integer
     height as integer
 endtype
 
@@ -15,6 +16,8 @@ type guiTextDocumentType
     parser as integer
     freeListId as integer
     invalid as boolean
+    width as integer
+    height as integer
 endtype
 
 type guiTextPosType
@@ -33,8 +36,8 @@ type guiTextareaContextType
     h as integer
     wordWrap as boolean
     lineHeight as integer
-    clientw as integer
-    clienth as integer
+    pageSizeH as integer
+    pageSizeV as integer
     queryx as integer
     queryy as integer
     queryindex as integer
@@ -58,21 +61,47 @@ global dim guiCurrentLines() as guiLogicalLineType
 function guiTextarea(id as guiId, x, y, w, h, scrollx, scrolly, wordWrap)
     guiBeginControl(x, y, w, h, 1)
     
+    horzId = CHILD_ID(id)
+    vertId = CHILD_ID(id)
+    
+    allowScrollX = 1-wordWrap
+    allowScrollY = 1
+    
+    pageSizeH = w-2
+    pageSizeV = h-2
+    redirectId = 0
+    if allowScrollX then dec pageSizeV, 20 : redirectId = horzId
+    if allowScrollY then dec pageSizeH, 20 : redirectId = vertId
+    
+    if redirectId then guiGetScroll(id, redirectId)
+    
     guiCurrentTextarea.wordWrap = wordWrap
-    guiCurrentTextarea.clientw = w-22
-    guiCurrentTextarea.clienth = h-22
+    guiCurrentTextarea.pageSizeH = pageSizeH
+    guiCurrentTextarea.pageSizeV = pageSizeV
     guiCurrentTextarea.scrollx = scrollx
     guiCurrentTextarea.scrolly = scrolly
     
     guiTextareaLogic(id)
     guiTextareaDraw(id, w, h)
     
-    guiBeginContainer(id, 1, 1, w-22, h-22, scrollx, scrolly)
+    guiBeginContainer(id, 1, 1, pageSizeH, pageSizeV, scrollx, scrolly)
     
     guiTextareaClientLogic(id)
     guiDrawTextDocument()
     
     guiEndContainer()
+    
+    clientw = guiCurrentTextDocument.width
+    clienth = guiCurrentTextDocument.height
+    scrollx = guiCurrentTextarea.scrollx
+    scrolly = guiCurrentTextarea.scrolly
+    if allowScrollX
+        gui.interaction.scrollX = guiHScrollbar(horzId, 0, h-21, pageSizeH+2, 21, scrollx, clientw-pageSizeH, pageSizeH, 40)
+    endif
+    if allowScrollY
+        gui.interaction.scrollY = guiVScrollbar(vertId, w-21, 0, 21, pageSizeV+2, scrolly, clienth-pageSizeV, pageSizeV, 40)
+    endif
+    guiTextareaDrawEnd(id, w, h, allowScrollX, allowScrollY)
     
     guiEndControl()
 endfunction
@@ -82,6 +111,15 @@ function guiTextareaDraw(id as guiId, w, h)
     y = guiAdjustY(0)
 
     a2FillBox x, y, x+w, y+h, THEME_BACKGROUND_LIGHT
+endfunction
+
+function guiTextareaDrawEnd(id as guiId, w, h, allowScrollX, allowScrollY)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    if allowScrollX and allowScrollY
+        a2FillBox x+w-20, y+h-20, x+w, y+h, THEME_INACTIVE_LIGHT
+    endif
     
     a2SetLineAA 0
     a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
@@ -98,6 +136,11 @@ endfunction
 function guiTextareaClientLogic(id as guiId)
     focused = guiFocus(id, 0)
     guiCurrentTextarea.focused = focused
+    
+    if focused
+        oldselend as guiTextPosType
+        oldselend = guiCurrentTextarea.selEnd
+    endif
     
     ` Convert 0, 0 to screen coordinates
     x = guiAdjustX(0)
@@ -224,6 +267,10 @@ function guiTextareaClientLogic(id as guiId)
             
             guiSetCursorVisible(1)
         endwhile
+        
+        if guiCompareTextPos(oldselend, guiCurrentTextarea.selEnd)
+            guiTextScrollToSelection()
+        endif
     endif
 endfunction
 
@@ -373,6 +420,51 @@ function guiSetTextDocumentFromStringArray(array)
     unlink array lines()
 endfunction
 
+function guiSetTextDocumentFromFile(filename$)
+    fileId = find free datafile()
+    if open datafile to read(fileId, filename$)
+        datafile string type 1, 2
+        guiSetTextDocumentFromString(datafile string$(fileId))
+        
+        close datafile fileId
+        
+        exitfunction 1
+    endif
+endfunction 0
+
+function guiGetFileFromTextDocument(filename$, newline$)
+    fileId = find free datafile()
+    if open datafile to write(fileId, filename$)
+        datafile string type 1, 7
+        write datafile string fileId, guiGetStringFromTextDocument(newline$)
+        
+        close datafile fileId
+        
+        exitfunction 1
+    endif
+endfunction 0
+
+function guiGetStringFromTextDocument(newline$)
+    lineCount = guiGetLineCount()
+    result$ = ""
+    for i = 0 to lineCount-1
+        if i then result$ = result$ + newline$
+        result$ = result$ + guiGetLineText(i)
+    next i
+endfunction result$
+
+function guiGetStringArrayFromTextDocument()
+    lineCount = guiGetLineCount()
+    local dim lines(lineCount-1) as string
+    
+    for i = 0 to lineCount-1
+        lines(i) = guiGetLineText(i)
+    next i
+    
+    array = get arrayptr(lines())
+    unlink array lines()
+endfunction array
+
 function guiGetLineFromId(id)
     lineCount = get array size(guiCurrentLines())
     for i = 0 to lineCount-1
@@ -389,6 +481,7 @@ function guiSetLineText(index, text$)
     
     guiCurrentLines(index).text$ = text$
     guiCurrentLines(index).endState = -1
+    guiCurrentLines(index).width = -1
     guiCurrentLines(index).height = -1
     
     guiCurrentTextDocument.invalid = 1
@@ -402,6 +495,7 @@ function guiInitLine(index)
     guiCurrentLines(index).blockStart = 0
     guiCurrentLines(index).blockEnd = 0
     guiCurrentLines(index).collapsed = 0
+    guiCurrentLines(index).width = -1
     guiCurrentLines(index).height = -1
 endfunction
 
@@ -485,12 +579,15 @@ function guiProcessTextDocument(draw)
     else
         guiProcessTextDocument(0)
     endif
+    
+    guiCurrentTextDocument.width = 0
+    guiCurrentTextDocument.height = 0
 
     guiCurrentTextarea.posx = 0
     guiCurrentTextarea.posy = 0
     scrolly = guiCurrentTextarea.scrolly
-    clientw = guiCurrentTextarea.clientw
-    clienth = guiCurrentTextarea.clienth
+    pageSizeH = guiCurrentTextarea.pageSizeH
+    pageSizeV = guiCurrentTextarea.pageSizeV
     parser = guiCurrentTextDocument.parser
     if parser = 0 then parser = get ptr to function("guiDefaultParser")
     
@@ -499,7 +596,7 @@ function guiProcessTextDocument(draw)
     
     state = 0
     lineCount = get array size(guiCurrentLines())
-
+    
     for i = 0 to lineCount-1
         guiCurrentTextarea.index = i
         
@@ -507,13 +604,14 @@ function guiProcessTextDocument(draw)
         
         if draw
             if guiCurrentTextarea.posy+guiCurrentLines(i).height > scrolly
-                if guiCurrentTextarea.posy < clienth+scrolly
+                if guiCurrentTextarea.posy < pageSizeV+scrolly
                     funcPtr = drawFuncPtr
                 endif
             endif
         else
             if guiCurrentLines(i).state <> state then funcPtr = measureFuncPtr
             if guiCurrentLines(i).endState = -1 then funcPtr = measureFuncPtr
+            if guiCurrentLines(i).width = -1 then funcPtr = measureFuncPtr
             if guiCurrentLines(i).height = -1 then funcPtr = measureFuncPtr
         endif
         
@@ -521,12 +619,14 @@ function guiProcessTextDocument(draw)
             guiCurrentLines(i).state = state
             text$ = guiCurrentLines(i).text$
 
+            guiCurrentLines(i).width = 0
             guiCurrentLines(i).height = 0
             guiCurrentTextarea.lineHeight = 0
             guiCurrentTextarea.charIndex = 0
             
             state = call function ptr(parser, state, text$, funcPtr)
             
+            guiCurrentLines(i).width = max(guiCurrentTextarea.posx, guiCurrentLines(i).width)
             inc guiCurrentLines(i).height, guiCurrentTextarea.lineHeight
 
             guiCurrentLines(i).endState = state
@@ -535,6 +635,8 @@ function guiProcessTextDocument(draw)
         else
             inc guiCurrentTextarea.posy, guiCurrentLines(i).height
         endif
+        guiCurrentTextDocument.width = max(guiCurrentTextDocument.width, guiCurrentLines(i).width)
+        inc guiCurrentTextDocument.height, guiCurrentLines(i).height
         
         guiCurrentTextarea.posx = 0
     next i
@@ -588,6 +690,8 @@ function guiGetTextLinePos(index)
 endfunction ypos
 
 function guiGetTextCharIndex(index, xpos)
+    guiProcessTextDocument(0)
+
     guiCurrentTextarea.index = index
     guiCurrentTextarea.posx = 0
     guiCurrentTextarea.posy = 0
@@ -607,6 +711,8 @@ function guiGetTextCharIndex(index, xpos)
 endfunction guiCurrentTextarea.queryresult
 
 function guiGetTextCharInfo(index, charIndex)
+    guiProcessTextDocument(0)
+
     if charIndex < 0 then charIndex = 0
     if index < 0 then index = 0
 
@@ -629,8 +735,8 @@ function guiGetTextChunkCursorPos(color, bgcolor, font, text$)
         i = guiCurrentTextarea.index
     
         textw = guiGetTextWidth2(font, text$)
-        if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.clientw) and guiCurrentTextarea.wordWrap
-            pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.clientw-guiCurrentTextarea.posx, 0)
+        if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.pageSizeH) and guiCurrentTextarea.wordWrap
+            pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.pageSizeH-guiCurrentTextarea.posx, 0)
             wrappos = guiFindWordWrapPos(fast left$(text$, pos+1))
             if wrappos = 0 and guiCurrentTextarea.posx = 0
                 wrappos = max(pos, 1)
@@ -658,8 +764,8 @@ function guiGetTextChunkCharPos(color, bgcolor, font, text$)
     i = guiCurrentTextarea.index
 
     textw = guiGetTextWidth2(font, text$)
-    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.clientw) and guiCurrentTextarea.wordWrap
-        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.clientw-guiCurrentTextarea.posx, 0)
+    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.pageSizeH) and guiCurrentTextarea.wordWrap
+        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.pageSizeH-guiCurrentTextarea.posx, 0)
         wrappos = guiFindWordWrapPos(fast left$(text$, pos+1))
         if wrappos = 0 and guiCurrentTextarea.posx = 0
             wrappos = max(pos, 1)
@@ -667,9 +773,9 @@ function guiGetTextChunkCharPos(color, bgcolor, font, text$)
         
         guiGetTextChunkCharPosSimple(font, fast left$(text$, wrappos))
         
+        guiCurrentTextarea.queryfound = 0
         guiCurrentTextarea.posx = 0
         inc guiCurrentTextarea.posy, guiCurrentTextarea.lineHeight
-        inc guiCurrentLines(i).height, guiCurrentTextarea.lineHeight
         guiCurrentTextarea.lineHeight = 0
         
         guiGetTextChunkCharPos(color, bgcolor, font, mid$(text$, wrappos+1, 0))
@@ -725,8 +831,8 @@ function guiDrawTextChunk(color, bgcolor, font, text$)
     i = guiCurrentTextarea.index
 
     textw = guiGetTextWidth2(font, text$)
-    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.clientw) and guiCurrentTextarea.wordWrap
-        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.clientw-guiCurrentTextarea.posx, 0)
+    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.pageSizeH) and guiCurrentTextarea.wordWrap
+        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.pageSizeH-guiCurrentTextarea.posx, 0)
         wrappos = guiFindWordWrapPos(fast left$(text$, pos+1))
         if wrappos = 0 and guiCurrentTextarea.posx = 0
             wrappos = max(pos, 1)
@@ -734,9 +840,10 @@ function guiDrawTextChunk(color, bgcolor, font, text$)
         
         guiDrawTextChunkSelected(color, bgcolor, font, fast left$(text$, wrappos))
         
-        guiCurrentTextarea.posx = 0
+        guiCurrentLines(i).width = max(guiCurrentTextarea.posx, guiCurrentLines(i).width)
         inc guiCurrentTextarea.posy, guiCurrentTextarea.lineHeight
         inc guiCurrentLines(i).height, guiCurrentTextarea.lineHeight
+        guiCurrentTextarea.posx = 0
         guiCurrentTextarea.lineHeight = 0
         
         guiDrawTextChunk(color, bgcolor, font, mid$(text$, wrappos+1, 0))
@@ -749,8 +856,8 @@ function guiMeasureTextChunk(color, bgcolor, font, text$)
     i = guiCurrentTextarea.index
 
     textw = guiGetTextWidth2(font, text$)
-    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.clientw) and guiCurrentTextarea.wordWrap
-        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.clientw-guiCurrentTextarea.posx, 0)
+    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.pageSizeH) and guiCurrentTextarea.wordWrap
+        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.pageSizeH-guiCurrentTextarea.posx, 0)
         wrappos = guiFindWordWrapPos(fast left$(text$, pos+1))
         if wrappos = 0 and guiCurrentTextarea.posx = 0
             wrappos = max(pos, 1)
@@ -758,9 +865,10 @@ function guiMeasureTextChunk(color, bgcolor, font, text$)
         
         guiMeasureTextChunkSimple(font, fast left$(text$, wrappos))
         
-        guiCurrentTextarea.posx = 0
+        guiCurrentLines(i).width = max(guiCurrentTextarea.posx, guiCurrentLines(i).width)
         inc guiCurrentTextarea.posy, guiCurrentTextarea.lineHeight
         inc guiCurrentLines(i).height, guiCurrentTextarea.lineHeight
+        guiCurrentTextarea.posx = 0
         guiCurrentTextarea.lineHeight = 0
         
         guiMeasureTextChunk(color, bgcolor, font, mid$(text$, wrappos+1, 0))
@@ -871,3 +979,23 @@ function guiCompareTextPos(a as guiTextPosType, b as guiTextPosType)
         endif
     endif
 endfunction 0
+
+function guiTextScrollToSelection()
+    guiTextScrollToChar(guiCurrentTextarea.selEnd.lineIndex, guiCurrentTextarea.selEnd.charIndex)
+endfunction
+
+function guiTextScrollToChar(lineIndex, charIndex)
+    y = guiGetTextLinePos(lineIndex)
+    guiGetTextCharInfo(lineIndex, charIndex)
+    x = guiGetQueryX()
+    inc y, guiGetQueryY()
+    
+    height = a2GetLineHeight(guiGetQueryFont())
+    
+    guiTextScrollToRect(x-1, y, 2, height)
+endfunction
+
+function guiTextScrollToRect(x, y, w, h)
+    guiCurrentTextarea.scrollx = clamp(guiCurrentTextarea.scrollx, x+w-guiCurrentTextarea.pageSizeH, x)
+    guiCurrentTextarea.scrolly = clamp(guiCurrentTextarea.scrolly, y+h-guiCurrentTextarea.pageSizeV, y)
+endfunction

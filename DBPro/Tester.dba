@@ -67,8 +67,10 @@ do
     perf_start = hitimer(10000)
     
     guiSetCurrentTextDocument(myTextDocument)
-    guiTextarea(GEN_ID, 50, 50, 150, 300, 0, 0, 1)
+    guiTextarea(GEN_ID, 50, 50, 150, 300, scrollx, scrolly, 0)
     myTextDocument = guiCurrentTextDocument
+    scrollx = guiScrollX()
+    scrolly = guiScrollY()
     
     guiWindowListNames(get arrayptr(windowFuncPtrs()), 1)
     
@@ -96,7 +98,14 @@ do
 loop
 
 function initParser()
-    set dir "C:\Program Files\The Game Creators\Dark Basic Professional\Editor\Keywords"
+    path$ = get registry$("SOFTWARE\Dark Basic\Dark Basic Pro", "INSTALL-PATH")
+    path$ = path$ + "\Editor\Keywords"
+    
+    if path exist(path$) = 0
+        path$ = dir programs() + "\The Game Creators\Dark Basic Professional\Editor\Keywords"
+    endif
+    
+    set dir path$
     
     make lookup 1
     
