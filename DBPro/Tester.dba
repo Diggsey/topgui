@@ -1,6 +1,7 @@
 sync on : sync rate 0
 set display mode desktop width(), desktop height(), 32, 0
 
+` Initialise the GUI
 guiInit()
 
 global windowX = 750
@@ -36,6 +37,9 @@ global panelScrollY
 global sliderValue
 global spinnerValue as float
 
+` These are names of functions. Each function draws a window. They are put
+` in an array so that they can easily be re-ordered when a window is
+` brought to the front.
 dim windowFuncPtrs(2) as string
 windowFuncPtrs(0) = "window2"
 windowFuncPtrs(1) = "window1"
@@ -53,27 +57,41 @@ set current camera 0
 
 ink 0, 0
 
-initParser()
+initDBProParser()
+
+` Declare a variable to hold the text document
+myTextDocument as guiTextDocumentType
 
 ` Create a text document
-myTextDocument as guiTextDocumentType
 guiCreateTextDocument()
+
+` Put some text in it
 guiSetTextDocumentFromString("sync on : sync rate 0" + lf$() + lf$() + "make object cube 1, 10" + lf$() + lf$() + "do" + lf$() + "    myvar = 1" + lf$() + "    print " + quote$("myvar: ") + ", myvar" + lf$() + "    sync `Update the screen" + lf$() + "loop")
-guiCurrentTextDocument.parser = get ptr to function("testParser")
+
+` Attach the DBPro syntax parser
+guiCurrentTextDocument.parser = get ptr to function("DBProParser")
+
+` Put the result into the text document variable
 myTextDocument = guiCurrentTextDocument
 
-tmp$ = ""
 do
-    perf_start = hitimer(10000)
-    
+    ` Activate the text document
     guiSetCurrentTextDocument(myTextDocument)
+    
+    ` Draw and update the textarea
     guiTextarea(GEN_ID, 50, 50, 150, 300, scrollx, scrolly, 0)
+    
+    ` *IMPORTANT* Save changes to text document into variable
     myTextDocument = guiCurrentTextDocument
+    
+    ` Update scrolling
     scrollx = guiScrollX()
     scrolly = guiScrollY()
     
+    ` Draw the windows making sure they are in the correct order
     guiWindowListNames(get arrayptr(windowFuncPtrs()), 1)
     
+    ` Open context menu on right click
     if gui.msd = 2
         menux = gui.msx
         menuy = gui.msy
@@ -82,31 +100,39 @@ do
         menuopen = 0
     endif
     
+    ` Draw context menu
     if guiContextMenuBegin(GEN_ID, menux, menuy, 150, 180, menuopen)
         doExampleMenu()
         guiContextMenuEnd()
     endif
     
+    ` Update cube
     yrotate object 1, hitimer()*0.02
     
     print screen fps()
     
+    ` Update GUI
     guiUpdate()
     sync
 
     cls 0xFFC0D0FF
 loop
 
-function initParser()
+` Automatically find all the DBPro keywords
+function initDBProParser()
+    ` Get DBPro install path from registry
     path$ = get registry$("SOFTWARE\Dark Basic\Dark Basic Pro", "INSTALL-PATH")
     path$ = path$ + "\Editor\Keywords"
     
+    ` If registry key not found, try program files
     if path exist(path$) = 0
         path$ = dir programs() + "\The Game Creators\Dark Basic Professional\Editor\Keywords"
     endif
     
+    ` Open the keywords folder
     set dir path$
     
+    ` Put all keywords into a lookup table for speed
     make lookup 1
     
     find first
@@ -134,6 +160,7 @@ function initParser()
     until get file type() = -1
 endfunction
 
+` Check if the text starts with a keyword and return its length
 function findKeyword(text$)
     text$ = fast lower$(text$)
     l = fast len(text$)
@@ -156,6 +183,7 @@ function findKeyword(text$)
     endwhile
 endfunction 0
 
+` Check if the text starts with a word and return its length
 function findWord(text$)
     l = fast len(text$)
     for i = 1 to l
@@ -167,6 +195,7 @@ function findWord(text$)
     next i
 endfunction l
 
+` Check if the text starts with symbols and return its length
 function findSymbol(text$)
     l = fast len(text$)
     for i = 1 to l
@@ -178,6 +207,7 @@ function findSymbol(text$)
     next i
 endfunction l
 
+` Check if the text starts with a quoted string and return its length
 function findString(text$)
     c = mid ascii(text$, 1)
     if c = 34
@@ -188,36 +218,51 @@ function findString(text$)
     endif
 endfunction l
 
-function testParser(state, text$, colorFuncPtr)
+` DBPro syntax parser, called for each line
+function DBProParser(state, text$, colorFuncPtr)
+    ` colorFunc must be called at least once even for an empty line
+    ` so that the textarea knows what font to use to determine the
+    ` line height.
     if text$ = "" and colorFuncPtr <> 0
         call function ptr colorFuncPtr, 0, 0, gui.fontId, ""
     endif
 
+    ` While the line has text left to parse
     while text$ <> ""
+        ` If we are in a multiline comment
         if state
+            ` TODO: Handle multiline comments
         else
+            ` Get first character code
             c = asc(text$)
             if guiIsLetter(c)
+                ` If it's a letter check for keywords and words
                 keyword = findKeyword(text$)
                 if keyword
+                    ` It's a keyword
                     call function ptr colorFuncPtr, 0xFF0000FF, 0, gui.fontId, fast left$(text$, keyword)
                     text$ = mid$(text$, keyword+1, 0)
                 else
+                    ` It's a word (eg. variable name)
                     wordlen = findWord(text$)
                     call function ptr colorFuncPtr, 0xFF000000, 0, gui.fontId, fast left$(text$, wordlen)
                     text$ = mid$(text$, wordlen+1, 0)
                 endif
             else
+                ` If it's not a letter check for a symbol, quoted string or single-line comment
                 symbol = findSymbol(text$)
                 if symbol
+                    ` It's a symbol or number
                     call function ptr colorFuncPtr, 0xFFFF0000, 0, gui.fontId, fast left$(text$, symbol)
                     text$ = mid$(text$, symbol+1, 0)
                 else
                     str = findString(text$)
                     if str
+                        ` It's a quoted string
                         call function ptr colorFuncPtr, 0xFF800080, 0, gui.fontId, fast left$(text$, str)
                         text$ = mid$(text$, str+1, 0)
                     else
+                        ` It's a single-line comment, so process the rest of the line
                         call function ptr colorFuncPtr, 0xFF808080, 0, gui.fontId, text$
                         text$ = ""
                     endif
