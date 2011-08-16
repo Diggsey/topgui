@@ -1,8 +1,6 @@
 
-type guiLogicalLine
-    used as boolean
-    prevLine as integer
-    nextLine as integer
+type guiLogicalLineType
+    id as integer
     text$ as string
     state as integer
     endState as integer
@@ -12,20 +10,392 @@ type guiLogicalLine
     height as integer
 endtype
 
-type guiTextDocument
+type guiTextDocumentType
     lineArray as integer
-    firstLine as integer
-    lastLine as integer
     parser as integer
+    freeListId as integer
+    invalid as boolean
 endtype
 
-global guiCurrentTextDocument as guiTextDocument
-global dim guiCurrentLines() as guiLogicalLine
+type guiTextPosType
+    lineIndex as integer
+    charIndex as integer
+endtype
+
+type guiTextareaContextType
+    posx as integer
+    posy as integer
+    index as integer
+    charIndex as integer
+    scrollx as integer
+    scrolly as integer
+    w as integer
+    h as integer
+    wordWrap as boolean
+    lineHeight as integer
+    clientw as integer
+    clienth as integer
+    queryx as integer
+    queryy as integer
+    queryindex as integer
+    queryresult as integer
+    queryfont as integer
+    queryfound as boolean
+    focused as boolean
+    selectioncolor as integer
+    selectionbgcolor as integer
+    
+    selStart as guiTextPosType
+    selEnd as guiTextPosType
+    selMin as guiTextPosType
+    selMax as guiTextPosType
+endtype
+
+global guiCurrentTextarea as guiTextareaContextType
+global guiCurrentTextDocument as guiTextDocumentType
+global dim guiCurrentLines() as guiLogicalLineType
+
+function guiTextarea(id as guiId, x, y, w, h, scrollx, scrolly, wordWrap)
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiCurrentTextarea.wordWrap = wordWrap
+    guiCurrentTextarea.clientw = w-22
+    guiCurrentTextarea.clienth = h-22
+    guiCurrentTextarea.scrollx = scrollx
+    guiCurrentTextarea.scrolly = scrolly
+    
+    guiTextareaLogic(id)
+    guiTextareaDraw(id, w, h)
+    
+    guiBeginContainer(id, 1, 1, w-22, h-22, scrollx, scrolly)
+    
+    guiTextareaClientLogic(id)
+    guiDrawTextDocument()
+    
+    guiEndContainer()
+    
+    guiEndControl()
+endfunction
+
+function guiTextareaDraw(id as guiId, w, h)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    a2FillBox x, y, x+w, y+h, THEME_BACKGROUND_LIGHT
+    
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+endfunction
+
+function guiTextareaLogic(id as guiId)
+    ` If mouse over, try becoming hot
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+endfunction
+
+function guiTextareaClientLogic(id as guiId)
+    focused = guiFocus(id, 0)
+    guiCurrentTextarea.focused = focused
+    
+    ` Convert 0, 0 to screen coordinates
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    if guiGetHot() = id
+        if gui.msd = 1
+            if guiSetActive(id)
+                lineIndex = guiGetTextLineIndex(guiMouseY()-y)
+                charIndex = guiGetTextCharIndex(lineIndex, guiMouseX()-x)
+                guiCurrentTextarea.selStart.lineIndex = lineIndex
+                guiCurrentTextarea.selStart.charIndex = charIndex
+                guiCurrentTextarea.selEnd = guiCurrentTextarea.selStart
+                
+                guiSetFocus(id, 0, 0)
+            endif
+        endif
+    endif
+    
+    if guiGetActive() = id
+        if gui.msc = 1
+            guiStayActive()
+            
+            lineIndex = guiGetTextLineIndex(guiMouseY()-y)
+            charIndex = guiGetTextCharIndex(lineIndex, guiMouseX()-x)
+            guiCurrentTextarea.selEnd.lineIndex = lineIndex
+            guiCurrentTextarea.selEnd.charIndex = charIndex
+            
+            guiSetCursorVisible(1)
+        endif
+    endif
+    
+    if focused
+        guiCalculateSelectionMinMax()
+        guiCurrentTextarea.selectioncolor = 0xFFFFFFFF
+        guiCurrentTextarea.selectionbgcolor = 0xFF3060FF
+        
+        l = fast len(gui.entryBuffer)
+        while l
+            mode = mid ascii(gui.entryBuffer, 1)
+            keyCode = mid ascii(gui.entryBuffer, 2)
+            char$ = chr$(keyCode)
+            minSel = min(gui.selStart, gui.selEnd)
+            maxSel = max(gui.selStart, gui.selEnd)
+            
+            if mode = 1
+                if keyCode = 8
+                    if guiTextEraseSelection() = 0
+                        if guiCurrentTextarea.selStart.charIndex > 0
+                            text$ = guiGetLineText(guiCurrentTextarea.selStart.lineIndex)
+                            text$ = remove$(text$, guiCurrentTextarea.selStart.charIndex, 1)
+                            guiSetLineText(guiCurrentTextarea.selStart.lineIndex, text$)
+                            
+                            dec guiCurrentTextarea.selEnd.charIndex
+                            guiCurrentTextarea.selStart = guiCurrentTextarea.selEnd
+                        else
+                            if guiCurrentTextarea.selStart.lineIndex > 0
+                                text1$ = guiGetLineText(guiCurrentTextarea.selStart.lineIndex-1)
+                                text2$ = guiGetLineText(guiCurrentTextarea.selStart.lineIndex)
+                                guiSetLineText(guiCurrentTextarea.selStart.lineIndex-1, text1$ + text2$)
+                                guiRemoveLine(guiCurrentTextarea.selStart.lineIndex)
+                                
+                                dec guiCurrentTextarea.selEnd.lineIndex
+                                guiCurrentTextarea.selEnd.charIndex = fast len(text1$)
+                                guiCurrentTextarea.selStart = guiCurrentTextarea.selEnd
+                            endif
+                        endif
+                    endif
+                else
+                    if keyCode <> 9 and keyCode <> 10 and keyCode <> 13
+                        guiTextEraseSelection()
+                        guiTextInsertString(char$)
+                    endif
+                endif
+            else
+                if mode = 2 or mode = 3
+                    if keyCode = VK_LEFT
+                        if guiCurrentTextarea.selEnd.charIndex > 0
+                            dec guiCurrentTextarea.selEnd.charIndex
+                        else
+                            if guiCurrentTextarea.selEnd.lineIndex > 0
+                                dec guiCurrentTextarea.selEnd.lineIndex
+                                guiCurrentTextarea.selEnd.charIndex = guiGetLineLength(guiCurrentTextarea.selEnd.lineIndex)
+                            endif
+                        endif
+                        
+                        if shiftkey() = 0 then guiCurrentTextarea.selStart = guiCurrentTextarea.selEnd
+                    endif
+                    if keyCode = VK_RIGHT
+                        if guiCurrentTextarea.selEnd.charIndex < guiGetLineLength(guiCurrentTextarea.selEnd.lineIndex)
+                            inc guiCurrentTextarea.selEnd.charIndex
+                        else
+                            if guiCurrentTextarea.selEnd.lineIndex < guiGetLineCount()-1
+                                inc guiCurrentTextarea.selEnd.lineIndex
+                                guiCurrentTextarea.selEnd.charIndex = 0
+                            endif
+                        endif
+
+                        if shiftkey() = 0 then guiCurrentTextarea.selStart = guiCurrentTextarea.selEnd
+                    endif
+                    if keyCode = VK_DELETE
+                        if guiTextEraseSelection() = 0
+                            text$ = guiGetLineText(guiCurrentTextarea.selStart.lineIndex)
+                            if guiCurrentTextarea.selStart.charIndex < fast len(text$)
+                                text$ = remove$(text$, guiCurrentTextarea.selStart.charIndex+1, 1)
+                                guiSetLineText(guiCurrentTextarea.selStart.lineIndex, text$)
+                            else
+                                if guiCurrentTextarea.selStart.lineIndex < guiGetLineCount()-1
+                                    text2$ = guiGetLineText(guiCurrentTextarea.selStart.lineIndex+1)
+                                    guiSetLineText(guiCurrentTextarea.selStart.lineIndex, text$ + text2$)
+                                    guiRemoveLine(guiCurrentTextarea.selStart.lineIndex+1)
+                                endif
+                            endif
+                        endif
+                    endif
+                    if keyCode = VK_RETURN
+                        guiTextInsertString(lf$())
+                    endif
+                endif
+            endif
+            
+            gui.entryBuffer = remove$(gui.entryBuffer, 1, 2)
+            dec l, 2
+            
+            guiSetCursorVisible(1)
+        endwhile
+    endif
+endfunction
+
+function guiGetLineCount()
+    result = get array size(guiCurrentLines())
+endfunction result
+
+function guiGetLineLength(index)
+    text$ = guiGetLineText(index)
+    result = fast len(text$)
+endfunction result
+
+function guiCalculateSelectionMinMax()
+    cmp = guiCompareTextPos(guiCurrentTextarea.selStart, guiCurrentTextarea.selEnd)
+    
+    if cmp < 0
+        guiCurrentTextarea.selMin = guiCurrentTextarea.selStart
+        guiCurrentTextarea.selMax = guiCurrentTextarea.selEnd
+    else
+        guiCurrentTextarea.selMin = guiCurrentTextarea.selEnd
+        guiCurrentTextarea.selMax = guiCurrentTextarea.selStart
+    endif
+endfunction
+
+function guiTextEraseSelection()
+    if guiCompareTextPos(guiCurrentTextarea.selMin, guiCurrentTextarea.selMax) = 0
+        exitfunction 0
+    endif
+
+    texta$ = guiCurrentLines(guiCurrentTextarea.selMin.lineIndex).text$
+    textb$ = guiCurrentLines(guiCurrentTextarea.selMax.lineIndex).text$
+    lineText$ = fast left$(texta$, guiCurrentTextarea.selMin.charIndex) + mid$(textb$, guiCurrentTextarea.selMax.charIndex+1, 0)
+    
+    guiRemoveLines(guiCurrentTextarea.selMin.lineIndex+1, guiCurrentTextarea.selMax.lineIndex)
+    guiSetLineText(guiCurrentTextarea.selMin.lineIndex, lineText$)
+    
+    guiCurrentTextarea.selStart = guiCurrentTextarea.selMin
+    guiCurrentTextarea.selEnd = guiCurrentTextarea.selMin
+    guiCurrentTextarea.selMax = guiCurrentTextarea.selMin
+endfunction 1
+
+function guiTextInsertString(text$)
+    guiTextEraseSelection()
+    
+    startIndex = guiCurrentTextarea.selMin.lineIndex
+    line$ = guiGetLineText(startIndex)
+    
+    post$ = mid$(line$, guiCurrentTextarea.selMin.charIndex+1, 0)
+    pre$ = fast left$(line$, guiCurrentTextarea.selMin.charIndex)
+    
+    split string text$, lf$()
+    c = split count()
+    for i = 0 to c-1
+        w$ = trim$(split word$(i+1), cr$())
+        if i = 0 then w$ = pre$ + w$
+        if i = c-1
+            guiCurrentTextarea.selMin.lineIndex = startIndex+i
+            guiCurrentTextarea.selMin.charIndex = fast len(w$)
+            guiCurrentTextarea.selMax = guiCurrentTextarea.selMin
+            guiCurrentTextarea.selStart = guiCurrentTextarea.selMin
+            guiCurrentTextarea.selEnd = guiCurrentTextarea.selMin
+            w$ = w$ + post$
+        else
+            guiInsertLine(startIndex+i+1)
+        endif
+        guiSetLineText(startIndex+i, w$)
+    next i
+endfunction
+
+function guiSetCurrentTextDocument(document as guiTextDocumentType)
+    guiCurrentTextDocument = document
+    unlink array guiCurrentLines()
+    link array guiCurrentLines(), guiCurrentTextDocument.lineArray
+endfunction
+
+function guiCreateTextDocument()
+    unlink array guiCurrentLines()
+    global dim guiCurrentLines() as guiLogicalLineType
+    guiCurrentTextDocument.lineArray = get arrayptr(guiCurrentLines())
+    guiCurrentTextDocument.parser = 0
+    guiCurrentTextDocument.freeListId = find free freelist()
+    make freelist guiCurrentTextDocument.freeListId
+    
+    guiInsertLine(0)
+endfunction
+
+function guiSetTextDocumentParser(parser)
+    guiCurrentTextDocument.parser = parser
+
+    lineCount = get array size(guiCurrentLines())
+    for i = 0 to lineCount-1
+        guiCurrentLines(i).state = -1
+        guiCurrentLines(i).endState = -1
+        guiCurrentLines(i).height = -1
+    next i
+    
+    guiCurrentTextDocument.invalid = 1
+endfunction
+
+function guiDeleteTextDocument()
+    delete freelist guiCurrentTextDocument.freeListId
+
+    undim guiCurrentLines()
+    guiCurrentTextDocument.lineArray = 0
+    guiCurrentTextDocument.freeListId = 0
+    guiCurrentTextDocument.parser = 0
+endfunction
+
+function guiClearTextDocument()
+    undim guiCurrentLines()
+    global dim guiCurrentLines() as guiLogicalLineType
+    guiCurrentTextDocument.lineArray = get arrayptr(guiCurrentLines())
+    reset freelist guiCurrentTextDocument.freeListId
+    
+    guiInsertLine(0)
+endfunction
+
+function guiSetTextDocumentFromString(text$)
+    guiClearTextDocument()
+    
+    split string text$, lf$()
+    lineCount = split count()
+
+    for i = 0 to lineCount-1
+        if i then guiInsertLine(i)
+
+        line$ = trim$(split word$(i+1), cr$())
+        guiSetLineText(i, line$)
+    next i
+endfunction
+
+function guiSetTextDocumentFromStringArray(array)
+    guiClearTextDocument()
+    
+    local dim lines() as string
+    link array lines(), array
+
+    lineCount = get array size(lines())
+
+    for i = 0 to lineCount-1
+        if i then guiInsertLine(i)
+
+        line$ = lines(i)
+        guiSetLineText(i, line$)
+    next i
+    
+    unlink array lines()
+endfunction
+
+function guiGetLineFromId(id)
+    lineCount = get array size(guiCurrentLines())
+    for i = 0 to lineCount-1
+        if guiCurrentLines(i).id = id then exitfunction i
+    next i
+endfunction -1
+
+function guiGetLineText(index)
+    text$ = guiCurrentLines(index).text$
+endfunction text$
+
+function guiSetLineText(index, text$)
+    if is null(text$) then text$ = ""
+    
+    guiCurrentLines(index).text$ = text$
+    guiCurrentLines(index).endState = -1
+    guiCurrentLines(index).height = -1
+    
+    guiCurrentTextDocument.invalid = 1
+endfunction
 
 function guiInitLine(index)
-    guiCurrentLines(index).used = 1
-    guiCurrentLines(index).prevLine = -1
-    guiCurrentLines(index).nextLine = -1
+    guiCurrentLines(index).id = get from freelist(guiCurrentTextDocument.freeListId)
     guiCurrentLines(index).text$ = ""
     guiCurrentLines(index).state = -1
     guiCurrentLines(index).endState = -1
@@ -35,68 +405,42 @@ function guiInitLine(index)
     guiCurrentLines(index).height = -1
 endfunction
 
-function guiReserveLine()
-    lineCount = array count(guiCurrentLines())
-    start = rnd(lineCount)
-    for i = 0 to lineCount
-        index = (start+i) mod (lineCount+1)
-        if guiCurrentLines(index).used = 0
-            guiInitLine(index)
-            exitfunction index
-        endif
-    next i
-    
-    index = lineCount+1
-    inc lineCount, 10
-    global dim guiCurrentLines(lineCount) as guiLogicalLine
-    
-    for i = index to lineCount
-        guiCurrentLines(i).used = 0
-    next i
-    
-    guiInitLine(index)
-endfunction index
-
-function guiFreeLine(index)
-    guiCurrentLines(index).used = 0
+function guiDeinitLine(index)
+    return to freelist guiCurrentTextDocument.freeListId, guiCurrentLines(index).id
+    guiCurrentLines(index).id = 0
     guiCurrentLines(index).text$ = null$()
 endfunction
 
 function guiRemoveLine(index)
-    prevLine = guiCurrentLines(index).prevLine
-    nextLine = guiCurrentLines(index).nextLine
+    guiDeinitLine(index)
+    array delete element guiCurrentLines(), index
+    guiCurrentTextDocument.lineArray = get arrayptr(guiCurrentLines())
     
-    if prevLine = -1
-        guiCurrentTextDocument.firstLine = nextLine
-    else
-        guiCurrentLines(prevLine).nextLine = nextLine
-    endif
-    if nextLine = -1
-        guiCurrentTextDocument.lastLine = prevLine
-    else
-        guiCurrentLines(nextLine).prevLine = prevLine
-    endif
-    
-    guiFreeLine(index)
+    guiCurrentTextDocument.invalid = 1
 endfunction
 
-function guiInsertLine(prevLine)
-    index = guiReserveLine()
-    if prevLine = -1
-        nextLine = guiCurrentTextDocument.firstLine
-        guiCurrentTextDocument.firstLine = index
+function guiRemoveLines(fromIndex, toIndex)
+    for i = fromIndex to toIndex
+        guiDeinitLine(fromIndex)
+        array delete element guiCurrentLines(), fromIndex
+    next i
+    
+    guiCurrentTextDocument.lineArray = get arrayptr(guiCurrentLines())
+    guiCurrentTextDocument.invalid = 1
+endfunction
+
+function guiInsertLine(index)
+    lineCount = get array size(guiCurrentLines())
+    if index < lineCount
+        array insert at element guiCurrentLines(), index
     else
-        nextLine = guiCurrentLines(prevLine).nextLine
-        guiCurrentLines(prevLine).nextLine = index
+        array insert at bottom guiCurrentLines()
     endif
-    if nextLine = -1
-        guiCurrentTextDocument.lastLine = index
-    else
-        guiCurrentLines(nextLine).prevLine = index
-    endif
-    guiCurrentLines(index).prevLine = prevLine
-    guiCurrentLines(index).nextLine = nextLine
-endfunction index
+    guiCurrentTextDocument.lineArray = get arrayptr(guiCurrentLines())
+    guiInitLine(index)
+    
+    guiCurrentTextDocument.invalid = 1
+endfunction
 
 function guiDefaultParser(state, text$, colorFuncPtr)
     if colorFuncPtr
@@ -104,42 +448,426 @@ function guiDefaultParser(state, text$, colorFuncPtr)
     endif
 endfunction 0
 
-function guiDrawTextDocument(w, h, scrollx, scrolly)
-    x = guiAdjustX(0)
-    y = guiAdjustY(0)
+function guiDrawTextDocument()
+    guiProcessTextDocument(1)
+endfunction
+
+function guiIsLetter(code)
+    result = (code >= 65 and code <= 90) or (code >= 97 and code <= 122) or (code = 95)
+endfunction result
+
+function guiIsDigit(code)
+    result = (code >= 48 and code <= 57)
+endfunction result
+
+function guiIsLetterOrDigit(code)
+    result = (code >= 48 and code <= 57) or (code >= 65 and code <= 90) or (code >= 97 and code <= 122) or (code = 95)
+endfunction result
+
+function guiFindWordWrapPos(text$)
+    l = fast len(text$)
+    for i = l to 1 step -1
+        b = a
+        a = guiIsLetterOrDigit(mid ascii(text$, i)) = 0
+        if i < l
+            if a or b
+                exitfunction i
+            endif
+        endif
+    next i
+endfunction 0
+
+function guiProcessTextDocument(draw)
+    if draw = 0
+        if guiCurrentTextDocument.invalid = 0
+            exitfunction
+        endif
+    else
+        guiProcessTextDocument(0)
+    endif
+
+    guiCurrentTextarea.posx = 0
+    guiCurrentTextarea.posy = 0
+    scrolly = guiCurrentTextarea.scrolly
+    clientw = guiCurrentTextarea.clientw
+    clienth = guiCurrentTextarea.clienth
+    parser = guiCurrentTextDocument.parser
+    if parser = 0 then parser = get ptr to function("guiDefaultParser")
     
-    posx = 0
-    posy = 0
-    
-    colorFuncPtr = get ptr to function("guiDrawTextChunk")
+    drawFuncPtr = get ptr to function("guiDrawTextChunk")
+    measureFuncPtr = get ptr to function("guiMeasureTextChunk")
     
     state = 0
-    index = guiCurrentTextDocument.firstLine
-    while index <> -1
-        invalid = 0
-        visible = 0
-        if guiCurrentLines(index).state <> state then invalid = 1
-        if guiCurrentLines(index).endState = -1 then invalid = 1
-        if guiCurrentLines(index).height = -1 then invalid = 1 : visible = 1
-        if posy+guiCurrentLines(index).height > scrolly and posy < h+scrolly then visible = 1
-    
-        if invalid or visible
-            guiCurrentLines(index).state = state
-            
-            if visible
-                state = call function ptr(guiCurrentTextDocument.parser, state, text$, colorFuncPtr)
-            else
-                state = call function ptr(guiCurrentTextDocument.parser, state, text$, 0)
+    lineCount = get array size(guiCurrentLines())
+
+    for i = 0 to lineCount-1
+        guiCurrentTextarea.index = i
+        
+        funcPtr = 0
+        
+        if draw
+            if guiCurrentTextarea.posy+guiCurrentLines(i).height > scrolly
+                if guiCurrentTextarea.posy < clienth+scrolly
+                    funcPtr = drawFuncPtr
+                endif
             endif
-            guiCurrentLines(index).endState = state
+        else
+            if guiCurrentLines(i).state <> state then funcPtr = measureFuncPtr
+            if guiCurrentLines(i).endState = -1 then funcPtr = measureFuncPtr
+            if guiCurrentLines(i).height = -1 then funcPtr = measureFuncPtr
         endif
         
-        inc posy, guiCurrentLines(index).height
+        if funcPtr
+            guiCurrentLines(i).state = state
+            text$ = guiCurrentLines(i).text$
+
+            guiCurrentLines(i).height = 0
+            guiCurrentTextarea.lineHeight = 0
+            guiCurrentTextarea.charIndex = 0
+            
+            state = call function ptr(parser, state, text$, funcPtr)
+            
+            inc guiCurrentLines(i).height, guiCurrentTextarea.lineHeight
+
+            guiCurrentLines(i).endState = state
+            
+            inc guiCurrentTextarea.posy, guiCurrentTextarea.lineHeight
+        else
+            inc guiCurrentTextarea.posy, guiCurrentLines(i).height
+        endif
         
-        index = guiCurrentLines(index).nextLine
-    endwhile
+        guiCurrentTextarea.posx = 0
+    next i
+    
+    guiCurrentTextDocument.invalid = 0
+    
+    if draw and guiCurrentTextarea.focused and guiGetCursorVisible()
+        ` Draw cursor
+        x = guiAdjustX(0)
+        y = guiAdjustY(0)
+        
+        posy = y+guiGetTextLinePos(guiCurrentTextarea.selEnd.lineIndex)
+        guiGetTextCharInfo(guiCurrentTextarea.selEnd.lineIndex, guiCurrentTextarea.selEnd.charIndex)
+        posx = x+guiGetQueryX()
+        inc posy, guiGetQueryY()
+        font = guiGetQueryFont()
+        
+        a2SetBlendMode 2, 2, 2, 2, 2, 1
+        a2FillBox posx-1, posy, posx+1, posy+a2GetLineHeight(font), 0xFFFFFFFF
+        a2SetBlendMode 5, 6, 1, 2, 2, 1
+    endif
+endfunction
+
+function guiGetTextLineIndex(ypos)
+    guiProcessTextDocument(0)
+    
+    lineCount = get array size(guiCurrentLines())
+    for i = 0 to lineCount-1
+        lineHeight = guiCurrentLines(i).height
+        if ypos < lineHeight
+            guiCurrentTextarea.queryy = ypos
+            exitfunction i
+        endif
+        dec ypos, lineHeight
+    next i
+    guiCurrentTextarea.queryy = ypos
+    
+    dec i
+endfunction i
+
+function guiGetTextLinePos(index)
+    guiProcessTextDocument(0)
+    ypos = 0
+    
+    lineCount = get array size(guiCurrentLines())
+    for i = 0 to index-1
+        lineHeight = guiCurrentLines(i).height
+        inc ypos, lineHeight
+    next i
+    
+endfunction ypos
+
+function guiGetTextCharIndex(index, xpos)
+    guiCurrentTextarea.index = index
+    guiCurrentTextarea.posx = 0
+    guiCurrentTextarea.posy = 0
+    guiCurrentTextarea.queryx = xpos
+    guiCurrentTextarea.queryindex = 0
+    guiCurrentTextarea.queryresult = 0
+    guiCurrentTextarea.queryfound = 0
+    parser = guiCurrentTextDocument.parser
+    text$ = guiCurrentLines(index).text$
+    state = guiCurrentLines(index).state
+    state = call function ptr(parser, state, text$, get ptr to function("guiGetTextChunkCursorPos"))
+    if guiCurrentTextarea.queryy >= guiCurrentTextarea.posy
+        if guiCurrentTextarea.queryfound = 0
+            guiCurrentTextarea.queryresult = guiCurrentTextarea.queryindex
+        endif
+    endif
+endfunction guiCurrentTextarea.queryresult
+
+function guiGetTextCharInfo(index, charIndex)
+    if charIndex < 0 then charIndex = 0
+    if index < 0 then index = 0
+
+    guiCurrentTextarea.index = index
+    guiCurrentTextarea.posx = 0
+    guiCurrentTextarea.posy = 0
+    guiCurrentTextarea.queryx = 0
+    guiCurrentTextarea.queryy = 0
+    guiCurrentTextarea.queryindex = charIndex
+    guiCurrentTextarea.queryresult = 0
+    guiCurrentTextarea.queryfound = 0
+    parser = guiCurrentTextDocument.parser
+    text$ = guiCurrentLines(index).text$
+    state = guiCurrentLines(index).state
+    state = call function ptr(parser, state, text$, get ptr to function("guiGetTextChunkCharPos"))
+endfunction
+
+function guiGetTextChunkCursorPos(color, bgcolor, font, text$)
+    if guiCurrentTextarea.queryy >= guiCurrentTextarea.posy
+        i = guiCurrentTextarea.index
+    
+        textw = guiGetTextWidth2(font, text$)
+        if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.clientw) and guiCurrentTextarea.wordWrap
+            pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.clientw-guiCurrentTextarea.posx, 0)
+            wrappos = guiFindWordWrapPos(fast left$(text$, pos+1))
+            if wrappos = 0 and guiCurrentTextarea.posx = 0
+                wrappos = max(pos, 1)
+            endif
+            
+            guiGetTextChunkCursorPosSimple(font, fast left$(text$, wrappos))
+            
+            if guiCurrentTextarea.queryfound = 0
+                guiCurrentTextarea.queryresult = guiCurrentTextarea.queryindex
+            endif
+            
+            guiCurrentTextarea.queryfound = 0
+            guiCurrentTextarea.posx = 0
+            inc guiCurrentTextarea.posy, guiCurrentTextarea.lineHeight
+            guiCurrentTextarea.lineHeight = 0
+            
+            guiGetTextChunkCursorPos(color, bgcolor, font, mid$(text$, wrappos+1, 0))
+        else
+            guiGetTextChunkCursorPosSimple(font, text$)
+        endif
+    endif
+endfunction
+
+function guiGetTextChunkCharPos(color, bgcolor, font, text$)
+    i = guiCurrentTextarea.index
+
+    textw = guiGetTextWidth2(font, text$)
+    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.clientw) and guiCurrentTextarea.wordWrap
+        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.clientw-guiCurrentTextarea.posx, 0)
+        wrappos = guiFindWordWrapPos(fast left$(text$, pos+1))
+        if wrappos = 0 and guiCurrentTextarea.posx = 0
+            wrappos = max(pos, 1)
+        endif
+        
+        guiGetTextChunkCharPosSimple(font, fast left$(text$, wrappos))
+        
+        guiCurrentTextarea.posx = 0
+        inc guiCurrentTextarea.posy, guiCurrentTextarea.lineHeight
+        inc guiCurrentLines(i).height, guiCurrentTextarea.lineHeight
+        guiCurrentTextarea.lineHeight = 0
+        
+        guiGetTextChunkCharPos(color, bgcolor, font, mid$(text$, wrappos+1, 0))
+    else
+        guiGetTextChunkCharPosSimple(font, text$)
+    endif
+endfunction
+
+function guiGetQueryX()
+endfunction guiCurrentTextarea.queryx
+
+function guiGetQueryY()
+endfunction guiCurrentTextarea.queryy
+
+function guiGetQueryFont()
+endfunction guiCurrentTextarea.queryfont
+
+function guiGetTextChunkCursorPosSimple(font, text$)
+    if guiCurrentTextarea.queryy >= guiCurrentTextarea.posy
+        textw = guiGetTextWidth2(font, text$)
+        if guiCurrentTextarea.queryx < guiCurrentTextarea.posx + textw and guiCurrentTextarea.queryfound = 0
+            char = guiGetCursorPos2(font, text$, guiCurrentTextarea.queryx-guiCurrentTextarea.posx, 1)
+            guiCurrentTextarea.queryresult = guiCurrentTextarea.queryindex + char
+            
+            guiCurrentTextarea.queryfound = 1
+        endif
+        inc guiCurrentTextarea.posx, textw
+        inc guiCurrentTextarea.queryindex, fast len(text$)
+        lineHeight = a2GetLineHeight(font)
+        guiCurrentTextarea.lineHeight = max(guiCurrentTextarea.lineHeight, lineHeight)
+    endif
+endfunction
+
+function guiGetTextChunkCharPosSimple(font, text$)
+    textw = guiGetTextWidth2(font, text$)
+    l = fast len(text$)
+    if guiCurrentTextarea.queryindex <= l and guiCurrentTextarea.queryindex >= 0
+        w = guiGetTextWidth2(font, fast left$(text$, guiCurrentTextarea.queryindex))
+        guiCurrentTextarea.queryfound = 1
+        guiCurrentTextarea.queryx = guiCurrentTextarea.posx + w
+        guiCurrentTextarea.queryy = guiCurrentTextarea.posy
+        guiCurrentTextarea.queryfont = font
+        guiCurrentTextarea.queryresult = guiCurrentTextarea.queryx
+    endif
+    
+    dec guiCurrentTextarea.queryindex, l
+    inc guiCurrentTextarea.posx, textw
+    lineHeight = a2GetLineHeight(font)
+    guiCurrentTextarea.lineHeight = max(guiCurrentTextarea.lineHeight, lineHeight)
 endfunction
 
 function guiDrawTextChunk(color, bgcolor, font, text$)
+    i = guiCurrentTextarea.index
+
+    textw = guiGetTextWidth2(font, text$)
+    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.clientw) and guiCurrentTextarea.wordWrap
+        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.clientw-guiCurrentTextarea.posx, 0)
+        wrappos = guiFindWordWrapPos(fast left$(text$, pos+1))
+        if wrappos = 0 and guiCurrentTextarea.posx = 0
+            wrappos = max(pos, 1)
+        endif
+        
+        guiDrawTextChunkSelected(color, bgcolor, font, fast left$(text$, wrappos))
+        
+        guiCurrentTextarea.posx = 0
+        inc guiCurrentTextarea.posy, guiCurrentTextarea.lineHeight
+        inc guiCurrentLines(i).height, guiCurrentTextarea.lineHeight
+        guiCurrentTextarea.lineHeight = 0
+        
+        guiDrawTextChunk(color, bgcolor, font, mid$(text$, wrappos+1, 0))
+    else
+        guiDrawTextChunkSelected(color, bgcolor, font, text$)
+    endif
 endfunction
 
+function guiMeasureTextChunk(color, bgcolor, font, text$)
+    i = guiCurrentTextarea.index
+
+    textw = guiGetTextWidth2(font, text$)
+    if (guiCurrentTextarea.posx+textw > guiCurrentTextarea.clientw) and guiCurrentTextarea.wordWrap
+        pos = guiGetCursorPos2(font, text$, guiCurrentTextarea.clientw-guiCurrentTextarea.posx, 0)
+        wrappos = guiFindWordWrapPos(fast left$(text$, pos+1))
+        if wrappos = 0 and guiCurrentTextarea.posx = 0
+            wrappos = max(pos, 1)
+        endif
+        
+        guiMeasureTextChunkSimple(font, fast left$(text$, wrappos))
+        
+        guiCurrentTextarea.posx = 0
+        inc guiCurrentTextarea.posy, guiCurrentTextarea.lineHeight
+        inc guiCurrentLines(i).height, guiCurrentTextarea.lineHeight
+        guiCurrentTextarea.lineHeight = 0
+        
+        guiMeasureTextChunk(color, bgcolor, font, mid$(text$, wrappos+1, 0))
+    else
+        guiMeasureTextChunkSimple(font, text$)
+    endif
+endfunction
+
+function guiDrawTextChunkSelected(color, bgcolor, font, text$)
+    if guiCurrentTextarea.focused = 0
+        guiDrawTextChunkSimple(color, bgcolor, font, text$)
+        exitfunction
+    endif
+    
+    a as guiTextPosType
+    b as guiTextPosType
+    a.lineIndex = guiCurrentTextarea.index
+    b.lineIndex = guiCurrentTextarea.index
+    a.charIndex = guiCurrentTextarea.charIndex
+    b.charIndex = guiCurrentTextarea.charIndex + fast len(text$)
+    
+    cmpa = guiCompareTextPos(guiCurrentTextarea.selMax, a)
+    cmpb = guiCompareTextPos(guiCurrentTextarea.selMin, b)
+    
+    if cmpa <= 0 or cmpb >= 0
+        guiDrawTextChunkSimple(color, bgcolor, font, text$)
+    else
+        cmpc = guiCompareTextPos(guiCurrentTextarea.selMin, a)
+        cmpd = guiCompareTextPos(guiCurrentTextarea.selMax, b)
+        if cmpc <= 0 and cmpd >= 0
+            guiDrawTextChunkSimple(guiCurrentTextarea.selectioncolor, guiCurrentTextarea.selectionbgcolor, font, text$)
+        else
+            if cmpc > 0
+                startchar = guiCurrentTextarea.selMin.charIndex-a.charIndex
+                guiDrawTextChunkSimple(color, bgcolor, font, fast left$(text$, startchar))
+            else
+                startchar = 0
+            endif
+            if cmpd < 0
+                endchar = guiCurrentTextarea.selMax.charIndex-a.charIndex
+            else
+                endchar = fast len(text$)
+            endif
+            if startchar <> endchar
+                guiDrawTextChunkSimple(guiCurrentTextarea.selectioncolor, guiCurrentTextarea.selectionbgcolor, font, mid$(text$, startchar+1, endchar-startchar))
+            endif
+            if cmpd < 0
+                guiDrawTextChunkSimple(color, bgcolor, font, mid$(text$, endchar+1, 0))
+            endif
+        endif
+    endif
+endfunction
+
+function guiDrawTextChunkSimple(color, bgcolor, font, text$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    x1 = x+guiCurrentTextarea.posx
+    y1 = y+guiCurrentTextarea.posy
+    
+    lineHeight = a2GetLineHeight(font)
+    
+    if text$ <> null$() and text$ <> ""
+        textWidth = guiGetTextWidth2(font, text$)
+        inc guiCurrentTextarea.charIndex, fast len(text$)
+        
+        a2FillBox x1, y1, x1+textWidth, y1+lineHeight, bgcolor
+        `a2Text font, x1, y1, text$, color
+        guiFastText(font, x1, y1, text$, color)
+        inc guiCurrentTextarea.posx, textWidth
+    endif
+    
+    guiCurrentTextarea.lineHeight = max(guiCurrentTextarea.lineHeight, lineHeight)
+endfunction
+
+function guiMeasureTextChunkSimple(font, text$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    x1 = x+guiCurrentTextarea.posx
+    y1 = y+guiCurrentTextarea.posy
+    
+    lineHeight = a2GetLineHeight(font)
+    
+    if text$ <> null$() and text$ <> ""
+        textWidth = guiGetTextWidth2(font, text$)
+        
+        inc guiCurrentTextarea.posx, textWidth
+    endif
+    
+    guiCurrentTextarea.lineHeight = max(guiCurrentTextarea.lineHeight, lineHeight)
+endfunction
+
+function guiCompareTextPos(a as guiTextPosType, b as guiTextPosType)
+    if a.lineIndex < b.lineIndex
+        exitfunction -1
+    else
+        if a.lineIndex > b.lineIndex
+            exitfunction 1
+        else
+            if a.charIndex < b.charIndex
+                exitfunction -1
+            else
+                if a.charIndex > b.charIndex
+                    exitfunction 1
+                endif
+            endif
+        endif
+    endif
+endfunction 0

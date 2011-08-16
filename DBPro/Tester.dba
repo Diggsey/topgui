@@ -53,10 +53,23 @@ set current camera 0
 
 ink 0, 0
 
+initParser()
+
+` Create a text document
+myTextDocument as guiTextDocumentType
+guiCreateTextDocument()
+guiSetTextDocumentFromString("sync on : sync rate 0" + lf$() + lf$() + "make object cube 1, 10" + lf$() + lf$() + "do" + lf$() + "    myvar = 1" + lf$() + "    print " + quote$("myvar: ") + ", myvar" + lf$() + "    sync `Update the screen" + lf$() + "loop")
+guiCurrentTextDocument.parser = get ptr to function("testParser")
+myTextDocument = guiCurrentTextDocument
+
 tmp$ = ""
 do
     perf_start = hitimer(10000)
-
+    
+    guiSetCurrentTextDocument(myTextDocument)
+    guiTextarea(GEN_ID, 50, 50, 150, 300, 0, 0, 1)
+    myTextDocument = guiCurrentTextDocument
+    
     guiWindowListNames(get arrayptr(windowFuncPtrs()), 1)
     
     if gui.msd = 2
@@ -82,6 +95,129 @@ do
     cls 0xFFC0D0FF
 loop
 
+function initParser()
+    set dir "C:\Program Files\The Game Creators\Dark Basic Professional\Editor\Keywords"
+    
+    make lookup 1
+    
+    find first
+    repeat
+        if get file type() = 0
+            if fast right$(get file name$(), 4) = ".ini"
+                open to read 1, get file name$()
+                
+                read string 1, line$
+                while file end(1) = 0
+                    pos = find char(line$, "=")
+                    if pos
+                        keyword$ = fast lower$(fast left$(line$, pos-1))
+                        set lookup 1, keyword$, "keyword"
+                    endif
+                
+                    read string 1, line$
+                endwhile
+                
+                close file 1
+            endif
+        endif
+    
+        find next
+    until get file type() = -1
+endfunction
+
+function findKeyword(text$)
+    text$ = fast lower$(text$)
+    l = fast len(text$)
+    for i = 1 to l
+        c = mid ascii(text$, i)
+        if guiIsLetterOrDigit(c) = 0 and c <> 32 and c <> 36
+            exit
+        endif
+    next i
+    dec i
+    
+    keyword$ = text$
+    while i > 0
+        keyword$ = fast left$(keyword$, i)
+        if lookup exist(1, keyword$)
+            exitfunction i
+        endif
+        
+        i = last instr(keyword$, " ")-1
+    endwhile
+endfunction 0
+
+function findWord(text$)
+    l = fast len(text$)
+    for i = 1 to l
+        c = mid ascii(text$, i)
+        if guiIsLetterOrDigit(c) = 0
+            dec i
+            exitfunction i
+        endif
+    next i
+endfunction l
+
+function findSymbol(text$)
+    l = fast len(text$)
+    for i = 1 to l
+        c = mid ascii(text$, i)
+        if guiIsLetter(c) or c = 34 or c = 96
+            dec i
+            exitfunction i
+        endif
+    next i
+endfunction l
+
+function findString(text$)
+    c = mid ascii(text$, 1)
+    if c = 34
+        l = find ascii(text$, 34, 2)
+        if l = 0 then l = fast len(text$)
+    else
+        l = 0
+    endif
+endfunction l
+
+function testParser(state, text$, colorFuncPtr)
+    if text$ = "" and colorFuncPtr <> 0
+        call function ptr colorFuncPtr, 0, 0, gui.fontId, ""
+    endif
+
+    while text$ <> ""
+        if state
+        else
+            c = asc(text$)
+            if guiIsLetter(c)
+                keyword = findKeyword(text$)
+                if keyword
+                    call function ptr colorFuncPtr, 0xFF0000FF, 0, gui.fontId, fast left$(text$, keyword)
+                    text$ = mid$(text$, keyword+1, 0)
+                else
+                    wordlen = findWord(text$)
+                    call function ptr colorFuncPtr, 0xFF000000, 0, gui.fontId, fast left$(text$, wordlen)
+                    text$ = mid$(text$, wordlen+1, 0)
+                endif
+            else
+                symbol = findSymbol(text$)
+                if symbol
+                    call function ptr colorFuncPtr, 0xFFFF0000, 0, gui.fontId, fast left$(text$, symbol)
+                    text$ = mid$(text$, symbol+1, 0)
+                else
+                    str = findString(text$)
+                    if str
+                        call function ptr colorFuncPtr, 0xFF800080, 0, gui.fontId, fast left$(text$, str)
+                        text$ = mid$(text$, str+1, 0)
+                    else
+                        call function ptr colorFuncPtr, 0xFF808080, 0, gui.fontId, text$
+                        text$ = ""
+                    endif
+                endif
+            endif
+        endif
+    endwhile
+endfunction state
+
 function doExampleMenu()
     guiMenuItem("Item 0", 0, 24, 20, 0)
     menuChecked = guiCheckboxMenuItem("Check me", 0, 24, 20, menuChecked)
@@ -97,6 +233,7 @@ function doExampleMenu()
             case 0
                 guiSetTheme("Default")
             endcase
+            
             case 1
                 guiSetTheme("Red")
             endcase

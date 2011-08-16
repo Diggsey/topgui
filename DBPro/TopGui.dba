@@ -938,15 +938,14 @@ function guiFastText(fontId, x, y, text$, color)
         guiPushClip(0, 0, guiCachedText(i).width, guiCachedText(i).height, 0, 0, 0)
         
         cls 0
-        a2Text guiCachedText(i).fontId, 0, 0, guiCachedText(i).textStr, 0xFFFFFFFF
+        a2Text fontId, 0, 0, text$, 0xFFFFFFFF
         
-        guiPopClip()
         set draw target drawTargetType, drawTargetId
+        guiPopClip()
     endif
     
-    guiCachedText(i).used = 1
-
     a2DrawImage guiCachedText(i).imageId, x, y, 0, 0, 0, 1, 0, color
+    guiCachedText(i).used = 1
     
 endfunction
 
@@ -1070,3 +1069,47 @@ endfunction
 function guiFadeColor(color, alpha)
     color = set alpha(color, (rgba(color)*alpha)/255)
 endfunction color
+
+function guiGetTextWidth(text$)
+    if text$ = ""
+        result = 0
+    else
+        result = a2GetTextWidth(gui.fontId, text$)
+    endif
+endfunction result
+
+function guiGetTextWidth2(fontId, text$)
+    if text$ = ""
+        result = 0
+    else
+        result = a2GetTextWidth(fontId, text$)
+    endif
+endfunction result
+
+function guiGetCursorPos(text$, pos, round)
+    pos = guiGetCursorPos2(gui.fontId, text$, pos, round)
+endfunction pos
+
+function guiGetCursorPos2(fontId, text$, pos, round)
+    minChar = 1
+    maxChar = fast len(text$)
+    
+    while maxChar > minChar
+        midChar = (minChar+maxChar)/2
+        width = guiGetTextWidth2(fontId, fast left$(text$, midChar))
+        if width <= pos
+            minChar = midChar+1
+        else
+            maxChar = midChar
+        endif
+    endwhile
+    
+    if round
+        width = guiGetTextWidth2(fontId, fast left$(text$, minChar-1)) + guiGetTextWidth2(fontId, mid$(text$, minChar))/2
+        if width > pos
+            dec minChar
+        endif
+    else
+        if minChar > 0 then dec minChar
+    endif
+endfunction minChar
