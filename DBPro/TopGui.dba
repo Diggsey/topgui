@@ -224,13 +224,13 @@ endfunction result
 ` CHILD_INDEX_ID(x) - Generate a control ID based on a parent ID and an index
 #constant GEN_ID INDEX_ID(0)
 function INDEX_ID(index)
-    result = -(getReturnAddress() << 12) + index
+    result = -(getReturnAddress() << 10) + index
 endfunction result
 function CHILD_ID(parentId as guiId)
-    result = -(getReturnAddress() << 12) + (parentId << 16)
+    result = -(getReturnAddress() << 10) + (parentId << 12)
 endfunction result
 function CHILD_INDEX_ID(parentId as guiId, index)
-    result = -(getReturnAddress() << 12) + (parentId << 16) + index
+    result = -(getReturnAddress() << 10) + (parentId << 12) + index
 endfunction result
 
 function guiUpdate()

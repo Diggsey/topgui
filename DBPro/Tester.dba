@@ -36,6 +36,7 @@ global panelScrollX
 global panelScrollY
 global sliderValue
 global spinnerValue as float
+global spinnerValue2 as float
 
 ` These are names of functions. Each function draws a window. They are put
 ` in an array so that they can easily be re-ordered when a window is
@@ -380,6 +381,7 @@ function window2(focused)
         sliderValue = guiHSlider(GEN_ID, 500, 500, 300, 30, sliderValue, 15, 1)
         sliderValue = guiVSlider(GEN_ID, 500, 550, 30, 300, sliderValue, 15, 1)
         spinnerValue = guiSpinner(GEN_ID, 600, 600, 100, 25, spinnerValue, -100.0, 100.0, 0.05, 2, 1)
+        spinnerValue2 = guiSpinner(GEN_ID, 600, 630, 100, 25, spinnerValue2, -100.0, 100.0, 0.05, 2, 1)
 
     guiScrollWindowEnd()
     windowX2 = guiMoveX(windowX2, 0, 1000000, windowW2, 50, 1000000)

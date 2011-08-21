@@ -44,7 +44,7 @@ window resolution=1024x768
 
 
 ;*****Media files, icons, cursors*****
-media root path=C:\Program Files\The Game Creators\Dark Basic Professional\Projects\TopGui\DBPro\
+media root path=C:\Program Files\The Game Creators\Dark Basic Professional\Projects\TopGui\top-gui\DBPro\
 
 ;****Version Information****
 VerComments=
