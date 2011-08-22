@@ -76,6 +76,8 @@ guiCurrentTextDocument.parser = get ptr to function("DBProParser")
 myTextDocument = guiCurrentTextDocument
 
 do
+    gameFocused = guiGame(GEN_ID, 0, 0, screen width(), screen height())
+
     ` Activate the text document
     guiSetCurrentTextDocument(myTextDocument)
     

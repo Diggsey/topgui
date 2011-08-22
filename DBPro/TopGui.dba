@@ -809,6 +809,47 @@ function guiSetFocus(id as guiId, initialSelStart, initialSelEnd)
     endif
 endfunction
 
+function guiGame(id as guiId, x, y, w, h)
+    guiBeginControl(x, y, w, h, 1)
+    
+    focused = guiFocus(id, 1)
+    
+    if guiInClip(guiMouseX(), guiMouseY())
+        guiSetHot(id)
+    endif
+    
+    ` If we're the active control
+    if guiGetActive() = id
+        guiStayActive()
+        
+        ` If left button was released
+        if gui.msu = 1
+            ` No longer active
+            guiSetActive(0)
+        endif
+        
+        ` If other button was pressed
+        if gui.msd
+            ` No longer active
+            guiSetActive(0)
+        endif
+    else
+        ` If we're the hot control
+        if guiGetHot() = id
+            ` If left button was pressed
+            if gui.msd = 1
+                ` Make us active
+                guiSetActive(id)
+                guiSetFocus(id, 0, 0)
+            endif
+        endif
+    endif
+    
+    guiGetScroll(id, id)
+    
+    guiEndControl()
+endfunction focused
+
 function guiDrawFocusRect(x1, y1, x2, y2, color)
     batchSize = (x2 - x1) + (y2 - y1) + 2
     a2StartDotBatch batchSize
