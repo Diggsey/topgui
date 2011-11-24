@@ -1,5 +1,9 @@
 
 function guiWindowBegin(id as guiId, x, y, w, h, caption$, child, focused)
+    guiClearInteraction()
+
+    focused = guiModalContainer(id, focused)
+    
     guiBeginControl(x, y, w, h, child)
     guiGetScroll(id, id)
     
@@ -17,6 +21,10 @@ function guiWindowEnd()
 endfunction
 
 function guiScrollWindowBegin(id as guiId, x, y, w, h, caption$, scrollx, scrolly, scrollw, scrollh, child, focused)
+    guiClearInteraction()
+
+    focused = guiModalContainer(id, focused)
+    
     guiBeginControl(x, y, w, h, child)
     
     activated = guiScrollWindowLogic(id, w, h)
@@ -258,3 +266,18 @@ function guiWindowDraw(id as guiId, w, h, caption$, focused)
     guiFastText(gui.fontId, x+6, y+4, caption$, THEME_TEXT_DARK)
 
 endfunction
+
+function guiMessageBox(id as guiId, title$, message$, x, y, w, h, focused)
+    guiWindowBegin(id, x, y, w, h, title$, 0, focused)
+    
+    guiLabel(CHILD_ID(id), 5, 5, w-18, h-70, message$, 0, 0, THEME_TEXT_LIGHT)
+    
+    if guiButton(CHILD_ID(id), w/2-44, h-60, 80, 25, "OK")
+        result = 1
+    else
+        result = 0
+    endif
+        
+    guiWindowEnd()
+endfunction result
+

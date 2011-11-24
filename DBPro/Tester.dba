@@ -92,7 +92,7 @@ do
     scrolly = guiScrollY()
     
     ` Draw the windows making sure they are in the correct order
-    guiWindowListNames(get arrayptr(windowFuncPtrs()), 1)
+    guiWindowListNames(get arrayptr(windowFuncPtrs()), guiRootFocused())
     
     ` Open context menu on right click
     if gui.msd = 2
@@ -120,6 +120,25 @@ do
 
     cls 0xFFC0D0FF
 loop
+
+function sayHello(opened)
+    if opened
+        ` Initial dialog position and size
+        guiModal.x = 300
+        guiModal.y = 300
+        guiModal.width = 220
+        guiModal.height = 110
+        
+        ` Prevent a non-modal control from keeping the focus
+        guiSetFocus(0, 0, 0)
+    endif
+    
+    if guiMessageBox(guiModal.id, "Title", "Hello, this is a message box!", guiModal.x, guiModal.y, guiModal.width, guiModal.height, guiModal.focused)
+        guiCloseModal()
+    endif
+    guiModal.x = guiMoveX(guiModal.x, 0, 1000000, guiModal.width, 0, 1000000)
+    guiModal.y = guiMoveY(guiModal.y, 0, 1000000, guiModal.height, 0, 1000000)
+endfunction
 
 ` Automatically find all the DBPro keywords
 function initDBProParser()
@@ -307,7 +326,9 @@ function doExampleMenu()
     guiMenuItem("Item 3", 0, 24, 20, 0)
     guiMenuItem("Item 4", 0, 24, 20, 0)
     guiSplitterMenuItem(5)
-    guiMenuItem("Item 5", 0, 24, 20, 0)
+    if guiMenuItem("Dialog", 0, 24, 20, 0)
+        guiOpenModalName(RND_ID, 0, "sayHello", 0)
+    endif
 endfunction
 
 function window1(focused)
@@ -349,7 +370,8 @@ endfunction clicked
 
 function window2(focused)
 
-    clicked = guiScrollWindowBegin(GEN_ID, windowX2, windowY2, windowW2, windowH2, "Hello world!", windowScrollX2, windowScrollY2, 1000, 1000, 0, focused)
+    windowId = GEN_ID
+    clicked = guiScrollWindowBegin(windowId, windowX2, windowY2, windowW2, windowH2, "Hello world!", windowScrollX2, windowScrollY2, 1000, 1000, 0, focused)
         
         windowChecked2 = guiRadioButton(GEN_ID, 100, 40, 120, 30, "Check me", 0, windowChecked2)
         windowChecked2 = guiRadioButton(GEN_ID, 100, 80, 120, 30, "Check me", 1, windowChecked2)
@@ -360,6 +382,7 @@ function window2(focused)
             if guiTabBegin("Tab 0", 0)
             
                 if guiButton(GEN_ID, 20, 20, 200, 50, "Click me!")
+                    guiOpenModalName(RND_ID, windowId, "sayHello", 0)
                 endif
                 
                 guiTabEnd()

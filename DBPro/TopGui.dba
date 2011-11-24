@@ -27,6 +27,8 @@ type guiContextType
     msu as integer  ` Mouse up
     fontId as integer
     defaultFontId as integer
+    rootFocused as boolean
+    modalId as guiId
     
     ` Active data
     dragMode as integer
@@ -98,6 +100,20 @@ type guiCachedTextType
     used as boolean
 endtype
 
+type guiModalType
+    id as guiId
+    parentId as guiId
+    functionPtr as integer
+    param as integer
+    focused as boolean
+    x as integer
+    y as integer
+    width as integer
+    height as integer
+    closed as boolean
+endtype
+
+global guiModal as guiModalType
 global gui as guiContextType
 
 ` Initialize gui
@@ -119,6 +135,7 @@ function guiInit()
     global dim guiOverlays() as guiOverlayType
     global dim guiCachedText() as guiCachedTextType
     global dim guiMenuStack() as guiId
+    global dim guiModalStack() as guiModalType
     
     set array index guiClip(), -1
     set array index guiIdStack(), -1
@@ -131,6 +148,7 @@ function guiInit()
     set array index guiOverlays(), -1
     set array index guiCachedText(), -1
     set array index guiMenuStack(), -1
+    set array index guiModalStack(), -1
     
     ` Alpha blend RGB channels, add alpha channels
     a2SetBlendMode 5, 6, 1, 2, 2, 1
@@ -222,7 +240,9 @@ endfunction result
 ` INDEX_ID(x) - Generate a control ID based on an index
 ` CHILD_ID(x) - Generate a control ID based on a parent ID
 ` CHILD_INDEX_ID(x) - Generate a control ID based on a parent ID and an index
+` RND_ID - Generate a random and inconsistent control ID
 #constant GEN_ID INDEX_ID(0)
+#constant RND_ID ((rnd(0xFFFF) << 16) || rnd(0xFFFF))
 function INDEX_ID(index)
     result = -(getReturnAddress() << 10) + index
 endfunction result
@@ -233,7 +253,55 @@ function CHILD_INDEX_ID(parentId as guiId, index)
     result = -(getReturnAddress() << 10) + (parentId << 12) + index
 endfunction result
 
+function guiModalContainer(id as guiId, focused)
+    n = get array index(guiModalStack())
+    for i = n to 0 step -1
+        if guiModalStack(i).parentId = id
+            guiModalStack(i).focused = focused
+            focused = 0
+            
+            if gui.modalId = 0 then gui.modalId = guiModalStack(i).id
+        endif
+    next i
+endfunction focused
+
+function guiUpdateModalChildren(id as guiId)
+    modalCopy as guiModalType
+    modalCopy = guiModal
+
+    for i = 0 to get array index(guiModalStack())
+        if guiModalStack().parentId = id
+            guiModal = guiModalStack(i)
+            
+            if gui.modalId = guiModal.id then gui.modalId = 0
+            
+            guiSetHotParents(guiModal.id)
+            
+            if guiModal.closed
+                guiModal.closed = 0
+                opened = 1
+            else
+                opened = 0
+            endif
+            
+            call function ptr guiModal.functionPtr, opened
+            
+            if guiModal.closed = 0
+                guiModalStack(i) = guiModal
+            else
+                array delete element guiModalStack(), i
+                array index to stack guiModalStack()
+                dec i
+            endif
+        endif
+    next i
+    
+    guiModal = modalCopy
+endfunction
+
 function guiUpdate()
+    guiUpdateModalChildren(0)
+
     ` Close submenus when parent is clicked
     if gui.msd = 1
         guiMenuCloseChildren(guiGetHot())
@@ -374,7 +442,12 @@ function guiUpdate()
     gui.entryBuffer = gui.tempBuffer
     gui.tempBuffer = ""
     
+    gui.rootFocused = guiModalContainer(0, 1)
 endfunction
+
+function guiRootFocused()
+    focused = gui.rootFocused
+endfunction focused
 
 function guiMouseX()
     x = gui.msx - guiOverlayX()
@@ -544,13 +617,7 @@ function guiEndControl()
     guiPopClip()
 endfunction
 
-function guiSetHot(id as guiId)
-    if gui.currentOverlay <> -1
-        gui.overlayHotId = id
-    else
-        gui.nextHotId = id
-    endif
-    
+function guiSetHotParents(id as guiId)
     if gui.hotId = id
         N = get array index(guiIdStack())
         
@@ -559,6 +626,20 @@ function guiSetHot(id as guiId)
             guiHotParentIds(i) = guiIdStack(i)
         next i
     endif
+endfunction
+
+function guiSetHot(id as guiId)
+    if gui.currentOverlay <> -1
+        gui.overlayHotId = id
+    else
+        if gui.modalId
+            gui.nextHotId = gui.modalId
+        else
+            gui.nextHotId = id
+        endif
+    endif
+    
+    guiSetHotParents(id)
 endfunction
 
 function guiIsChildHot(id as guiId)
@@ -644,7 +725,9 @@ function guiPushInteraction()
     next array index guiInteractions()
     if array index valid(guiInteractions()) = 0 then array insert at bottom guiInteractions()
     guiInteractions() = gui.interaction
+endfunction
 
+function guiClearInteraction()
     gui.interaction.deltaX = 0
     gui.interaction.deltaY = 0
     gui.interaction.deltaW = 0
@@ -736,6 +819,8 @@ function guiBeginContainer(id as guiId, x, y, w, h, scrollx, scrolly)
 endfunction
 
 function guiEndContainer()
+    guiUpdateModalChildren(guiIdStack())
+
     `remove from stack guiIdStack()
     previous array index guiIdStack()
 
@@ -762,8 +847,10 @@ function guiHasDelayed()
 endfunction 0
 
 function guiFocus(id as guiId, tabFocus)
-    if gui.newFocusId = 0 then gui.newFocusId = id
-    if gui.overrideFocusId = 0 then gui.overrideFocusId = id
+    if gui.modalId = 0
+        if gui.newFocusId = 0 then gui.newFocusId = id
+        if gui.overrideFocusId = 0 then gui.overrideFocusId = id
+    endif
 
     if gui.focusId = id
         gui.newFocusId = id
@@ -778,8 +865,10 @@ function guiFocus(id as guiId, tabFocus)
         
         gui.nextFocusId = 0
     else
-        gui.prevFocusId = id
-        if gui.nextFocusId = 0 then gui.nextFocusId = id
+        if gui.modalId = 0
+            gui.prevFocusId = id
+            if gui.nextFocusId = 0 then gui.nextFocusId = id
+        endif
     endif
 
     result = (gui.focusId = id)
@@ -1061,8 +1150,25 @@ function guiMenuCloseChildren(parentId as guiId)
     set array index guiMenuStack(), index
 endfunction
 
+function guiOpenModalName(id as guiId, parentId as guiId, functionName$, param)
+    guiOpenModal(id, parentId, get ptr to function(functionName$), param)
+endfunction
+
+function guiOpenModal(id as guiId, parentId as guiId, functionPtr, param)
+    add to stack guiModalStack()
+    guiModalStack().id = id
+    guiModalStack().parentId = parentId
+    guiModalStack().functionPtr = functionPtr
+    guiModalStack().param = param
+    guiModalStack().closed = 1
+endfunction
+
+function guiCloseModal()
+    guiModal.closed = 1
+endfunction
+
 function guiPushMenu(id as guiId)
-    `add to stack guiDataStackInteger()
+    `add to stack guiMenuStack()
     next array index guiMenuStack()
     if array index valid(guiMenuStack()) = 0 then array insert at bottom guiMenuStack()
     guiMenuStack() = id
@@ -1071,7 +1177,7 @@ endfunction
 function guiPopMenu()
     id as guiId
     id = guiMenuStack()
-    `remove from stack guiDataStackInteger()
+    `remove from stack guiMenuStack()
     previous array index guiMenuStack()
 endfunction id
 
