@@ -91,6 +91,9 @@ do
     scrollx = guiScrollX()
     scrolly = guiScrollY()
     
+    guiHProgressbar(GEN_ID, 400, 200, 200, 24, (timer()/5) mod 1000, 1000, 0, 1)
+    guiVProgressbar(GEN_ID, 400, 250, 50, 200, (timer()/5) mod 1000, 1000, 1, 1)
+    
     ` Draw the windows making sure they are in the correct order
     guiWindowListNames(get arrayptr(windowFuncPtrs()), guiRootFocused())
     

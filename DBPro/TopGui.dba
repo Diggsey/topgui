@@ -1068,7 +1068,9 @@ function guiFastText(fontId, x, y, text$, color)
         guiPushClip(0, 0, guiCachedText(i).width, guiCachedText(i).height, 0, 0, 0)
         
         cls 0
+        a2SetBlendMode 11, 7, 1, 2, 2, 5
         a2Text fontId, 0, 0, text$, 0xFFFFFFFF
+        a2SetBlendMode 5, 6, 1, 2, 2, 1
         
         set draw target drawTargetType, drawTargetId
         guiPopClip()
@@ -1113,10 +1115,12 @@ function guiFastBoxText(fontId, x1, y1, x2, y2, text$, halign, valign, wordWrap,
         guiPushClip(0, 0, guiCachedText(i).width, guiCachedText(i).height, 0, 0, 0)
         
         cls 0
+        a2SetBlendMode 11, 7, 1, 2, 2, 5
         a2BoxText guiCachedText(i).fontId, 0, 0, x2-x1, y2-y1, guiCachedText(i).textStr, halign, valign, wordWrap, 0xFFFFFFFF
+        a2SetBlendMode 5, 6, 1, 2, 2, 1
         
-        guiPopClip()
         set draw target drawTargetType, drawTargetId
+        guiPopClip()
     endif
     
     guiCachedText(i).used = 1

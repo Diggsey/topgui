@@ -1,0 +1,141 @@
+
+function guiHProgressbar(id as guiId, x, y, w, h, value, maximum, style, showtext)
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiHProgressbarDraw(id, w, h, value, maximum, style, showtext)
+    
+    guiEndControl()
+endfunction
+
+function guiVProgressbar(id as guiId, x, y, w, h, value, maximum, style, showtext)
+    guiBeginControl(x, y, w, h, 1)
+    
+    guiVProgressbarDraw(id, w, h, value, maximum, style, showtext)
+    
+    guiEndControl()
+endfunction
+
+function guiProgressbarDrawBackground(id as guiId, w, h, text$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+
+    a2FillBox x, y, x+w, y+h, THEME_BACKGROUND_DARK
+    
+    if is empty(text$) = 0
+        guiFastBoxText(gui.fontId, x, y, x+w, y+h, text$, 1, 1, 0, THEME_TEXT_LIGHT)
+    endif
+    
+    a2SetLineAA 0
+    a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+endfunction
+
+function guiHProgressbarDrawForeground(id as guiId, w, h, text$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    a2FillBox x, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+    
+    if is empty(text$) = 0
+        guiFastBoxText(gui.fontId, x, y, x+w, y+h, text$, 1, 1, 0, THEME_TEXT_DARK)
+    endif
+endfunction
+
+function guiVProgressbarDrawForeground(id as guiId, w, h, text$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    a2FillBox x, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK
+    
+    if is empty(text$) = 0
+        guiFastBoxText(gui.fontId, x, y, x+w, y+h, text$, 1, 1, 0, THEME_TEXT_DARK)
+    endif
+endfunction
+
+function guiHProgressbarDraw(id as guiId, w, h, value, maximum, style, showtext)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    if showtext
+        text$ = str$((value*100)/maximum) + "%"
+    else
+        text$ = null$()
+    endif
+    
+    guiProgressbarDrawBackground(id, w, h, text$)
+    
+    select style
+        case 0
+            size = ((w-2)*value)/maximum
+            guiPushClip(1, 1, size+1, h-1, 1, 1, 1)
+            guiHProgressbarDrawForeground(id, w, h, text$)
+            guiPopClip()
+        endcase
+        case 1
+            blockw = 15
+            blocks = (w+blockw-2)/blockw
+            size = (blocks*value)/maximum
+            for i = 0 to size-1
+                blockx = blockw*i+3
+                guiPushClip(blockx, 3, min(blockx+blockw-3, w-1), h-3, blockx, 3, 1)
+                guiHProgressbarDrawForeground(id, w, h, text$)
+                guiPopClip()
+            next i
+        endcase
+        case 2
+            blockw = ((w-2)*value)/maximum
+            size = w+blockw-2
+            delay = 2500
+            pos = ((timer() mod delay)*size)/delay - blockw
+            a = max(pos+1, 1)
+            b = min(pos+blockw+1, w-1)
+            guiPushClip(a, 1, b, h-1, a, 1, 1)
+            guiHProgressbarDrawForeground(id, w, h, text$)
+            guiPopClip()
+        endcase
+    endselect
+    
+endfunction
+
+function guiVProgressbarDraw(id as guiId, w, h, value, maximum, style, showtext)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    if showtext
+        text$ = str$((value*100)/maximum) + "%"
+    else
+        text$ = null$()
+    endif
+    
+    guiProgressbarDrawBackground(id, w, h, text$)
+    
+    select style
+        case 0
+            size = ((h-2)*value)/maximum
+            guiPushClip(1, 1, w-1, size+1, 1, 1, 1)
+            guiHProgressbarDrawForeground(id, w, h, text$)
+            guiPopClip()
+        endcase
+        case 1
+            blockh = 15
+            blocks = (h+blockh-2)/blockh
+            size = (blocks*value)/maximum
+            for i = 0 to size-1
+                blocky = blockh*i+3
+                guiPushClip(3, blocky, w-3, min(blocky+blockh-3, h-1), 3, blocky, 1)
+                guiVProgressbarDrawForeground(id, w, h, text$)
+                guiPopClip()
+            next i
+        endcase
+        case 2
+            blockh = ((h-2)*value)/maximum
+            size = h+blockh-2
+            delay = 2500
+            pos = ((timer() mod delay)*size)/delay - blockh
+            a = max(pos+1, 1)
+            b = min(pos+blockh+1, h-1)
+            guiPushClip(1, a, w-1, b, 1, a, 1)
+            guiVProgressbarDrawForeground(id, w, h, text$)
+            guiPopClip()
+        endcase
+    endselect
+    
+endfunction
