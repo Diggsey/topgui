@@ -30,7 +30,7 @@ function guiListboxBeginLogic(id as guiId)
         guiSetHot(id)
     endif
     
-    if guiGetHot() = id
+    if guiGetHot() = id and focused = 0
         if gui.msd = 1
             guiSetFocus(id, 0, 0)
         endif

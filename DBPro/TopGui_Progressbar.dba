@@ -43,7 +43,7 @@ endfunction
 function guiVProgressbarDrawForeground(id as guiId, w, h, text$)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
-    a2FillBox x, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK
+    a2FillBox x, y, x+w, y+h, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK, THEME_ACTIVE_LIGHT
     
     if is empty(text$) = 0
         guiFastBoxText(gui.fontId, x, y, x+w, y+h, text$, 1, 1, 0, THEME_TEXT_DARK)

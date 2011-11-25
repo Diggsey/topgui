@@ -786,13 +786,14 @@ function guiBeginOverlay(id as guiId, x, y, w, h, color, animationType, animatio
         guiOverlays(overlayIndex).animationStart = timer()
     endif
     
-    guiPushClip(0, 0, w, h, 0, 0, 0)
-    
     guiPushInteger(draw target type())
     guiPushInteger(draw target())
     guiPushInteger(gui.currentOverlay)
     
     draw to image guiOverlays(overlayIndex).imageId
+    
+    guiPushClip(0, 0, w, h, 0, 0, 0)
+    
     cls 0
     
     gui.currentOverlay = overlayIndex

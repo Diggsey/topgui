@@ -29,6 +29,23 @@ function guiScrollPanelEnd()
     guiEndControl()
 endfunction
 
+function guiGroupboxBegin(id as guiId, x, y, w, h, borderColor, text$)
+    guiBeginControl(x, y, w, h, 1)
+    
+    texth = a2GetLineHeight(gui.fontId)/2
+    
+    guiPanelLogic(id)
+    guiGroupboxDraw(id, w, h, borderColor, text$, texth)
+    
+    guiBeginContainer(id, 1, texth+1, w-2, h-texth-2, 0, 0)
+endfunction activated
+
+function guiGroupboxEnd()
+    guiEndContainer()
+    
+    guiEndControl()
+endfunction
+
 function guiPanelLogic(id as guiId)
     if guiInClip(guiMouseX(), guiMouseY())
         guiSetHot(id)
@@ -96,4 +113,20 @@ function guiScrollPanelDraw(id, w, h, scrollx, scrolly, scrollw, scrollh, color,
     a2SetLineAA 0
     a2Box x, y, x+w-1, y+h-1, THEME_OUTLINE_DARK
     a2SetLineAA 1
+endfunction
+
+function guiGroupboxDraw(id as guiId, w, h, borderColor, text$, texth)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    textw = guiGetTextWidth(text$)+10
+    
+    a2SetLineAA 0
+    a2Line x, y+texth, x+10, y+texth, borderColor
+    a2Line x+textw+10, y+texth, x+w-1, y+texth, borderColor
+    a2Line x, y+texth, x, y+h-1, borderColor
+    a2Line x+w-1, y+texth, x+w-1, y+h-1, borderColor
+    a2Line x, y+h-1, x+w-1, y+h-1, borderColor
+    a2SetLineAA 1
+    
+    guiFastText(gui.fontId, x+15, y, text$, THEME_TEXT_LIGHT)
 endfunction
