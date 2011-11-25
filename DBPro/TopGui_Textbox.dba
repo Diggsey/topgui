@@ -2,8 +2,23 @@
 function guiTextbox(id as guiId, x, y, w, h, text$, callbackPtr)
     guiBeginControl(x, y, w, h, 1)
     
-    text$ = guiTextboxLogic(id, w, h, text$, callbackPtr)
+    text$ = guiTextboxLogic(id, w, h, text$, text$, callbackPtr)
     guiTextboxDraw(id, w, h, text$)
+    
+    guiEndControl()
+endfunction text$
+
+function guiPassbox(id as guiId, x, y, w, h, text$, passchar$, callbackPtr)
+    guiBeginControl(x, y, w, h, 1)
+    
+    l = fast len(text$)
+    displaytext$ = ""
+    for i = 1 to l
+        displaytext$ = displaytext$ + passchar$
+    next i
+    
+    text$ = guiTextboxLogic(id, w, h, text$, displaytext$, callbackPtr)
+    guiTextboxDraw(id, w, h, displaytext$)
     
     guiEndControl()
 endfunction text$
@@ -22,7 +37,7 @@ function guiTextboxValidate(text$, newtext$, newSelStart, newSelEnd, callbackPtr
     endif
 endfunction text$
 
-function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
+function guiTextboxLogic(id as guiId, w, h, text$, displaytext$, callbackPtr)
 
     focused = guiFocus(id, 1)
     
@@ -38,7 +53,7 @@ function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
     if guiGetHot() = id
         if gui.msd = 1
             if guiSetActive(id)
-                sel = guiGetCursorPos(text$, guiMouseX()+gui.tempScroll-x-4, 1)
+                sel = guiGetCursorPos(displaytext$, guiMouseX()+gui.tempScroll-x-4, 1)
                 guiSetFocus(id, sel, sel)
             endif
         endif
@@ -48,7 +63,7 @@ function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
         if gui.msc = 1
             guiStayActive()
             
-            gui.selEnd = guiGetCursorPos(text$, guiMouseX()+gui.tempScroll-x-4, 1)
+            gui.selEnd = guiGetCursorPos(displaytext$, guiMouseX()+gui.tempScroll-x-4, 1)
             guiSetCursorVisible(1)
         endif
     endif
@@ -115,7 +130,7 @@ function guiTextboxLogic(id as guiId, w, h, text$, callbackPtr)
         gui.selStart = clamp(gui.selStart, 0, fast len(text$))
         gui.selEnd = clamp(gui.selEnd, 0, fast len(text$))
         
-        selEndX = guiGetTextWidth(fast left$(text$, gui.selEnd))+4-gui.tempScroll
+        selEndX = guiGetTextWidth(fast left$(displaytext$, gui.selEnd))+4-gui.tempScroll
         if selEndX < 4
             dec gui.tempScroll, 10
         endif

@@ -398,6 +398,7 @@ function window2(focused)
                 guiTabEnd()
             endif
             if guiTabBegin("Tab 2", 0)
+                windowText$ = guiPassbox(GEN_ID, 20, 20, 150, 25, windowText$, chr$(149), 0)
                 guiTabEnd()
             endif
         windowTabIndex = guiTabsEnd()
