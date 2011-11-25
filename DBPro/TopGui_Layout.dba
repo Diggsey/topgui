@@ -46,6 +46,40 @@ function guiEndFlowLayout()
     guiPopLayout()
 endfunction
 
+function guiBeginGridLayout(x, y, cellw, cellh, xoverlap, yoverlap)
+    guiPushLayout(xoverlap)
+    guiPushLayout(yoverlap)
+    guiPushLayout(x-xoverlap)
+    guiPushLayout(y-yoverlap)
+    guiPushLayout(cellw)
+    guiPushLayout(cellh)
+    guiPushLayoutName("guiGridLayout")
+endfunction
+
+function guiEndGridLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+endfunction
+
+function guiGridLayout(id as guiId, x, y, w, h)
+    xoverlap = guiPeekLayout(6)
+    yoverlap = guiPeekLayout(5)
+    cx = guiPeekLayout(4)
+    cy = guiPeekLayout(3)
+    cellw = guiPeekLayout(2)
+    cellh = guiPeekLayout(1)
+    
+    gui.layoutX = cx + x*cellw
+    gui.layoutY = cy + y*cellh
+    gui.layoutW = w*cellw + xoverlap
+    gui.layoutH = h*cellh + yoverlap
+endfunction
+
 function guiFlowLayoutH(id as guiId, x, y, w, h)
     xoverlap = guiPeekLayout(8)
     yoverlap = guiPeekLayout(7)
