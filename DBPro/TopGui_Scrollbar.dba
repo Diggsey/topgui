@@ -1,5 +1,7 @@
 
 function guiHScrollbar(id as guiId, x, y, w, h, value, maxValue, pageSize, smallStep)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     value = guiHScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)
@@ -9,6 +11,8 @@ function guiHScrollbar(id as guiId, x, y, w, h, value, maxValue, pageSize, small
 endfunction value
 
 function guiVScrollbar(id as guiId, x, y, w, h, value, maxValue, pageSize, smallStep)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     value = guiVScrollbarLogic(id, w, h, value, maxValue, pageSize, smallStep)

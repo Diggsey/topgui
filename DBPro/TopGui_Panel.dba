@@ -1,5 +1,7 @@
 
 function guiPanelBegin(id as guiId, x, y, w, h, borderColor, color, image, tile)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     guiPanelLogic(id)
@@ -15,6 +17,8 @@ function guiPanelEnd()
 endfunction
 
 function guiScrollPanelBegin(id as guiId, x, y, w, h, scrollx, scrolly, scrollw, scrollh, color, image, tile)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     guiPanelLogic(id)
@@ -30,6 +34,8 @@ function guiScrollPanelEnd()
 endfunction
 
 function guiGroupboxBegin(id as guiId, x, y, w, h, borderColor, text$)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     texth = a2GetLineHeight(gui.fontId)/2

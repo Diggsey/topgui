@@ -1,5 +1,7 @@
 
 function guiHSlider(id as guiId, x, y, w, h, value, maxValue, largeStep)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     value = guiHSliderLogic(id, w, h, value, maxValue, largeStep)
@@ -9,6 +11,8 @@ function guiHSlider(id as guiId, x, y, w, h, value, maxValue, largeStep)
 endfunction value
 
 function guiVSlider(id as guiId, x, y, w, h, value, maxValue, largeStep)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     value = guiVSliderLogic(id, w, h, value, maxValue, largeStep)

@@ -1,5 +1,7 @@
 
 function guiComboboxBegin(id as guiId, x, y, w, h, selectedIndex, dropDownHeight, allowScrollY)
+    guiLayout(id, x, y, w, h)
+
     guiBeginControl(x, y, w, h, 1)
     
     isOpen = guiComboboxBeginLogic(id, selectedIndex)

@@ -1,5 +1,7 @@
 
 function guiHProgressbar(id as guiId, x, y, w, h, value, maximum, style, showtext)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     guiHProgressbarDraw(id, w, h, value, maximum, style, showtext)
@@ -8,6 +10,8 @@ function guiHProgressbar(id as guiId, x, y, w, h, value, maximum, style, showtex
 endfunction
 
 function guiVProgressbar(id as guiId, x, y, w, h, value, maximum, style, showtext)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     guiVProgressbarDraw(id, w, h, value, maximum, style, showtext)

@@ -1,5 +1,7 @@
 
 function guiListboxBegin(id as guiId, x, y, w, h, scrollx, scrolly, allowScrollX, allowScrollY)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     guiListboxBeginLogic(id)

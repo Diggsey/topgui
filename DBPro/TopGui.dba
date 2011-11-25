@@ -59,6 +59,12 @@ type guiContextType
     cursorTimer as integer
     tempScroll as integer
     tempText as string
+    
+    ` Layout
+    layoutX as integer
+    layoutY as integer
+    layoutW as integer
+    layoutH as integer
 endtype
 
 type guiRectType
@@ -123,6 +129,12 @@ function guiInit()
     `   0xC3                ret
     ` (Bytes reversed to get correct endian-ness:)
     poke dword get ptr to function("getReturnAddress"), 0xC304458B
+    
+    ` Insert ASM code into getReturnEBP:
+    `   0x8B 0x45 0x00      mov eax, [ebp+0]
+    `   0xC3                ret
+    ` (Bytes reversed to get correct endian-ness:)
+    poke dword get ptr to function("getReturnEBP"), 0xC300458B
 
     global dim guiClip() as guiRectType
     global dim guiIdStack() as guiId
@@ -136,6 +148,7 @@ function guiInit()
     global dim guiCachedText() as guiCachedTextType
     global dim guiMenuStack() as guiId
     global dim guiModalStack() as guiModalType
+    global dim guiLayoutStack() as integer
     
     set array index guiClip(), -1
     set array index guiIdStack(), -1
@@ -149,6 +162,7 @@ function guiInit()
     set array index guiCachedText(), -1
     set array index guiMenuStack(), -1
     set array index guiModalStack(), -1
+    set array index guiLayoutStack(), -1
     
     ` Alpha blend RGB channels, add alpha channels
     a2SetBlendMode 5, 6, 1, 2, 2, 1
@@ -159,6 +173,7 @@ function guiInit()
     
     set message callback "guiWndProc"
     
+    guiPushLayout(0)
     guiSetTheme("Default")
 endfunction
 
@@ -236,6 +251,16 @@ endfunction 0
 function getReturnAddress()
 endfunction result
 
+` Will be replaced by ASM code at init time
+function getReturnEBP()
+endfunction result
+
+` DO NOT USE!
+function setParam(addr, ebp, index, value)
+    ptr = ebp + peek integer(addr - index*7 - 10)
+    poke integer ptr, value
+endfunction
+
 ` GEN_ID - Generate a unique but consistent control ID
 ` INDEX_ID(x) - Generate a control ID based on an index
 ` CHILD_ID(x) - Generate a control ID based on a parent ID
@@ -252,6 +277,45 @@ endfunction result
 function CHILD_INDEX_ID(parentId as guiId, index)
     result = -(getReturnAddress() << 10) + (parentId << 12) + index
 endfunction result
+
+function guiLayout(id as guiId, x, y, w, h)
+    ptr = guiPeekLayout(0)
+    if ptr
+        call function ptr ptr, id, x, y, w, h
+        
+        addr = getReturnAddress()
+        ebp = getReturnEBP()
+        setParam(addr, ebp, 1, gui.layoutX)
+        setParam(addr, ebp, 2, gui.layoutY)
+        setParam(addr, ebp, 3, gui.layoutW)
+        setParam(addr, ebp, 4, gui.layoutH)
+    endif
+endfunction
+
+function guiPushLayout(v)
+    `add to stack guiLayoutStack()
+    next array index guiLayoutStack()
+    if array index valid(guiLayoutStack()) = 0 then array insert at bottom guiLayoutStack()
+    guiLayoutStack() = v
+endfunction
+
+function guiPushLayoutName(name$)
+    guiPushLayout(get ptr to function(name$))
+endfunction
+
+function guiPopLayout()
+    v = guiLayoutStack()
+    `remove from stack guiLayoutStack()
+    previous array index guiLayoutStack()
+endfunction v
+
+function guiPeekLayout(offset)
+    v = guiLayoutStack(get array index(guiLayoutStack())-offset)
+endfunction v
+
+function guiPokeLayout(offset, v)
+    guiLayoutStack(get array index(guiLayoutStack())-offset) = v
+endfunction
 
 function guiModalContainer(id as guiId, focused)
     n = get array index(guiModalStack())
@@ -817,9 +881,13 @@ function guiBeginContainer(id as guiId, x, y, w, h, scrollx, scrolly)
     next array index guiIdStack()
     if array index valid(guiIdStack()) = 0 then array insert at bottom guiIdStack()
     guiIdStack() = id
+    
+    guiPushLayout(0)
 endfunction
 
 function guiEndContainer()
+    guiPopLayout()
+    
     guiUpdateModalChildren(guiIdStack())
 
     `remove from stack guiIdStack()
@@ -900,6 +968,8 @@ function guiSetFocus(id as guiId, initialSelStart, initialSelEnd)
 endfunction
 
 function guiGame(id as guiId, x, y, w, h)
+    guiLayout(id, x, y, w, h)
+
     guiBeginControl(x, y, w, h, 1)
     
     focused = guiFocus(id, 1)

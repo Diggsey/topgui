@@ -1,5 +1,8 @@
 
 function guiSpinner(id as guiId, x, y, w, h, value#, min#, max#, step#, places, editable)
+    guiLayout(id, x, y, w, h)
+    guiPushLayout(0)
+    
     guiBeginControl(x, y, w, h, 1)
     
     textboxId as guiId
@@ -9,6 +12,8 @@ function guiSpinner(id as guiId, x, y, w, h, value#, min#, max#, step#, places, 
     guiSpinnerDraw(id, w, h, textboxId)
     
     guiEndControl()
+    
+    guiPopLayout()
 endfunction value#
 
 function guiSpinnerLogic(id as guiId, w, h, textboxId as guiId, value#, min#, max#, step#, places, editable)

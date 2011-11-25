@@ -1,5 +1,7 @@
 
 function guiRadioButton(id as guiId, x, y, w, h, caption$, index, checkedIndex)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     checkedIndex = guiRadioButtonLogic(id, w, h, index, checkedIndex)

@@ -1,5 +1,7 @@
 
 function guiLabel(id as guiId, x, y, w, h, caption$, halign, valign, color)
+    guiLayout(id, x, y, w, h)
+
     guiBeginControl(x, y, w, h, 1)
     
     guiLabelDraw(id, w, h, caption$, halign, valign, color)
@@ -16,6 +18,8 @@ function guiLabelDraw(id as guiId, w, h, caption$, halign, valign, color)
 endfunction
 
 function guiShadowLabel(id as guiId, x, y, w, h, caption$, halign, valign, color, xoffset, yoffset, shadowcolor)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     guiShadowLabelDraw(id, w, h, caption$, halign, valign, color, xoffset, yoffset, shadowcolor)

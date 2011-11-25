@@ -1,5 +1,7 @@
 
 function guiTabsBegin(id as guiId, x, y, w, h, tabHeight, index)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     guiTabsBeginLogic(id)

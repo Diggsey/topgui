@@ -59,6 +59,8 @@ global guiCurrentTextDocument as guiTextDocumentType
 global dim guiCurrentLines() as guiLogicalLineType
 
 function guiTextarea(id as guiId, x, y, w, h, scrollx, scrolly, wordWrap)
+    guiLayout(id, x, y, w, h)
+    
     guiBeginControl(x, y, w, h, 1)
     
     horzId = CHILD_ID(id)

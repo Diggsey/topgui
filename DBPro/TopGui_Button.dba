@@ -1,5 +1,7 @@
 
 function guiButton(id as guiId, x, y, w, h, caption$)
+    guiLayout(id, x, y, w, h)
+
     guiBeginControl(x, y, w, h, 1)
     
     clicked = guiButtonLogic(id, w, h)
@@ -9,6 +11,8 @@ function guiButton(id as guiId, x, y, w, h, caption$)
 endfunction clicked
 
 function guiPicButton(id as guiId, x, y, w, h, imageId)
+    guiLayout(id, x, y, w, h)
+
     guiBeginControl(x, y, w, h, 1)
     
     clicked = guiButtonLogic(id, w, h)

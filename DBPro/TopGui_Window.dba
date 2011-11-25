@@ -1,5 +1,7 @@
 
 function guiWindowBegin(id as guiId, x, y, w, h, caption$, child, focused)
+    guiLayout(id, x, y, w, h)
+    
     guiClearInteraction()
 
     focused = guiModalContainer(id, focused)
@@ -21,6 +23,8 @@ function guiWindowEnd()
 endfunction
 
 function guiScrollWindowBegin(id as guiId, x, y, w, h, caption$, scrollx, scrolly, scrollw, scrollh, child, focused)
+    guiLayout(id, x, y, w, h)
+    
     guiClearInteraction()
 
     focused = guiModalContainer(id, focused)

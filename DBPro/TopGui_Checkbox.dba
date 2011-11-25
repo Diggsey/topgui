@@ -1,5 +1,7 @@
 
 function guiCheckbox(id as guiId, x, y, w, h, caption$, checked)
+    guiLayout(id, x, y, w, h)
+
     guiBeginControl(x, y, w, h, 1)
     
     checked = guiCheckboxLogic(id, w, h, checked)
