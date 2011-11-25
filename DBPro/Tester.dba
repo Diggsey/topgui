@@ -387,9 +387,19 @@ function window2(focused)
         guiTabsBegin(GEN_ID, 100, 200, 308, 332, 25, windowTabIndex)
             if guiTabBegin("Tab 0", 0)
             
-                if guiButton(GEN_ID, 20, 20, 200, 50, "Click me!")
+                guiBeginFlowLayout(0, 0, 300, 300, 1, -2, -2)
+            
+                if guiButton(GEN_ID, 0, -1, 40, 50, "Click me!")
                     guiOpenModalName(RND_ID, windowId, "sayHello", 0)
                 endif
+                if guiButton(GEN_ID, 0, 1, 60, 40, "Click me!")
+                    guiOpenModalName(RND_ID, windowId, "sayHello", 0)
+                endif
+                guiButton(GEN_ID, -1, 0, 80, 60, "Hi")
+                guiButton(GEN_ID, 1, 0, 30, 50, "Hi")
+                guiButton(GEN_ID, 0, 0, 100, 40, "Fill")
+                
+                guiEndFlowLayout()
                 
                 guiTabEnd()
             endif

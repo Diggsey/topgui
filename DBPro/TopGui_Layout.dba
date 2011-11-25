@@ -1,0 +1,167 @@
+function guiBeginDockLayout(x, y, w, h, xoverlap, yoverlap)
+    guiPushLayout(xoverlap)
+    guiPushLayout(yoverlap)
+    guiPushLayout(x-xoverlap)
+    guiPushLayout(y-yoverlap)
+    guiPushLayout(w+xoverlap*2)
+    guiPushLayout(h+yoverlap*2)
+    guiPushLayoutName("guiDockLayout")
+endfunction
+
+function guiEndDockLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+endfunction
+
+function guiBeginFlowLayout(x, y, w, h, flowdir, xoverlap, yoverlap)
+    guiPushLayout(xoverlap)
+    guiPushLayout(yoverlap)
+    guiPushLayout(x-xoverlap)
+    guiPushLayout(y-yoverlap)
+    guiPushLayout(w+xoverlap)
+    guiPushLayout(h+yoverlap)
+    guiPushLayout(x-xoverlap)
+    guiPushLayout(y-yoverlap)
+    if flowdir = 0
+        guiPushLayoutName("guiFlowLayoutH")
+    else
+        guiPushLayoutName("guiFlowLayoutV")
+    endif
+endfunction
+
+function guiEndFlowLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+    guiPopLayout()
+endfunction
+
+function guiFlowLayoutH(id as guiId, x, y, w, h)
+    xoverlap = guiPeekLayout(8)
+    yoverlap = guiPeekLayout(7)
+    cx = guiPeekLayout(6)
+    cy = guiPeekLayout(5)
+    cw = guiPeekLayout(4)
+    ch = guiPeekLayout(3)
+    x = guiPeekLayout(2)
+    y = guiPeekLayout(1)
+    newx = x + w - xoverlap
+    if newx > cx + cw and x > cx
+        x = cx
+        y = cy
+        newx = x + w - xoverlap
+    endif
+    
+    gui.layoutX = x
+    gui.layoutY = y
+    gui.layoutW = w
+    gui.layoutH = h
+    
+    cy = max(cy, y + h - yoverlap)
+    x = newx
+    
+    guiPokeLayout(5, cy)
+    guiPokeLayout(2, x)
+    guiPokeLayout(1, y)
+endfunction
+
+function guiFlowLayoutV(id as guiId, x, y, w, h)
+    xoverlap = guiPeekLayout(8)
+    yoverlap = guiPeekLayout(7)
+    cx = guiPeekLayout(6)
+    cy = guiPeekLayout(5)
+    cw = guiPeekLayout(4)
+    ch = guiPeekLayout(3)
+    x = guiPeekLayout(2)
+    y = guiPeekLayout(1)
+    newy = y + h - yoverlap
+    if newy > cy + ch and y > cy
+        x = cx
+        y = cy
+        newy = y + h - yoverlap
+    endif
+    
+    gui.layoutX = x
+    gui.layoutY = y
+    gui.layoutW = w
+    gui.layoutH = h
+    
+    cx = max(cx, x + w - xoverlap)
+    y = newy
+    
+    guiPokeLayout(6, cx)
+    guiPokeLayout(2, x)
+    guiPokeLayout(1, y)
+endfunction
+
+function guiDockLayout(id as guiId, x, y, w, h)
+    xoverlap = guiPeekLayout(6)
+    yoverlap = guiPeekLayout(5)
+    cx = guiPeekLayout(4)
+    cy = guiPeekLayout(3)
+    cw = guiPeekLayout(2)
+    ch = guiPeekLayout(1)
+    
+    select sgn(x)*2+sgn(y)
+        case -2
+            gui.layoutX = cx
+            gui.layoutY = cy
+            gui.layoutW = w
+            gui.layoutH = ch
+            
+            inc cx, w-xoverlap
+            dec cw, w-xoverlap
+        endcase
+        case -1
+            gui.layoutX = cx
+            gui.layoutY = cy
+            gui.layoutW = cw
+            gui.layoutH = h
+            
+            inc cy, h-yoverlap
+            dec ch, h-yoverlap
+        endcase
+        case 1
+            gui.layoutX = cx
+            gui.layoutY = cy+ch-h
+            gui.layoutW = cw
+            gui.layoutH = h
+            
+            dec ch, h-yoverlap
+        endcase
+        case 2
+            gui.layoutX = cx+cw-w
+            gui.layoutY = cy
+            gui.layoutW = w
+            gui.layoutH = ch
+            
+            dec cw, w-xoverlap
+        endcase
+        case default
+            gui.layoutX = cx
+            gui.layoutY = cy
+            gui.layoutW = cw
+            gui.layoutH = ch
+            
+            cx = 0
+            cy = 0
+            cw = 0
+            ch = 0
+        endcase
+   endselect
+    
+    guiPokeLayout(4, cx)
+    guiPokeLayout(3, cy)
+    guiPokeLayout(2, cw)
+    guiPokeLayout(1, ch)
+endfunction
