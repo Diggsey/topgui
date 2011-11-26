@@ -16,19 +16,21 @@ function guiPanelEnd()
     guiEndControl()
 endfunction
 
-function guiScrollPanelBegin(id as guiId, x, y, w, h, scrollx, scrolly, scrollw, scrollh, color, image, tile)
+function guiScrollPanelBegin(id as guiId, x, y, w, h, scrollx, scrolly, color, image, tile)
     guiLayout(id, x, y, w, h)
     
     guiBeginControl(x, y, w, h, 1)
     
     guiPanelLogic(id)
-    guiScrollPanelDraw(id, w, h, scrollx, scrolly, scrollw, scrollh, color, image, tile)
+    guiScrollPanelBeginDraw(id, w, h, scrollx, scrolly, color, image, tile)
     
     guiBeginContainer(id, 1, 1, w-22, h-22, scrollx, scrolly)
 endfunction activated
 
-function guiScrollPanelEnd()
+function guiScrollPanelEnd(scrollw, scrollh)
     guiEndContainer()
+    
+    guiScrollPanelEndDraw(scrollw, scrollh)
     
     guiEndControl()
 endfunction
@@ -83,7 +85,7 @@ function guiPanelDraw(id as guiId, w, h, borderColor, color, image, tile)
     a2SetLineAA 1
 endfunction
 
-function guiScrollPanelDraw(id, w, h, scrollx, scrolly, scrollw, scrollh, color, image, tile)
+function guiScrollPanelBeginDraw(id, w, h, scrollx, scrolly, color, image, tile)
     x = guiAdjustX(0)
     y = guiAdjustY(0)
     
@@ -103,16 +105,34 @@ function guiScrollPanelDraw(id, w, h, scrollx, scrolly, scrollw, scrollh, color,
             a2DrawImage image, x-scrollx, y-scrolly, 0, 0, 0, 1, 0, 0xFFFFFFFF
         endif
     endif
+    
+    guiPushInteger(id)
+    guiPushInteger(w)
+    guiPushInteger(h)
+
+    gui.interaction.scrollX = scrollx
+    gui.interaction.scrollY = scrolly
+endfunction
+
+function guiScrollPanelEndDraw(scrollw, scrollh)
+    id as guiId
+    
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    h = guiPopInteger()
+    w = guiPopInteger()
+    id = guiPopInteger()
 
     pageSizeH = w-23
     pageSizeV = h-23
-    
+
     horzId = CHILD_ID(id)
     vertId = CHILD_ID(id)
     
     guiGetScroll(id, vertId)
-    gui.interaction.scrollX = guiHScrollbar(horzId, 0, h-21, w-20, 21, scrollx, scrollw-pageSizeH, pageSizeH, 25)
-    gui.interaction.scrollY = guiVScrollbar(vertId, w-21, 0, 21, h-20, scrolly, scrollh-pageSizeV, pageSizeV, 25)
+    gui.interaction.scrollX = guiHScrollbar(horzId, 0, h-21, w-20, 21, gui.interaction.scrollX, scrollw-pageSizeH, pageSizeH, 25)
+    gui.interaction.scrollY = guiVScrollbar(vertId, w-21, 0, 21, h-20, gui.interaction.scrollY, scrollh-pageSizeV, pageSizeV, 25)
     
     a2FillBox x+w-20, y+h-20, x+w-1, y+h-1, THEME_INACTIVE_DARK
     

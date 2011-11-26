@@ -1010,6 +1010,20 @@ function guiGame(id as guiId, x, y, w, h)
     guiEndControl()
 endfunction focused
 
+function guiDrawFocusLine(x1, y1, x2, y2, color)
+    dx = x2-x1
+    dy = y2-y1
+    steps = max(abs(x2-x1), abs(y2-y1))
+    
+    a2StartDotBatch (steps+1)/2
+    
+    for i = 0 to steps-1 step 2
+        a2Dot x1 + (i*dx)/steps, y1 + (i*dy)/steps, color
+    next i
+    
+    a2EndBatch
+endfunction
+
 function guiDrawFocusRect(x1, y1, x2, y2, color)
     batchSize = (x2 - x1) + (y2 - y1) + 2
     a2StartDotBatch batchSize

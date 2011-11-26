@@ -1,0 +1,142 @@
+
+function guiTreeviewBegin(id as guiId, x, y, w, h, scrollx, scrolly, indent)
+    guiLayout(id, x, y, w, h)
+    
+    focused = guiFocus(id, 1)
+
+    guiPushLayout(0)
+    guiScrollPanelBegin(id, x, y, w, h, scrollx, scrolly, THEME_BACKGROUND_LIGHT, 0, 0)
+    
+    if guiGetHot() = id and focused = 0
+        if gui.msd = 1
+            guiSetFocus(id, 0, 0)
+        endif
+    endif
+   
+    guiPushInteger(indent) `Indent size
+    guiPushInteger(0) `Indent level
+    guiPushInteger(0) `Connecter height
+    guiPushInteger(0) `Sub-connecter height
+    guiPushInteger(0) `Y position
+    guiPushInteger(0) `Scroll width
+    guiPushInteger(0) `Item index
+endfunction
+
+function guiTreeviewEnd()
+    index = guiPopInteger()
+    scrollw = guiPopInteger()
+    scrollh = guiPopInteger()
+    subconnecty = guiPopInteger() `Sub-connecter height
+    connecty = guiPopInteger() `Connecter height
+    level = guiPopInteger() `Indent level
+    indent = guiPopInteger() `Indent size
+
+    guiScrollPanelEnd(scrollw, scrollh)
+    
+    guiPopLayout()
+endfunction
+
+function guiTreenode(text$, image)
+    id as guiId
+    id = guiIdStack()
+
+    index = guiPopInteger()
+    scrollw = guiPopInteger()
+    scrolly = guiPopInteger()
+    subconnecty = guiPopInteger() `Sub-connecter height
+    connecty = guiPopInteger() `Connecter height
+    level = guiPopInteger() `Indent level
+    indent = guiPopInteger() `Indent size
+    
+    x = guiAdjustX(level*indent)
+    y = guiAdjustY(scrolly)
+    
+    texth = a2GetLineHeight(gui.fontId)
+    textw = guiGetTextWidth2(gui.fontId, text$)
+    if image
+        imagew = image width(image)
+        imageh = image height(image)
+    else
+        imagew = 0
+        imageh = 0
+    endif
+    h = max(texth+2, imageh)
+    midy = y+h/2
+    guiDrawFocusLine(x+indent/2, connecty, x+indent/2, midy, THEME_FOCUS_DARK)
+    guiDrawFocusLine(x+indent/2, midy, x+indent, midy, THEME_FOCUS_DARK)
+    
+    if image
+        a2DrawImage image, x+indent, midy-imageh/2, 0, 0, 0, 1, 0, 0xFFFFFFFF
+    endif
+    
+    if guiGetFocus() = id
+        if gui.selStart = index
+            x1 = x+indent+imagew+1
+            y1 = midy-texth/2
+            x2 = x1+textw+4
+            y2 = y1+texth
+            a2FillBox x1, y1, x2, y2, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
+            guiDrawFocusRect(x1, y1, x2-1, y2-1, THEME_FOCUS_DARK)
+        endif
+    endif
+    
+    guiFastText(gui.fontId, x+indent+imagew+3, midy-texth/2, text$, THEME_TEXT_DARK)
+    
+    if gui.msd > 0
+        if guiGetHot() = id
+            if guiMouseY() >= y and guiMouseY() < y+h
+                gui.selStart = index
+            endif
+        endif
+    endif
+    
+    connecty = midy
+    subconnecty = midy+h/2
+    scrollw = max(scrollw, level*indent+indent+imagew+textw+4)
+    guiPushInteger(indent) `Indent size
+    guiPushInteger(level) `Indent level
+    guiPushInteger(connecty) `Connecter height
+    guiPushInteger(subconnecty) `Connecter height
+    guiPushInteger(scrolly+h)
+    guiPushInteger(scrollw)
+    guiPushInteger(index+1)
+endfunction
+
+function guiTreenodeBegin(text$, image, expanded)
+    guiTreenode(text$, image)
+    
+    index = guiPopInteger() `Indent size
+    scrollw = guiPopInteger()
+    y = guiPopInteger()
+    subconnecty = guiPopInteger() `Sub-connecter height
+    connecty = guiPopInteger() `Connecter height
+    level = guiPopInteger() `Indent level
+    indent = guiPopInteger() `Indent size
+    
+    guiPushInteger(indent) `Indent size
+    guiPushInteger(level) `Indent level
+    guiPushInteger(connecty) `Connecter height
+    
+    guiPushInteger(indent) `Indent size
+    guiPushInteger(level+1) `Indent level
+    guiPushInteger(subconnecty) `Connecter height
+    guiPushInteger(0) `Sub-connecter height
+    guiPushInteger(y)
+    guiPushInteger(scrollw)
+    guiPushInteger(index)
+endfunction expanded
+
+function guiTreenodeEnd()
+    index = guiPopInteger()
+    scrollw = guiPopInteger()
+    y = guiPopInteger()
+    subconnecty = guiPopInteger() `Sub-connecter height
+    connecty = guiPopInteger() `Connecter height
+    level = guiPopInteger() `Indent level
+    indent = guiPopInteger() `Indent size
+    
+    guiPushInteger(0)
+    guiPushInteger(y)
+    guiPushInteger(scrollw)
+    guiPushInteger(index)
+endfunction

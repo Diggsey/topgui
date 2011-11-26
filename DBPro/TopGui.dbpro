@@ -25,6 +25,7 @@ include17=TopGui_Spinner.dba
 include18=TopGui_Textarea.dba
 include19=TopGui_Progressbar.dba
 include20=TopGui_Layout.dba
+include21=TopGui_Treeview.dba
 final source=_Temp.dbsource
 
 ;***Executable filename***
