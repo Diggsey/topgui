@@ -1,5 +1,5 @@
 
-function guiTreeviewBegin(id as guiId, x, y, w, h, scrollx, scrolly, indent)
+function guiTreeviewBegin(id as guiId, x, y, w, h, scrollx, scrolly, indent, selectedIndex)
     guiLayout(id, x, y, w, h)
     
     focused = guiFocus(id, 1)
@@ -8,11 +8,18 @@ function guiTreeviewBegin(id as guiId, x, y, w, h, scrollx, scrolly, indent)
     guiScrollPanelBegin(id, x, y, w, h, scrollx, scrolly, THEME_BACKGROUND_LIGHT, 0, 0)
     
     if guiGetHot() = id and focused = 0
-        if gui.msd = 1
+        if gui.msd > 0
             guiSetFocus(id, 0, 0)
         endif
     endif
-   
+    
+    guiPushInteger(selectedIndex) ` Old selected index
+    
+    if guiGetFocus() = id
+        if guiProcessKeyDown(id, VK_UP, 0) then selectedIndex = max(selectedIndex-1, 0)
+        if guiProcessKeyDown(id, VK_DOWN, 0) then selectedIndex = selectedIndex+1
+    endif
+
     guiPushInteger(indent) `Indent size
     guiPushInteger(0) `Indent level
     guiPushInteger(0) `Connecter height
@@ -20,9 +27,20 @@ function guiTreeviewBegin(id as guiId, x, y, w, h, scrollx, scrolly, indent)
     guiPushInteger(0) `Y position
     guiPushInteger(0) `Scroll width
     guiPushInteger(0) `Item index
+    guiPushInteger(selectedIndex)
+    guiPushInteger(scrolly)
+    guiPushInteger(h-22) ` Client height
+    guiPushInteger(1)
 endfunction
 
 function guiTreeviewEnd()
+    id as guiId
+    id = guiIdStack()
+
+    guiPopInteger()
+    clienth = guiPopInteger()
+    scrolly = guiPopInteger()
+    selectedIndex = guiPopInteger()
     index = guiPopInteger()
     scrollw = guiPopInteger()
     scrollh = guiPopInteger()
@@ -30,26 +48,38 @@ function guiTreeviewEnd()
     connecty = guiPopInteger() `Connecter height
     level = guiPopInteger() `Indent level
     indent = guiPopInteger() `Indent size
-
+    oldSelectedIndex = guiPopInteger()
+    
     guiScrollPanelEnd(scrollw, scrollh)
     
+    if selectedIndex <> oldSelectedIndex
+        if selectedIndex >= index then selectedIndex = index-1
+        gui.interaction.scrollY = scrolly
+    endif
+    
     guiPopLayout()
-endfunction
+endfunction selectedIndex
 
 function guiTreenode(text$, image)
+    if guiPeekInteger() = 0 then exitfunction
+
     id as guiId
     id = guiIdStack()
 
+    guiPopInteger()
+    clienth = guiPopInteger()
+    scrolly = guiPopInteger()
+    selectedIndex = guiPopInteger()
     index = guiPopInteger()
     scrollw = guiPopInteger()
-    scrolly = guiPopInteger()
+    scrollh = guiPopInteger()
     subconnecty = guiPopInteger() `Sub-connecter height
     connecty = guiPopInteger() `Connecter height
     level = guiPopInteger() `Indent level
     indent = guiPopInteger() `Indent size
     
     x = guiAdjustX(level*indent)
-    y = guiAdjustY(scrolly)
+    y = guiAdjustY(scrollh)
     
     texth = a2GetLineHeight(gui.fontId)
     textw = guiGetTextWidth2(gui.fontId, text$)
@@ -70,13 +100,15 @@ function guiTreenode(text$, image)
     endif
     
     if guiGetFocus() = id
-        if gui.selStart = index
+        if selectedIndex = index
             x1 = x+indent+imagew+1
             y1 = midy-texth/2
             x2 = x1+textw+4
             y2 = y1+texth
             a2FillBox x1, y1, x2, y2, THEME_ACTIVE_LIGHT, THEME_ACTIVE_LIGHT, THEME_ACTIVE_DARK, THEME_ACTIVE_DARK
             guiDrawFocusRect(x1, y1, x2-1, y2-1, THEME_FOCUS_DARK)
+            
+            scrolly = clamp(scrolly, y2-clienth + scrollh-y, y1 + scrollh-y)
         endif
     endif
     
@@ -85,7 +117,7 @@ function guiTreenode(text$, image)
     if gui.msd > 0
         if guiGetHot() = id
             if guiMouseY() >= y and guiMouseY() < y+h
-                gui.selStart = index
+                selectedIndex = index
             endif
         endif
     endif
@@ -97,46 +129,116 @@ function guiTreenode(text$, image)
     guiPushInteger(level) `Indent level
     guiPushInteger(connecty) `Connecter height
     guiPushInteger(subconnecty) `Connecter height
-    guiPushInteger(scrolly+h)
+    guiPushInteger(scrollh+h)
     guiPushInteger(scrollw)
     guiPushInteger(index+1)
+    guiPushInteger(selectedIndex)
+    guiPushInteger(scrolly)
+    guiPushInteger(clienth)
+    guiPushInteger(1)
 endfunction
 
 function guiTreenodeBegin(text$, image, expanded)
+    newexpanded = expanded
+    
+    if guiPeekInteger() = 0
+        guiPushInteger(0)
+        exitfunction newexpanded
+    endif
+    
+    id as guiId
+    id = guiIdStack()
+
     guiTreenode(text$, image)
     
-    index = guiPopInteger() `Indent size
+    guiPopInteger()
+    clienth = guiPopInteger()
+    scrolly = guiPopInteger()
+    selectedIndex = guiPopInteger()
+    index = guiPopInteger()
     scrollw = guiPopInteger()
-    y = guiPopInteger()
+    scrollh = guiPopInteger()
     subconnecty = guiPopInteger() `Sub-connecter height
     connecty = guiPopInteger() `Connecter height
     level = guiPopInteger() `Indent level
     indent = guiPopInteger() `Indent size
     
-    guiPushInteger(indent) `Indent size
-    guiPushInteger(level) `Indent level
-    guiPushInteger(connecty) `Connecter height
+    x = guiAdjustX(level*indent)
+    y = guiAdjustY(scrollh)
     
-    guiPushInteger(indent) `Indent size
-    guiPushInteger(level+1) `Indent level
-    guiPushInteger(subconnecty) `Connecter height
-    guiPushInteger(0) `Sub-connecter height
-    guiPushInteger(y)
-    guiPushInteger(scrollw)
-    guiPushInteger(index)
-endfunction expanded
+    a2FillBox x+indent/2-5, connecty-5, x+indent/2+5, connecty+5, THEME_BACKGROUND_LIGHTER
+    a2SetLineAA 0
+    a2Box x+indent/2-5, connecty-5, x+indent/2+5, connecty+5, THEME_OUTLINE_DARK
+    a2Line x+indent/2-2, connecty, x+indent/2+3, connecty, THEME_OUTLINE_DARK
+    if expanded = 0 then a2Line x+indent/2, connecty-2, x+indent/2, connecty+3, THEME_OUTLINE_DARK
+    a2SetLineAA 1
+    
+    if selectedIndex = index-1
+        if (guiGetHot() = id)
+            if gui.msd = 1
+                if guiInRect(guiMouseX(), guiMouseY(), x+indent/2-5, connecty-5, x+indent/2+6, connecty+6) or (gui.mdc = 1)
+                    newexpanded = 1-expanded
+                endif
+            endif
+        endif
+        if guiGetFocus() = id
+            if guiProcessKeyDown(id, VK_RIGHT, 1) then newexpanded = 1
+            if guiProcessKeyDown(id, VK_LEFT, 1) then newexpanded = 0
+        endif
+    endif
+    
+    if expanded
+        guiPushInteger(indent) `Indent size
+        guiPushInteger(level) `Indent level
+        guiPushInteger(connecty+5) `Connecter height
+        
+        guiPushInteger(indent) `Indent size
+        guiPushInteger(level+1) `Indent level
+        guiPushInteger(subconnecty) `Connecter height
+        guiPushInteger(0) `Sub-connecter height
+        guiPushInteger(scrollh)
+        guiPushInteger(scrollw)
+        guiPushInteger(index)
+        guiPushInteger(selectedIndex)
+        guiPushInteger(scrolly)
+        guiPushInteger(clienth)
+        guiPushInteger(1)
+    else
+        guiPushInteger(indent) `Indent size
+        guiPushInteger(level) `Indent level
+        guiPushInteger(connecty+5) `Connecter height
+        guiPushInteger(subconnecty) `Connecter height
+        guiPushInteger(scrollh)
+        guiPushInteger(scrollw)
+        guiPushInteger(index)
+        guiPushInteger(selectedIndex)
+        guiPushInteger(scrolly)
+        guiPushInteger(clienth)
+        guiPushInteger(1)
+        guiPushInteger(0)
+    endif
+endfunction newexpanded
 
 function guiTreenodeEnd()
+    if guiPopInteger() = 0 then exitfunction
+    
+    clienth = guiPopInteger()
+    scrolly = guiPopInteger()
+    selectedIndex = guiPopInteger()
     index = guiPopInteger()
     scrollw = guiPopInteger()
-    y = guiPopInteger()
+    scrollh = guiPopInteger()
     subconnecty = guiPopInteger() `Sub-connecter height
     connecty = guiPopInteger() `Connecter height
     level = guiPopInteger() `Indent level
     indent = guiPopInteger() `Indent size
     
     guiPushInteger(0)
-    guiPushInteger(y)
+    guiPushInteger(scrollh)
     guiPushInteger(scrollw)
     guiPushInteger(index)
+    guiPushInteger(selectedIndex)
+    guiPushInteger(scrolly)
+    guiPushInteger(clienth)
+    guiPushInteger(1)
 endfunction

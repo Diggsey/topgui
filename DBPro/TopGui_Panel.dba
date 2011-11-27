@@ -124,8 +124,8 @@ function guiScrollPanelEndDraw(scrollw, scrollh)
     w = guiPopInteger()
     id = guiPopInteger()
 
-    pageSizeH = w-23
-    pageSizeV = h-23
+    pageSizeH = max(w-23, 0)
+    pageSizeV = max(h-23, 0)
 
     horzId = CHILD_ID(id)
     vertId = CHILD_ID(id)

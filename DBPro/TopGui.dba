@@ -25,6 +25,8 @@ type guiContextType
     mmz as integer  ` Mouse wheel
     msd as integer  ` Mouse down
     msu as integer  ` Mouse up
+    mdc as integer  ` Mouse double click
+    msdTime as integer ` Mouse down time
     fontId as integer
     defaultFontId as integer
     rootFocused as boolean
@@ -219,7 +221,7 @@ function guiProcessKeyDown(id as guiId, keyCode, firstTime)
     l = fast len(gui.entryBuffer)-1
     for i = 1 to l step 2
         mode = mid ascii(gui.entryBuffer, i)
-        if (mode = 2) or ((mode = 3) and (firstTime = 0))
+        if (mode = 3) or ((mode = 2) and (firstTime = 0))
             key = mid ascii(gui.entryBuffer, i+1)
             if key = keyCode
                 gui.entryBuffer = remove$(gui.entryBuffer, i, 2)
@@ -484,6 +486,17 @@ function guiUpdate()
     gui.msd = gui.msc and (not gui.omc)
     ` Mouse up = clicked before and not clicked now
     gui.msu = gui.omc and (not gui.msc)
+    gui.mdc = 0
+    
+    if gui.msd
+        newtime = timer()
+        if newtime - gui.msdTime < 500
+            gui.mdc = gui.msd
+            gui.msdTime = newtime - 500
+        else
+            gui.msdTime = newtime
+        endif
+    endif
     
     ` Clear unused text from the cache
     n = array count(guiCachedText())

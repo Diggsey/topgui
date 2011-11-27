@@ -75,6 +75,8 @@ guiCurrentTextDocument.parser = get ptr to function("DBProParser")
 ` Put the result into the text document variable
 myTextDocument = guiCurrentTextDocument
 
+dim expanded(7) as boolean
+
 do
     gameFocused = guiGame(GEN_ID, 0, 0, screen width(), screen height())
 
@@ -97,17 +99,17 @@ do
     guiGroupboxBegin(GEN_ID, 500, 500, 300, 300, THEME_TEXT_LIGHT, "Groupbox")
     guiGroupboxEnd()
     
-    guiTreeviewBegin(GEN_ID, 30, 400, 300, 300, treescrollx, treescrolly, 24)
-        guiTreenodeBegin("Root node 1", 0, 1)
-            guiTreenodeBegin("Node 1", 0, 1)
+    guiTreeviewBegin(GEN_ID, 30, 400, 300, 300, treescrollx, treescrolly, 24, treeIndex)
+        expanded(0) = guiTreenodeBegin("Root node 1", 0, expanded(0))
+            expanded(1) = guiTreenodeBegin("Node 1", 0, expanded(1))
                 guiTreenode("Child node 1", 0)
                 guiTreenode("Child node 2", 0)
                 guiTreenode("Child node 3", 0)
                 guiTreenode("Child node 4", 0)
                 guiTreenode("Child node 5", 0)
             guiTreenodeEnd()
-            guiTreenodeBegin("Node 2", 0, 1)
-                guiTreenodeBegin("Sub node 1", 0, 1)
+            expanded(2) = guiTreenodeBegin("Node 2", 0, expanded(2))
+                expanded(3) = guiTreenodeBegin("Sub node 1", 0, expanded(3))
                     guiTreenode("Child node 1", 0)
                     guiTreenode("Child node 2", 0)
                     guiTreenode("Child node 3", 0)
@@ -119,10 +121,10 @@ do
             guiTreenode("Child node 2", 0)
             guiTreenode("Child node 3", 0)
             guiTreenode("Child node 4", 0)
-            guiTreenodeBegin("Node 3", 0, 1)
-                guiTreenodeBegin("Sub node 1", 0, 1)
-                    guiTreenodeBegin("Deep node 1", 0, 1)
-                        guiTreenodeBegin("Deeper node 1", 0, 1)
+            expanded(4) = guiTreenodeBegin("Node 3", 0, expanded(4))
+                expanded(5) = guiTreenodeBegin("Sub node 1", 0, expanded(5))
+                    expanded(6) = guiTreenodeBegin("Deep node 1", 0, expanded(6))
+                        expanded(7) = guiTreenodeBegin("Deeper node 1", 0, expanded(7))
                             guiTreenode("Child node 1", 0)
                             guiTreenode("Child node 2", 0)
                             guiTreenode("Child node 3", 0)
@@ -131,7 +133,7 @@ do
                 guiTreenodeEnd()
             guiTreenodeEnd()
         guiTreenodeEnd()
-    guiTreeviewEnd()
+    treeIndex = guiTreeviewEnd()
     treescrollx = guiScrollX()
     treescrolly = guiScrollY()
     
