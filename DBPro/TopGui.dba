@@ -135,6 +135,8 @@ function guiInit()
     `   0xC3                ret
     ` (Bytes reversed to get correct endian-ness:)
     poke dword get ptr to function("getReturnEBP"), 0xC300458B
+    
+    argInit()
 
     global dim guiClip() as guiRectType
     global dim guiIdStack() as guiId
@@ -255,12 +257,6 @@ endfunction result
 function getReturnEBP()
 endfunction result
 
-` DO NOT USE!
-function setParam(addr, ebp, index, value)
-    ptr = ebp + peek integer(addr - index*7 - 10)
-    poke integer ptr, value
-endfunction
-
 ` GEN_ID - Generate a unique but consistent control ID
 ` INDEX_ID(x) - Generate a control ID based on an index
 ` CHILD_ID(x) - Generate a control ID based on a parent ID
@@ -283,12 +279,12 @@ function guiLayout(id as guiId, x, y, w, h)
     if ptr
         call function ptr ptr, id, x, y, w, h
         
-        addr = getReturnAddress()
-        ebp = getReturnEBP()
-        setParam(addr, ebp, 1, gui.layoutX)
-        setParam(addr, ebp, 2, gui.layoutY)
-        setParam(addr, ebp, 3, gui.layoutW)
-        setParam(addr, ebp, 4, gui.layoutH)
+        arg = argGetFirst()
+        arg = argSkipInteger(arg)               `id
+        arg = argSetInteger(arg, gui.layoutX)   `x
+        arg = argSetInteger(arg, gui.layoutY)   `y
+        arg = argSetInteger(arg, gui.layoutW)   `w
+        arg = argSetInteger(arg, gui.layoutH)   `h
     endif
 endfunction
 

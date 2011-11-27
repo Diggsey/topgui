@@ -1,0 +1,655 @@
+global argEquateSSPtr
+
+function argInit()
+    coredll = load dll("dbprocore.dll")
+    argEquateSSPtr = get ptr to dll function(coredll, "?EquateSS@@YAKKK@Z")
+endfunction
+
+function argSetInteger(arg, value)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA1
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+    
+    poke integer addr, value
+endfunction arg
+
+function argSetFloat(arg, value#)
+    ebp = peek integer(getReturnEBP())
+
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA1
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+    
+    poke float addr, value#
+endfunction arg
+
+function argSetString(arg, value$)
+    ebp = peek integer(getReturnEBP())
+
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA1
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+    
+    result = call function ptr(argEquateSSPtr, peek integer(addr), get string ptr(value$))
+    poke integer addr, result
+endfunction arg
+
+function argSetDword(arg, value as dword)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA1
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+    
+    poke dword addr, value
+endfunction arg
+
+function argSetWord(arg, value as word)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 7
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 13
+        addr = peek integer(arg+1) + peek integer(arg+8)
+    else
+        if v = 0xA1
+            dec arg, 7
+            addr = peek integer(arg+2)
+        else
+            dec arg, 8
+            addr = ebp + peek integer(arg+3)
+        endif
+    endif
+    
+    poke word addr, value
+endfunction arg
+
+function argSetByte(arg, value as byte)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA0
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+    
+    poke byte addr, value
+endfunction arg
+
+function argSetBoolean(arg, value as byte)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA0
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+    
+    poke byte addr, value
+endfunction arg
+
+function argSetDoubleInteger(arg, value as double integer)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-7)
+    if v = 0xB8
+        dec arg, 14
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 21
+        addr = peek integer(arg+1) + peek integer(arg+15)
+    else
+        if v = 0xA1
+            dec arg, 14
+            addr = peek integer(arg+8)
+        else
+            dec arg, 16
+            addr = ebp + peek integer(arg+10)
+        endif
+    endif
+    
+    poke double integer addr, value
+endfunction arg
+
+function argSetDoubleFloat(arg, value as double float)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-23)
+    if v = 0x81
+        dec arg, 29
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0x05
+            dec arg, 24
+            addr = peek integer(arg+2)
+        else
+            dec arg, 24
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+    
+    poke double float addr, value
+endfunction arg
+
+function argSetUDT(arg, ptr)
+    ebp = peek integer(getReturnEBP())
+    
+    repeat
+        dec arg, 7
+        v = peek byte(arg+2)
+    until v
+    
+    v = peek byte(arg-3)
+    if v = 0xB8
+        dec arg, 3
+        addr = peek integer(arg+1)
+        size = peek integer(arg+6)
+    else
+        v = peek byte(arg-8)
+        if v = 0xB8
+            dec arg, 8
+            addr = peek integer(arg+1) + peek integer(arg+6)
+            size = peek integer(arg+11)
+        else
+            dec arg, 5
+            addr = ebp + peek integer(arg+3)
+            size = peek integer(arg+8)
+        endif
+    endif
+    
+    copy memory addr, ptr, size
+endfunction arg
+
+function argSkipInteger(arg)
+    v = peek byte(arg-6)
+    if v = 0x81
+        dec arg, 12
+    else
+        if v = 0xB8 or v = 0xA1
+            dec arg, 6
+        else
+            dec arg, 7
+        endif
+    endif
+endfunction arg
+
+function argSkipFloat(arg)
+    v = peek byte(arg-6)
+    if v = 0x81
+        dec arg, 12
+    else
+        if v = 0xB8 or v = 0xA1
+            dec arg, 6
+        else
+            dec arg, 7
+        endif
+    endif
+endfunction arg
+
+function argSkipString(arg)
+    v = peek byte(arg-6)
+    if v = 0x81
+        dec arg, 12
+    else
+        if v = 0xB8 or v = 0xA1
+            dec arg, 6
+        else
+            dec arg, 7
+        endif
+    endif
+endfunction arg
+
+function argSkipDword(arg)
+    v = peek byte(arg-6)
+    if v = 0x81
+        dec arg, 12
+    else
+        if v = 0xB8 or v = 0xA1
+            dec arg, 6
+        else
+            dec arg, 7
+        endif
+    endif
+endfunction arg
+
+function argSkipWord(arg)
+    v = peek byte(arg-6)
+    if v = 0x81
+        dec arg, 13
+    else
+        if v = 0xB8 or v = 0xA1
+            dec arg, 7
+        else
+            dec arg, 8
+        endif
+    endif
+endfunction arg
+
+function argSkipByte(arg)
+    v = peek byte(arg-6)
+    if v = 0x81
+        dec arg, 12
+    else
+        if v = 0xB8 or v = 0xA0
+            dec arg, 6
+        else
+            dec arg, 7
+        endif
+    endif
+endfunction arg
+
+function argSkipBoolean(arg)
+    v = peek byte(arg-6)
+    if v = 0x81
+        dec arg, 12
+    else
+        if v = 0xB8 or v = 0xA0
+            dec arg, 6
+        else
+            dec arg, 7
+        endif
+    endif
+endfunction arg
+
+function argSkipDoubleInteger(arg)
+    v = peek byte(arg-7)
+    if v = 0x81
+        dec arg, 21
+    else
+        if v = 0xB8 or v = 0xA1
+            dec arg, 14
+        else
+            dec arg, 16
+        endif
+    endif
+endfunction arg
+
+function argSkipDoubleFloat(arg)
+    v = peek byte(arg-23)
+    if v = 0x81
+        dec arg, 29
+    else
+        dec arg, 24
+    endif
+endfunction arg
+
+function argSkipUDT(arg)
+    repeat
+        dec arg, 7
+        v = peek byte(arg+2)
+    until v
+    
+    v = peek byte(arg-3)
+    if v = 0xB8
+        dec arg, 3
+    else
+        v = peek byte(arg-8)
+        if v = 0xB8
+            dec arg, 8
+        else
+            dec arg, 5
+        endif
+    endif
+endfunction arg
+
+function argGetFirst()
+    addr = peek integer(getReturnEBP()+4)
+    arg = addr-5
+endfunction arg
+
+function argGetPtrToInteger(arg)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA1
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToFloat(arg)
+    ebp = peek integer(getReturnEBP())
+
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA1
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToString(arg)
+    ebp = peek integer(getReturnEBP())
+
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA1
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToDword(arg)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA1
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToWord(arg)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 7
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 13
+        addr = peek integer(arg+1) + peek integer(arg+8)
+    else
+        if v = 0xA1
+            dec arg, 7
+            addr = peek integer(arg+2)
+        else
+            dec arg, 8
+            addr = ebp + peek integer(arg+3)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToByte(arg)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA0
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToBoolean(arg)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-6)
+    if v = 0xB8
+        dec arg, 6
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 12
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0xA0
+            dec arg, 6
+            addr = peek integer(arg+1)
+        else
+            dec arg, 7
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToDoubleInteger(arg)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-7)
+    if v = 0xB8
+        dec arg, 14
+        exitfunction arg
+    endif
+    
+    if v = 0x81
+        dec arg, 21
+        addr = peek integer(arg+1) + peek integer(arg+15)
+    else
+        if v = 0xA1
+            dec arg, 14
+            addr = peek integer(arg+8)
+        else
+            dec arg, 16
+            addr = ebp + peek integer(arg+10)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToDoubleFloat(arg)
+    ebp = peek integer(getReturnEBP())
+    
+    v = peek byte(arg-23)
+    if v = 0x81
+        dec arg, 29
+        addr = peek integer(arg+1) + peek integer(arg+7)
+    else
+        if v = 0x05
+            dec arg, 24
+            addr = peek integer(arg+2)
+        else
+            dec arg, 24
+            addr = ebp + peek integer(arg+2)
+        endif
+    endif
+endfunction addr
+
+function argGetPtrToUDT(arg)
+    ebp = peek integer(getReturnEBP())
+    
+    repeat
+        dec arg, 7
+        v = peek byte(arg+2)
+    until v
+    
+    v = peek byte(arg-3)
+    if v = 0xB8
+        dec arg, 3
+        addr = peek integer(arg+1)
+    else
+        v = peek byte(arg-8)
+        if v = 0xB8
+            dec arg, 8
+            addr = peek integer(arg+1) + peek integer(arg+6)
+        else
+            dec arg, 5
+            addr = ebp + peek integer(arg+3)
+        endif
+    endif
+endfunction addr
+
+function addressOfInteger(var)
+    addr = argGetPtrToInteger(argGetFirst())
+endfunction addr
+
+function addressOfFloat(var as float)
+    addr = argGetPtrToFloat(argGetFirst())
+endfunction addr
+
+function addressOfString(var as string)
+    addr = argGetPtrToString(argGetFirst())
+endfunction addr
+
+function addressOfDword(var as dword)
+    addr = argGetPtrToDword(argGetFirst())
+endfunction addr
+
+function addressOfWord(var as word)
+    addr = argGetPtrToWord(argGetFirst())
+endfunction addr
+
+function addressOfByte(var as byte)
+    addr = argGetPtrToByte(argGetFirst())
+endfunction addr
+
+function addressOfBoolean(var as boolean)
+    addr = argGetPtrToBoolean(argGetFirst())
+endfunction addr
+
+function addressOfDoubleInteger(var as double integer)
+    addr = argGetPtrToDoubleInteger(argGetFirst())
+endfunction addr
+
+function addressOfDoubleFloat(var as double float)
+    addr = argGetPtrToDoubleFloat(argGetFirst())
+endfunction addr
