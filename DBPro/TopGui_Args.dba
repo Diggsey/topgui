@@ -77,9 +77,18 @@ function argSetString(arg, value$)
         endif
     endif
     
+    assignString(addr, value$)
+endfunction arg
+
+function assignString(addr, value$)
     result = call function ptr(argEquateSSPtr, peek integer(addr), get string ptr(value$))
     poke integer addr, result
-endfunction arg
+endfunction
+
+function assignStringPtr(addr, ptr)
+    result = call function ptr(argEquateSSPtr, peek integer(addr), ptr)
+    poke integer addr, result
+endfunction
 
 function argSetDword(arg, value as dword)
     ebp = peek integer(getReturnEBP())
@@ -226,7 +235,7 @@ function argSetDoubleFloat(arg, value as double float)
     poke double float addr, value
 endfunction arg
 
-function argSetUDT(arg, ptr)
+function argSetUDT(arg, ptr, name$)
     ebp = peek integer(getReturnEBP())
     
     repeat
@@ -252,7 +261,30 @@ function argSetUDT(arg, ptr)
         endif
     endif
     
-    copy memory addr, ptr, size
+    pattern$ = get type pattern$(name$, 0)
+    plen = fast len(pattern$)
+    offset = 0
+    for i = 1 to plen
+        c$ = mid$(pattern$, i)
+        select c$
+            case "S"
+                assignStringPtr(addr + offset, peek integer(ptr + offset))
+                inc offset, 4
+            endcase
+            case "O"
+                poke double integer addr + offset, peek double integer(ptr + offset)
+                inc offset, 8
+            endcase
+            case "R"
+                poke double integer addr + offset, peek double integer(ptr + offset)
+                inc offset, 8
+            endcase
+            case default
+                poke integer addr + offset, peek integer(ptr + offset)
+                inc offset, 4
+            endcase
+        endselect
+    next i
 endfunction arg
 
 function argSkipInteger(arg)
