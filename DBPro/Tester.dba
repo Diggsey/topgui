@@ -93,8 +93,9 @@ do
     scrollx = guiScrollX()
     scrolly = guiScrollY()
     
-    guiHProgressbar(GEN_ID, 400, 200, 200, 24, (timer()/5) mod 1000, 1000, 0, 1)
-    guiVProgressbar(GEN_ID, 400, 250, 50, 200, (timer()/5) mod 1000, 1000, 1, 1)
+    pos = ((timer() && 0x7FFFFFFF)/5) mod 1000
+    guiHProgressbar(GEN_ID, 400, 200, 200, 24, pos, 1000, 0, 1)
+    guiVProgressbar(GEN_ID, 400, 250, 50, 200, pos, 1000, 1, 1)
     
     guiGroupboxBegin(GEN_ID, 500, 500, 300, 300, THEME_TEXT_LIGHT, "Groupbox")
     guiGroupboxEnd()

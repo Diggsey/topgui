@@ -1132,6 +1132,8 @@ function guiPeekString()
 endfunction value$
 
 function guiFastText(fontId, x, y, text$, color)
+    if is empty(text$) then exitfunction
+
     n = array count(guiCachedText())
     for i = 0 to n
         if guiCachedText(i).textStr = text$
@@ -1176,6 +1178,8 @@ function guiFastText(fontId, x, y, text$, color)
 endfunction
 
 function guiFastBoxText(fontId, x1, y1, x2, y2, text$, halign, valign, wordWrap, color)
+    if is empty(text$) then exitfunction
+    
     n = array count(guiCachedText())
     for i = 0 to n
         if guiCachedText(i).textStr = text$
