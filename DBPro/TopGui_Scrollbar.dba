@@ -38,7 +38,7 @@ function guiHScrollbarLogic(id as guiId, w, h, value, maxValue, pageSize, smallS
     inc value, guiGetScroll(id, id)*smallStep
     
     slideSize = (w-h*2)
-    barSize = (pageSize*slideSize)/(maxValue+pageSize)
+    barSize = max((pageSize*slideSize)/(maxValue+pageSize), 10)
     barPos = ((slideSize-barSize)*value)/maxValue
     
     inButton1 = guiInRect(guiMouseX(), guiMouseY(), x, y, x+h, y+h)
@@ -122,7 +122,7 @@ function guiVScrollbarLogic(id as guiId, w, h, value, maxValue, pageSize, smallS
     inc value, guiGetScroll(id, id)*smallStep
     
     slideSize = (h-w*2)
-    barSize = (pageSize*slideSize)/(maxValue+pageSize)
+    barSize = max((pageSize*slideSize)/(maxValue+pageSize), 10)
     barPos = ((slideSize-barSize)*value)/maxValue
     
     inButton1 = guiInRect(guiMouseX(), guiMouseY(), x, y, x+w, y+w)
@@ -199,7 +199,7 @@ function guiHScrollbarDraw(id as guiId, w, h, value, maxValue, pageSize)
     
     if disabled = 0
         slideSize = (w-h*2)
-        barSize = (pageSize*slideSize)/(maxValue+pageSize)
+        barSize = max((pageSize*slideSize)/(maxValue+pageSize), 10)
         barPos = ((slideSize-barSize)*value)/maxValue
         
         if guiGetHot() = id
@@ -250,7 +250,7 @@ function guiVScrollbarDraw(id as guiId, w, h, value, maxValue, pageSize)
     
     if disabled = 0
         slideSize = (h-w*2)
-        barSize = (pageSize*slideSize)/(maxValue+pageSize)
+        barSize = max((pageSize*slideSize)/(maxValue+pageSize), 10)
         barPos = ((slideSize-barSize)*value)/maxValue
         
         if guiGetHot() = id

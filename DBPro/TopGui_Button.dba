@@ -21,6 +21,17 @@ function guiPicButton(id as guiId, x, y, w, h, imageId)
     guiEndControl()
 endfunction clicked
 
+function guiTextButton(id as guiId, x, y, w, h, caption$)
+    guiLayout(id, x, y, w, h)
+
+    guiBeginControl(x, y, w, h, 1)
+    
+    clicked = guiButtonLogic(id, w, h)
+    guiTextButtonDraw(id, w, h, caption$)
+    
+    guiEndControl()
+endfunction clicked
+
 function guiButtonLogic(id as guiId, w, h)
     focused = guiFocus(id, 1)
     
@@ -136,4 +147,28 @@ function guiPicButtonDraw(id as guiId, w, h, imageId)
         guiDrawFocusRect(x+3, y+3, x+w-4, y+h-4, THEME_FOCUS_DARK)
     endif
     
+endfunction
+
+function guiTextButtonDraw(id as guiId, w, h, caption$)
+    x = guiAdjustX(0)
+    y = guiAdjustY(0)
+    
+    focused = guiGetFocus() = id
+    pressed = focused and spacekey()
+    
+    if guiGetHot() = id or pressed
+        if guiGetActive() = id or pressed
+            ` Active (pressed)
+            guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW)
+            guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_LIGHT)
+        else
+            ` Hot
+            guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW)
+            guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_LIGHT)
+        endif
+    else
+        ` Normal
+        guiFastBoxText(gui.fontId, x+4, y+4, x+w-2, y+h-2, caption$, 1, 1, 1, THEME_TEXT_SHADOW)
+        guiFastBoxText(gui.fontId, x+3, y+3, x+w-3, y+h-3, caption$, 1, 1, 1, THEME_TEXT_DARK)
+    endif
 endfunction

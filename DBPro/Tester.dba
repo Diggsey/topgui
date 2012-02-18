@@ -66,8 +66,14 @@ myTextDocument as guiTextDocumentType
 ` Create a text document
 guiCreateTextDocument()
 
+text$ = "sync on : sync rate 0" + lf$() + lf$() + "make object cube 1, 10" + lf$() + lf$() + "do" + lf$() + "    myvar = 1" + lf$() + "    print " + quote$("myvar: ") + ", myvar" + lf$() + "    sync `Update the screen" + lf$() + "loop" + lf$()
+
+for i = 1 to 8
+    text$ = text$ + text$
+next i
+
 ` Put some text in it
-guiSetTextDocumentFromString("sync on : sync rate 0" + lf$() + lf$() + "make object cube 1, 10" + lf$() + lf$() + "do" + lf$() + "    myvar = 1" + lf$() + "    print " + quote$("myvar: ") + ", myvar" + lf$() + "    sync `Update the screen" + lf$() + "loop")
+guiSetTextDocumentFromString(text$)
 
 ` Attach the DBPro syntax parser
 guiCurrentTextDocument.parser = get ptr to function("DBProParser")
@@ -436,9 +442,25 @@ function window2(focused)
                 if guiButton(GEN_ID, 0, 1, 3, 2, "Click me!")
                     guiOpenModalName(RND_ID, windowId, "sayHello", 0)
                 endif
-                guiButton(GEN_ID, 6, 1, 3, 3, "Hi")
-                guiButton(GEN_ID, 5, 4, 5, 2, "Hi")
-                guiButton(GEN_ID, 7, 7, 3, 3, "Fill")
+                tmpId = GEN_ID
+                guiButton(tmpId, 6, 1, 3, 3, "Drag me")
+                if guiGetHot() = tmpId
+                    if gui.msd = 1
+                        if guiStartDragDrop(tmpId, get ptr to function("dragDropUpdate"), GUI_DRAG_MODE_MOVE)
+                            guiSetDragDropData("text/plain", "Drag me")
+                        endif
+                    endif
+                endif
+                guiTextButton(GEN_ID, 5, 4, 5, 2, "Hi")
+                tmpId = GEN_ID
+                guiButton(tmpId, 7, 7, 3, 3, "to me!")
+                if guiGetHot() = tmpId
+                    if guiIsDragDropActive()
+                        if guiAcceptDragDrop(tmpId, "text/plain", GUI_DRAG_MODE_MOVE or GUI_DRAG_MODE_COPY)
+                            guiOpenModalName(RND_ID, windowId, "sayHello", 0)
+                        endif
+                    endif
+                endif
                 
                 guiEndGridLayout()
                 
@@ -475,6 +497,28 @@ function window2(focused)
     windowScrollY2 = guiScrollY()
 
 endfunction clicked
+
+function dragDropUpdate()
+    text$ = guiGetDragDropData("text/plain")
+    x = guiMouseX() + 15
+    y = guiMouseY() + 15
+    guiFastText(gui.fontId, x+1, y+1, text$, THEME_TEXT_SHADOW)
+    guiFastText(gui.fontId, x, y, text$, THEME_TEXT_DARK)
+    
+    if (gui.dragDrop.mode and gui.dragDrop.acceptedModes) = GUI_DRAG_MODE_NONE
+        w = guiGetTextWidth2(gui.fontId, text$)
+        h = a2GetLineHeight(gui.fontId)
+        a2Line x, y, x+w-1, y+h, 0xFFFF0000
+        a2Line x+1, y, x+w, y+h, 0xFFFF0000
+        a2Line x, y+h, x+w-1, y, 0xFFFF0000
+        a2Line x+1, y+h, x+w, y, 0xFFFF0000
+    endif
+    
+    if gui.msc <> 1
+        gui.dragDrop.mode = gui.dragDrop.mode and gui.dragDrop.acceptedModes
+        exitfunction 1
+    endif
+endfunction 0
 
 function window3(focused)
 

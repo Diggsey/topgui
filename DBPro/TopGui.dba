@@ -9,6 +9,28 @@ type guiInteractionType
     scrollY as integer
 endtype
 
+#constant GUI_DRAG_ACTION_NONE 0
+#constant GUI_DRAG_ACTION_DRAG 1
+#constant GUI_DRAG_ACTION_DROP 2
+
+#constant GUI_DRAG_MODE_NONE 0
+#constant GUI_DRAG_MODE_MOVE 1
+#constant GUI_DRAG_MODE_COPY 2
+
+type guiDragDrop
+    ` Set by system:
+    sourceId as integer
+    destId as integer
+    lastId as integer
+    action as integer
+    lookupId as integer
+    ` Set by source:
+    mode as integer
+    updateCallback as integer
+    ` Set by destination:
+    acceptedModes as integer
+endtype
+
 ` All global non-array data related to the gui should be stored in here:
 type guiContextType
     hotId as guiId
@@ -67,6 +89,8 @@ type guiContextType
     layoutY as integer
     layoutW as integer
     layoutH as integer
+    
+    dragDrop as guiDragDrop
 endtype
 
 type guiRectType
@@ -180,6 +204,57 @@ function guiInit()
     guiPushLayout(0)
     guiSetTheme("Default")
 endfunction
+
+function guiStartDragDrop(id as guiId, updateCallback, mode)
+    if gui.dragDrop.action <> GUI_DRAG_ACTION_NONE
+        exitfunction 0
+    endif
+
+    gui.dragDrop.sourceId = id
+    gui.dragDrop.action = GUI_DRAG_ACTION_DRAG
+    gui.dragDrop.lookupId = find free lookup()
+    make lookup gui.dragDrop.lookupId
+    gui.dragDrop.mode = mode
+    gui.dragDrop.updateCallback = updateCallback
+    gui.dragDrop.acceptedModes = 0
+endfunction 1
+
+function guiSetDragDropData(format$, data$)
+    if gui.dragDrop.action = GUI_DRAG_ACTION_DRAG
+        set lookup gui.dragDrop.lookupId, format$, data$
+    endif
+endfunction
+
+function guiIsDragDropActive()
+    result = gui.dragDrop.action <> GUI_DRAG_ACTION_NONE
+endfunction result
+
+function guiAcceptDragDrop(id as guiId, format$, modes)
+    if gui.dragDrop.action <> GUI_DRAG_ACTION_NONE
+        if gui.dragDrop.lastId <> id
+            if search lookup(gui.dragDrop.lookupId, format$)
+                gui.dragDrop.lastId = id
+                gui.dragDrop.acceptedModes = modes
+                
+                if gui.dragDrop.action = GUI_DRAG_ACTION_DROP
+                    if gui.dragDrop.destId = id
+                        exitfunction 1
+                    endif
+                else
+                    gui.dragDrop.destId = id
+                endif
+            endif
+        endif
+    endif
+endfunction 0
+
+function guiGetDragDropMode()
+    mode = gui.dragDrop.mode
+endfunction mode
+
+function guiGetDragDropData(format$)
+    data$ = lookup$(gui.dragDrop.lookupId, format$)
+endfunction data$
 
 #constant guiWM_CHAR 0x102
 #constant guiWM_KEYDOWN 0x100
@@ -428,8 +503,28 @@ function guiUpdate()
         endif
     next i
     
-    ` A control must keep itself active to stay active
-    if gui.stayActive = 0
+    ` Drag-drop functionality
+    gui.dragDrop.lastId = 0
+    if gui.dragDrop.action = GUI_DRAG_ACTION_DRAG
+        finish = call function ptr(gui.dragDrop.updateCallback)
+        if finish
+            if gui.dragDrop.mode <> GUI_DRAG_MODE_NONE
+                gui.dragDrop.action = GUI_DRAG_ACTION_DROP
+            else
+                gui.dragDrop.action = GUI_DRAG_ACTION_NONE
+            endif
+            gui.dragDrop.updateCallback = 0
+        endif
+        gui.dragDrop.acceptedModes = GUI_DRAG_MODE_NONE
+    else
+        if gui.dragDrop.action = GUI_DRAG_ACTION_DROP
+            delete lookup gui.dragDrop.lookupId
+            gui.dragDrop.action = GUI_DRAG_ACTION_NONE
+        endif
+    endif
+    
+    ` A control must keep itself active to stay active, drag-drop overrides active control
+    if (gui.stayActive = 0) or (gui.dragDrop.action <> GUI_DRAG_ACTION_NONE)
         gui.activeId = 0
         gui.delayTime = 0
     else
