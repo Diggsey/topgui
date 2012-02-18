@@ -145,6 +145,25 @@ type guiModalType
     closed as boolean
 endtype
 
+type guiDialogType
+    id as guiId
+    callback as integer
+    param as integer
+    buttons as string
+    message as string
+    title as string
+    path as string
+    files as string
+    filter as string
+    filterIndex as integer
+    multi as boolean
+    scrollx as integer
+    scrolly as integer
+    selection as string
+    mode as integer
+    confirmed as integer
+endtype
+
 global guiModal as guiModalType
 global gui as guiContextType
 
@@ -177,7 +196,8 @@ function guiInit()
     global dim guiMenuStack() as guiId
     global dim guiModalStack() as guiModalType
     global dim guiLayoutStack() as integer
-    
+    global dim guiDialogs() as guiDialogType
+
     set array index guiClip(), -1
     set array index guiIdStack(), -1
     set array index guiHotParentIds(), -1
@@ -191,6 +211,7 @@ function guiInit()
     set array index guiMenuStack(), -1
     set array index guiModalStack(), -1
     set array index guiLayoutStack(), -1
+    set array index guiDialogs(), -1
     
     ` Alpha blend RGB channels, add alpha channels
     a2SetBlendMode 5, 6, 1, 2, 2, 1
@@ -203,6 +224,26 @@ function guiInit()
     
     guiPushLayout(0)
     guiSetTheme("Default")
+endfunction
+
+function guiFindDialog(id as guiId)
+    l = array count(guiDialogs())
+    for i = 0 to l
+        if guiDialogs(i).id = id
+            exitfunction i
+        endif
+    next i
+    i = -1
+endfunction i
+
+function guiAddDialog(id as guiId)
+    array insert at bottom guiDialogs()
+    i = array count(guiDialogs())
+    guiDialogs(i).id = id
+endfunction i
+
+function guiRemoveDialog(index)
+    array delete element guiDialogs(), index
 endfunction
 
 function guiStartDragDrop(id as guiId, updateCallback, mode)
@@ -582,6 +623,10 @@ function guiUpdate()
     ` Mouse up = clicked before and not clicked now
     gui.msu = gui.omc and (not gui.msc)
     gui.mdc = 0
+    
+    if gui.msx <> gui.omx or gui.msy <> gui.omy
+        gui.msdTime = 0
+    endif
     
     if gui.msd
         newtime = timer()

@@ -1,0 +1,349 @@
+
+function guiMessageDialog(id as guiId, parentId as guiId, x, y, w, h, message$, title$, buttons$, callback, param)
+    index = guiAddDialog(id)
+    guiDialogs(index).callback = callback
+    guiDialogs(index).message = message$
+    guiDialogs(index).buttons = buttons$
+    guiDialogs(index).title = title$
+    guiDialogs(index).selection = "|"
+    guiDialogs(index).param = param
+    
+    guiOpenModalName(id, parentId, "guiMessageDialogUpdate", 0)
+    guiModalStack().x = x
+    guiModalStack().y = y
+    guiModalStack().width = w
+    guiModalStack().height = h
+endfunction
+
+function guiOpenFileDialog(id as guiId, parentId as guiId, x, y, w, h, path$, title$, filter$, multi, callback, param)
+    index = guiAddDialog(id)
+    guiDialogs(index).callback = callback
+    guiDialogs(index).path = path$
+    guiDialogs(index).title = title$
+    guiDialogs(index).filter = filter$
+    guiDialogs(index).multi = multi
+    guiDialogs(index).files = null$()
+    guiDialogs(index).mode = 0
+    guiDialogs(index).confirmed = 0
+    guiDialogs(index).param = param
+    
+    guiOpenModalName(id, parentId, "guiFileDialogUpdate", 0)
+    guiModalStack().x = x
+    guiModalStack().y = y
+    guiModalStack().width = w
+    guiModalStack().height = h
+endfunction
+
+function guiSaveFileDialog(id as guiId, parentId as guiId, x, y, w, h, path$, title$, filter$, callback, param)
+    index = guiAddDialog(id)
+    guiDialogs(index).callback = callback
+    guiDialogs(index).path = path$
+    guiDialogs(index).title = title$
+    guiDialogs(index).filter = filter$
+    guiDialogs(index).multi = 0
+    guiDialogs(index).files = null$()
+    guiDialogs(index).mode = 1
+    guiDialogs(index).confirmed = 0
+    guiDialogs(index).param = param
+    
+    guiOpenModalName(id, parentId, "guiFileDialogUpdate", 0)
+    guiModalStack().x = x
+    guiModalStack().y = y
+    guiModalStack().width = w
+    guiModalStack().height = h
+endfunction
+
+function guiCloseDialog(index)
+    guiRemoveDialog(index)
+    guiCloseModal()
+endfunction
+
+function guiMessageDialogUpdate(opened)
+    dialog as guiDialogType
+    index = guiFindDialog(guiModal.id)
+    dialog = guiDialogs(index)
+
+    if opened
+        ` Initial dialog position and size
+        if guiModal.x = -1 then guiModal.x = 300
+        if guiModal.y = -1 then guiModal.y = 300
+        if guiModal.width = -1 then guiModal.width = 300
+        if guiModal.height = -1 then guiModal.height = 120
+        
+        ` Prevent a non-modal control from keeping the focus
+        guiSetFocus(0, 0, 0)
+    endif
+    
+    guiWindowBegin(guiModal.id, guiModal.x, guiModal.y, guiModal.width, guiModal.height, dialog.title, 0, guiModal.focused)
+    
+    guiLabel(CHILD_ID(guiModal.id), 5, 5, guiModal.width-18, guiModal.height-70, dialog.message, 0, 0, THEME_TEXT_LIGHT)
+    
+    split string dialog.buttons, "|"
+    n = split count()
+    x = guiModal.width-8
+    for i = n to 1 step -1
+        w$ = split word$(i)
+        w = max(guiGetTextWidth2(gui.fontId, w$)+15, 60)
+        dec x, w+5
+    next i
+    
+    for i = 1 to n
+        w$ = split word$(i)
+        w = max(guiGetTextWidth2(gui.fontId, w$)+15, 60)
+        if guiButton(CHILD_INDEX_ID(id, i), x, guiModal.height-60, w, 25, w$)
+            guiCloseDialog(index)
+            if dialog.callback
+                call function ptr dialog.callback, dialog.param, w$
+            endif
+        endif
+        inc x, w+5
+    next i
+    
+    guiWindowEnd()
+
+    guiModal.x = guiMoveX(guiModal.x, 0, 1000000, guiModal.width, 0, 1000000)
+    guiModal.y = guiMoveY(guiModal.y, 0, 1000000, guiModal.height, 0, 1000000)
+endfunction
+
+function guiFilterMatch(filter$, text$)
+    l = fast len(filter$)
+    l2 = fast len(text$)
+    for i = 1 to l
+        c$ = mid$(filter$, i)
+        select c$
+            case "*"
+                filter$ = mid$(filter$, i+1, 0)
+                for j = i to l2+1
+                    tmp$ = mid$(text$, j, 0)
+                    if guiFilterMatch(filter$, tmp$)
+                        exitfunction 1
+                    endif
+                next j
+            endcase
+            case "?"
+                if i > l2 then exitfunction 0
+            endcase
+            case default
+                if i > l2 then exitfunction 0
+                if c$ <> mid$(text$, i) then exitfunction 0
+            endcase
+        endselect
+    next i
+    if l2 <> l then exitfunction 0
+endfunction 1
+
+function guiFileDialogUpdate(opened)
+    dialog as guiDialogType
+    index = guiFindDialog(guiModal.id)
+    dialog = guiDialogs(index)
+
+    if opened
+        ` Initial dialog position and size
+        if guiModal.x = -1 then guiModal.x = 300
+        if guiModal.y = -1 then guiModal.y = 300
+        if guiModal.width = -1 then guiModal.width = 300
+        if guiModal.height = -1 then guiModal.height = 400
+        
+        ` Prevent a non-modal control from keeping the focus
+        guiSetFocus(0, 0, 0)
+    endif
+    
+    guiWindowBegin(guiModal.id, guiModal.x, guiModal.y, guiModal.width, guiModal.height, dialog.title, 0, guiModal.focused)
+    
+    guiLabel(CHILD_ID(guiModal.id), 5, 5, guiModal.width-18, guiModal.height-70, "Look in: " + fast right$(dialog.path, 20), 0, 0, THEME_TEXT_LIGHT)
+    
+    if is null(dialog.files)
+        dialog.files = ""
+        split string dialog.filter, "|"
+        filter$ = fast lower$(split word$(dialog.filterIndex*2+2))
+        split string filter$, ";"
+        n = split count()
+    
+        push dir dialog.path
+        
+        find first
+        while get file type() <> -1
+            isMatch = 0
+            name$ = get file name$()
+            lname$ = fast lower$(name$)
+            if get file type() = 0
+                for i = 1 to n
+                    w$ = split word$(i)
+                    if guiFilterMatch(w$, lname$)
+                        isMatch = 1
+                        exit
+                    endif
+                next i
+            else
+                isMatch = 1
+            endif
+            
+            if isMatch
+                dialog.files = dialog.files + name$ + "|"
+            endif
+            
+            find next
+        endwhile
+         
+        pop dir
+    endif
+    
+    result$ = null$()
+    
+    split string dialog.files, "|"
+    n = split count()-1
+    guiListboxBegin(CHILD_ID(guiModal.id), 5, 30, guiModal.width-18, guiModal.height-165, dialog.scrollx, dialog.scrolly, 1, 1)
+    for i = 1 to n
+        name$ = split word$(i)
+        selected = instr(dialog.selection, "|" + name$ + "|")
+        if guiListboxItem(name$, 0, selected)
+            if controlkey() and dialog.multi
+                if selected
+                    dialog.selection = replace$(dialog.selection, "|" + name$ + "|", "|")
+                else
+                    dialog.selection = dialog.selection + name$ + "|"
+                endif
+            else
+                dialog.selection = "|" + name$ + "|"
+            endif
+            
+            if gui.mdc = 1
+                push dir dialog.path
+                
+                if file exist(name$) = 0 and path exist(name$)
+                    set dir name$
+                    dialog.path = get dir$()
+                    dialog.files = null$()
+                    dialog.selection = "|"
+                else
+                    result$ = dialog.selection
+                endif
+                
+                pop dir
+            endif
+        endif
+    next i
+    guiListboxEnd()
+    dialog.scrollx = guiScrollX()
+    dialog.scrolly = guiScrollY()
+    
+    l = fast len(dialog.selection)
+    if l > 2
+        sel$ = mid$(dialog.selection, 2, l-2)
+    else
+        sel$ = ""
+    endif
+    sel$ = guiTextbox(CHILD_ID(id), 5, guiModal.height-125, guiModal.width-18, 25, sel$, 0)
+    if dialog.multi = 0
+        sel$ = replace all$(sel$, "|", "")
+    endif
+    
+    if sel$ <> ""
+        dialog.selection = "|" + sel$ + "|"
+    else
+        dialog.selection = "|"
+    endif
+    
+    split string dialog.filter, "|"
+    n = split count()
+    guiComboboxBegin(CHILD_ID(id), 5, guiModal.height-90, guiModal.width-18, 21, dialog.filterIndex, 100, 1)
+    for i = 1 to n step 2
+        w$ = split word$(i)
+        guiComboboxItem(w$, 20, 0)
+    next i
+    filterIndex = guiComboboxEnd()
+    if filterIndex <> dialog.filterIndex
+        dialog.files = null$()
+        dialog.filterIndex = filterIndex
+    endif
+    
+    if dialog.mode
+        text$ = "Save"
+    else
+        text$ = "Open"
+    endif
+    if guiButton(CHILD_ID(id), guiModal.width-158, guiModal.height-60, 70, 25, text$)
+        push dir dialog.path
+        
+        split string dialog.selection, "|"
+        
+        if split count() > 2
+            name$ = split word$(2)
+            if split count() = 3 and file exist(name$) = 0 and path exist(name$)
+                set dir name$
+                dialog.path = get dir$()
+                dialog.files = null$()
+                dialog.selection = "|"
+            else
+                result$ = dialog.selection
+            endif
+        endif
+        
+        pop dir
+    endif
+    
+    guiDialogs(index) = dialog
+    
+    if guiButton(CHILD_ID(id), guiModal.width-83, guiModal.height-60, 70, 25, "Cancel")
+        guiCloseDialog(index)
+        if dialog.callback
+            call function ptr dialog.callback, dialog.param, null$(), null$()
+        endif
+    endif
+    
+    if dialog.confirmed
+        result$ = dialog.selection
+    endif
+    
+    if is null(result$) = 0
+        split string result$, "|"
+        n = split count()-1
+        success = 1
+        result$ = ""
+        
+        push dir dialog.path
+        for i = 2 to n
+            w$ = split word$(i)
+            if dialog.confirmed = 0
+                if dialog.mode
+                    if file exist(w$)
+                        guiMessageDialog(RND_ID, guiModal.parentId, -1, -1, -1, -1, "File already exists, overwrite?", "Warning", "Yes|No", get ptr to function("guiDialogConfirmCallback"), guiModal.id)
+                        success = 0
+                        exit
+                    endif
+                else
+                    if file exist(w$) = 0
+                        guiMessageDialog(RND_ID, guiModal.parentId, -1, -1, -1, -1, "File does not exist!", "Error", "OK", 0, 0)
+                        success = 0
+                        exit
+                    endif
+                endif
+            endif
+            if result$ <> "" then result$ = result$ + "|"
+            result$ = result$ + dialog.path + "\" + w$
+        next i
+        pop dir
+        
+        if success
+            guiCloseDialog(index)
+            if dialog.callback
+                call function ptr dialog.callback, dialog.param, dialog.path, result$
+            endif
+        endif
+    endif
+    
+    guiWindowEnd()
+
+    guiModal.x = guiMoveX(guiModal.x, 0, 1000000, guiModal.width, 100, 1000000)
+    guiModal.y = guiMoveY(guiModal.y, 0, 1000000, guiModal.height, 200, 1000000)
+    guiModal.width = guiResizeW(guiModal.width)
+    guiModal.height = guiResizeH(guiModal.height)
+endfunction
+
+function guiDialogConfirmCallback(id as guiId, button$)
+    if button$ = "Yes" or button$ = "OK"
+        index = guiFindDialog(id)
+        guiDialogs(index).confirmed = 1
+    endif
+endfunction
+
