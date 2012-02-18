@@ -156,10 +156,9 @@ namespace googlecode_uploader
         static void Main(string[] args)
         {
             string startDir = Directory.GetCurrentDirectory();
-            string svnFile = Path.Combine(Path.Combine(startDir, ".svn"), "entries");
 
-            string[] svnData = File.ReadAllLines(svnFile);
-            int revision = int.Parse(svnData[3]);
+            Console.Write("Enter revision number: ");
+            int revision = int.Parse(Console.ReadLine());
 
             string uploadFilename = Path.Combine(startDir, getProperty("Download name") + "_r" + revision.ToString() + ".zip");
             ZipFile uploadFile = new ZipFile();
